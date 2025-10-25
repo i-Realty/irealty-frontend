@@ -1,13 +1,19 @@
+"use client";
+
+import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
  export default function Navbar(){
+  const [open, setOpen] = useState(false);
+
   return (
-    <nav className="fixed w-full  h-20 top-0 bg-white shadow-sm z-50">
+    <nav className="fixed w-full h-20 top-0 bg-white shadow-sm z-50">
       <div className="max-w-[1440px] h-full mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" aria-label="Go to homepage" title="i-Realty Home">
-            <img src="/logo.png" alt="i-Realty Logo" width={92} height={40} className="w-auto h-10" />
+            <Image src="/logo.png" alt="i-Realty Logo" width={92} height={40} className="w-auto h-10" />
           </Link>
         </div>
 
@@ -32,12 +38,45 @@ import Link from 'next/link';
         </div>
 
         {/* Mobile Menu Button */}
-        <button className="lg:hidden p-2 rounded-lg hover:bg-gray-100">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+        <button
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          onClick={() => setOpen((s) => !s)}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+        >
+          {open ? (
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
         </button>
       </div>
+
+      {/* Mobile menu overlay */}
+      {open && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <div className="absolute top-20 right-0 left-0 bg-white shadow-lg p-6">
+            <div className="flex flex-col space-y-4">
+              <Link href="/listings?purpose=sale" onClick={() => setOpen(false)} className="text-base font-medium">Buy</Link>
+              <Link href="/listings?purpose=rent" onClick={() => setOpen(false)} className="text-base font-medium">Rent</Link>
+              <Link href="/sell" onClick={() => setOpen(false)} className="text-base font-medium">Sell</Link>
+              <Link href="/rent-out" onClick={() => setOpen(false)} className="text-base font-medium">Rent Out</Link>
+              <Link href="/agent" onClick={() => setOpen(false)} className="text-base font-medium">Agent</Link>
+              <Link href="/listings/developers" onClick={() => setOpen(false)} className="text-base font-medium">Developers</Link>
+
+              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                <Link href="/auth/login" onClick={() => setOpen(false)} className="w-full text-center px-4 py-3 border border-[#2563EB] rounded-lg">Login</Link>
+                <Link href="/auth/signup" onClick={() => setOpen(false)} className="w-full mt-2 sm:mt-0 text-center px-4 py-3 bg-[#2563EB] text-white rounded-lg">Sign up</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
