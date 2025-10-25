@@ -36,61 +36,56 @@ const faqs = [
 ];
 
 export default function FAQSection() {
-  const [openIdx, setOpenIdx] = useState(0);
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section className="w-full bg-white" style={{ padding: "96px 0 0 0" }}>
-      <div className="mx-auto flex" style={{ width: 1440, minHeight: 480 }}>
-        {/* Left: Heading (top aligned, exact replica) */}
-        <div className="flex flex-col" style={{ width: 400, paddingLeft: 64, paddingTop: 64 }}>
-          <h2 style={{ fontSize: 32, lineHeight: "40px", fontWeight: 700, fontFamily: "Lato", color: "#090202", marginBottom: 0 }}>
-            Frequently Asked<br />Questions
-          </h2>
-        </div>
-        {/* Right: FAQ List */}
-        <div className="flex-1 flex flex-col" style={{ paddingLeft: 64, paddingRight: 64, paddingTop: 64 }}>
-          {faqs.map((faq, i) => (
-            <div key={i} className="border-b border-[#E5E7EB] last:border-b-0">
-              <button
-                className="w-full flex items-center justify-between text-left"
-                style={{ 
-                  background: "none", 
-                  border: "none", 
-                  cursor: "pointer", 
-                  fontFamily: "Lato",
-                  paddingTop: 32,
-                  paddingBottom: 32,
-                  marginBottom: openIdx === i ? -24 : 0 
-                }}
-                onClick={() => setOpenIdx(i === openIdx ? -1 : i)}
-              >
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#090202" }}>{faq.question}</span>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }}>
-                  {openIdx === i ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="5" y="11" width="14" height="2" rx="1" fill="#8E98A8" />
-                    </svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="5" y="11" width="14" height="2" rx="1" fill="#8E98A8" />
-                      <rect x="11" y="5" width="2" height="14" rx="1" fill="#8E98A8" />
-                    </svg>
+    <section className="w-full bg-white py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          {/* Left: Heading */}
+          <div className="md:pr-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight" style={{ fontFamily: 'Lato' }}>
+              Frequently Asked
+              <br />Questions
+            </h2>
+          </div>
+
+          {/* Right: FAQ List (span 2 cols on md+) */}
+          <div className="md:col-span-2">
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <div key={i} className="border-b border-gray-200 last:border-b-0">
+                  <button
+                    className="w-full flex items-center justify-between text-left py-6 md:py-8 focus:outline-none"
+                    style={{ fontFamily: 'Lato' }}
+                    onClick={() => setOpenIdx(openIdx === i ? -1 : i)}
+                    aria-expanded={openIdx === i}
+                    aria-controls={`faq-panel-${i}`}
+                  >
+                    <span className="font-semibold text-base text-gray-900">{faq.question}</span>
+                    <span className="flex items-center justify-center w-6 h-6 text-gray-400">
+                      {openIdx === i ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="5" y="11" width="14" height="2" rx="1" fill="#8E98A8" />
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="5" y="11" width="14" height="2" rx="1" fill="#8E98A8" />
+                          <rect x="11" y="5" width="2" height="14" rx="1" fill="#8E98A8" />
+                        </svg>
+                      )}
+                    </span>
+                  </button>
+
+                  {openIdx === i && (
+                    <div id={`faq-panel-${i}`} className="pb-6 text-sm text-gray-600" style={{ lineHeight: '1.6', fontFamily: 'Lato' }}>
+                      {faq.answer}
+                    </div>
                   )}
-                </span>
-              </button>
-              {openIdx === i && (
-                <div style={{ 
-                  color: "#8E98A8", 
-                  fontSize: 14, 
-                  lineHeight: "20px", 
-                  fontFamily: "Lato",
-                  paddingBottom: 32
-                }}>
-                  {faq.answer}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

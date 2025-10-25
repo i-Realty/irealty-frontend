@@ -1,51 +1,65 @@
 "use client";
 
 import React from "react";
+import Image from 'next/image';
 
 export default function AgentDiasporaPromo() {
   return (
-    <section className="w-full" style={{ padding: "56px 0" }}>
-      <div className="mx-auto flex gap-8" style={{ width: 1440, padding: "0 64px", height:666 }}>
-        {/* Agent Card */}
-        <div
-          className="flex-1 rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE]"
-          style={{ background: "#FFF7ED", padding: 40, minWidth: 0 }}
-          tabIndex={0}
-          role="button"
-        >
-          <div className="mb-2">
-            <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#FDE68A", color: "#B45309", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Agent</span>
+    <section className="w-full py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {/* Agent Card */}
+          <div
+            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col"
+            style={{ background: "#FFF7ED" }}
+            tabIndex={0}
+            role="button"
+          >
+            <div className="p-6 sm:p-8 lg:p-10 flex flex-col h-full">
+              <div className="mb-3">
+                <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#FDE68A", color: "#B45309", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Agent</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: 'Lato', color: '#090202', marginBottom: 8 }}>Become a Verified Agent. Build Trust, Close Deals.</h3>
+              <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
+                Join i-Realty to access verified clients, manage listings with ease, and grow your real estate business on a trusted platform.
+              </p>
+              <a href="/auth/signup" className="inline-block font-semibold mb-4" style={{ color: '#B45309', fontFamily: 'Lato' }}>
+                Join As A Verified Agent <span className="ml-2 text-lg">→</span>
+              </a>
+
+              <div className="mt-auto flex justify-center">
+                <div className="w-full max-w-[420px]">
+                  <Image src="/images/agent-illustration.png" alt="Agent illustration" width={517} height={386} className="w-full h-auto object-contain" />
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 style={{ fontFamily: 'Lato', fontWeight: 700, fontSize: 24, color: '#090202', marginBottom: 12 }}>Become a Verified Agent. Build Trust, Close Deals.</h3>
-          <p style={{ fontFamily: 'Lato', fontSize: 15, color: '#8E98A8', marginBottom: 24, lineHeight: '24px' }}>
-            Join i-Realty to access verified clients, manage listings with ease, and grow your real estate business on a trusted platform.
-          </p>
-          <a href="/auth/signup" style={{ fontFamily: 'Lato', fontWeight: 700, color: '#B45309', fontSize: 15, textDecoration: 'none', display: 'inline-block', marginBottom: 32 }}>
-            Join As A Verified Agent <span style={{ marginLeft: 6, fontSize: 18 }}>→</span>
-          </a>
-          <div className="mt-2 flex justify-center">
-            <img src="/images/agent-illustration.png" alt="Agent illustration" style={{ width: 517, height: 386, objectFit: 'contain' }} />
-          </div>
-        </div>
-        {/* Diaspora Investors Card */}
-        <div
-          className="flex-1 rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE]"
-          style={{ background: "#F3F6FF", padding: 40, minWidth: 0 }}
-          tabIndex={0}
-          role="button"
-        >
-          <div className="mb-2">
-            <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#DBEAFE", color: "#2563EB", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Diaspora Investors</span>
-          </div>
-          <h3 style={{ fontFamily: 'Lato', fontWeight: 700, fontSize: 24, color: '#090202', marginBottom: 12 }}>Invest From Anywhere, With Confidence</h3>
-          <p style={{ fontFamily: 'Lato', fontSize: 15, color: '#8E98A8', marginBottom: 24, lineHeight: '24px' }}>
-            Browse trusted listings, track ROI, and transact securely—wherever you are in the world.
-          </p>
-          <a href="/auth/signup" style={{ fontFamily: 'Lato', fontWeight: 700, color: '#2563EB', fontSize: 15, textDecoration: 'none', display: 'inline-block', marginBottom: 32 }}>
-            Explore Verified Listings <span style={{ marginLeft: 6, fontSize: 18 }}>→</span>
-          </a>
-          <div className="mt-2 flex justify-center">
-            <img src="/images/diaspora-illustration.png" alt="Diaspora illustration" style={{ width: 517, height: 386, objectFit: 'contain' }} />
+
+          {/* Diaspora Investors Card */}
+          <div
+            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col"
+            style={{ background: "#F3F6FF" }}
+            tabIndex={0}
+            role="button"
+          >
+            <div className="p-6 sm:p-8 lg:p-10 flex flex-col h-full">
+              <div className="mb-3">
+                <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#DBEAFE", color: "#2563EB", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Diaspora Investors</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: 'Lato', color: '#090202', marginBottom: 8 }}>Invest From Anywhere, With Confidence</h3>
+              <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
+                Browse trusted listings, track ROI, and transact securely—wherever you are in the world.
+              </p>
+              <a href="/auth/signup" className="inline-block font-semibold mb-4" style={{ color: '#2563EB', fontFamily: 'Lato' }}>
+                Explore Verified Listings <span className="ml-2 text-lg">→</span>
+              </a>
+
+              <div className="mt-auto flex justify-center">
+                <div className="w-full max-w-[420px]">
+                  <Image src="/images/diaspora-illustration.png" alt="Diaspora illustration" width={517} height={386} className="w-full h-auto object-contain" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
