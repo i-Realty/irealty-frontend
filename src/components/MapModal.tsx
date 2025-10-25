@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 
 type Props = {
@@ -26,9 +25,9 @@ export default function MapModal({ onClose }: Props) {
 
         <div className="flex flex-col">
           <div className="mb-3 text-sm text-gray-500">Map</div>
-          <div className="w-full h-[60vh] bg-gray-100 rounded-lg overflow-hidden relative">
+          <div className="w-full h-[60vh] bg-gray-100 rounded-lg overflow-hidden">
             {/* Simulated map image */}
-            <Image src="/images/detailsmap.png" alt="map" fill className="object-cover" />
+            <img src="/images/detailsmap.png" alt="map" className="w-full h-full object-cover" />
           </div>
         </div>
       </div>

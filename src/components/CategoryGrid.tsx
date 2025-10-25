@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 const categories = [
@@ -44,7 +43,7 @@ export default function CategoryGrid() {
                   className="relative rounded-lg overflow-hidden transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                   style={{ height: 250 }}
                 >
-                  <Image src={cat.image} alt={cat.title} fill className="object-cover" />
+                  <img src={cat.image} alt={cat.title} className="absolute inset-0 w-full h-full object-cover" />
                   <div style={{ background: 'rgba(4,12,16,0.6)' }} className="absolute inset-0" />
                   <div className="absolute inset-0 p-6 flex flex-col justify-between">
                     <div className="flex justify-between items-start">

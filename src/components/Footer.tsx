@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 
 export default function Footer() {
   const navigation = {
@@ -38,7 +37,7 @@ export default function Footer() {
             title="Back to top"
             style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <Image src="/logo-white.png" alt="i-Realty" width={120} height={40} className="h-10 w-30" />
+            <img src="/logo-white.png" alt="i-Realty" width={120} height={40} className="h-10 w-30" />
           </button>
         </div>
 

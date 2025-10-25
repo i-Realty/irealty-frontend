@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 type TabName = "buy" | "rent" | "shortlet";
@@ -67,7 +66,7 @@ export default function SearchCard() {
       >
         <div className="flex flex-row items-center gap-2" style={{ flex: 1 }}>
           {/* Location Icon from public folder */}
-          <Image src="/icons/locationIcon.svg" alt="Location" width={24} height={24} className="object-contain" />
+          <img src="/icons/locationIcon.svg" alt="Location" className="w-6 h-6 object-contain" />
           <input
             type="text"
             value={search}

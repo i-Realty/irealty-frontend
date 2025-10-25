@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from 'next/image';
 import { motion } from "framer-motion";
 import { useRef } from "react";
 
@@ -120,7 +119,7 @@ export default function TestimonialSection() {
                           <p className="text-lg font-bold" style={{ fontFamily: "Lato", lineHeight: "32px" }}>{t.text}</p>
                         </div>
                         <div className="flex items-center gap-3 mt-8">
-                          <Image src={t.avatar} alt={t.name} width={40} height={40} style={{ borderRadius: "50%" }} />
+                          <img src={t.avatar} alt={t.name} style={{ width: 40, height: 40, borderRadius: "50%" }} />
                           <div>
                             <div className="font-bold" style={{ fontFamily: "Lato", fontSize: 16 }}>{t.name}</div>
                             <div className="text-sm" style={{ color: "#8E98A8", fontFamily: "Lato" }}>{t.role}</div>

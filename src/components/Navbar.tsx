@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
  export default function Navbar(){
   return (
@@ -8,7 +7,7 @@ import Image from 'next/image';
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" aria-label="Go to homepage" title="i-Realty Home">
-            <Image src="/logo.png" alt="i-Realty Logo" width={92} height={40} className="w-auto h-10" />
+            <img src="/logo.png" alt="i-Realty Logo" width={92} height={40} className="w-auto h-10" />
           </Link>
         </div>
 

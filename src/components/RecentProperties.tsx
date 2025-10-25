@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from 'next/image';
 import Link from 'next/link';
 
 const properties = [
@@ -115,10 +114,10 @@ export default function RecentProperties() {
           <div style={{ width: 1216 }} className="mx-auto">
             <h2 style={{ fontFamily: 'Lato', fontSize: 32, fontWeight: 700, marginBottom: 24 }}>Explore Recent Properties</h2>
             <div className="grid grid-cols-3 gap-6 mb-8">
-              {properties.map((prop) => (
+              {properties.map((prop, i) => (
                 <div key={prop.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg relative">
                   <div className="relative" style={{ height: 312 }}>
-                    <Image src={prop.image} alt={prop.title} fill className="rounded-lg object-cover" />
+                    <img src={prop.image} alt={prop.title} className="absolute rounded-lg inset-0 w-full h-full object-cover" />
                     <div
                       className={`absolute left-4 top-4 text-xs font-bold px-4 py-1 rounded-full ${prop.status && prop.status.toLowerCase().includes('sale') ? 'bg-[#2563EB] text-white' : 'bg-white text-[#2563EB]'}`}
                       style={{ fontFamily: 'Lato', fontSize: 14 }}
@@ -130,11 +129,9 @@ export default function RecentProperties() {
                       aria-pressed={likedIds.has(prop.id)}
                       className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/80 p-1"
                     >
-                      <Image
+                      <img
                         src={likedIds.has(prop.id) ? "/icons/favorite-filled.svg" : "/icons/favorite.svg"}
                         alt={likedIds.has(prop.id) ? 'Unfavorite' : 'Favorite'}
-                        width={20}
-                        height={20}
                         className="w-5 h-5"
                       />
                     </button>
@@ -145,10 +142,10 @@ export default function RecentProperties() {
                     <div className="font-bold text-lg text-[#090202]" style={{ fontFamily: 'Lato', marginBottom: 2 }}>{prop.price}<span className="text-xs text-[#8E98A8] font-normal">{prop.priceSuffix}</span></div>
                     <div className="text-xs text-[#8E98A8] mb-2" style={{ fontFamily: 'Lato' }}>{prop.beds} beds • {prop.baths} baths • {prop.area}</div>
                     <div className="flex items-center mt-2">
-                      <Image src={prop.agentAvatar} alt={prop.agent} width={24} height={24} className="w-6 h-6 rounded-full mr-2" />
+                      <img src={prop.agentAvatar} alt={prop.agent} className="w-6 h-6 rounded-full mr-2" />
                       <span className="text-xs text-[#8E98A8] flex items-center" style={{ fontFamily: 'Lato' }}>
                         {prop.agent}
-                        <Image src="/icons/verifiedbadge.svg" alt="Verified" width={16} height={16} className="w-4 h-4 ml-2" />
+                        <img src="/icons/verifiedbadge.svg" alt="Verified" className="w-4 h-4 ml-2" />
                       </span>
                     </div>
                   </div>
