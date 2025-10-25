@@ -24,9 +24,9 @@ export default function LoginPage() {
     <div style={{ background: '#F8FAFB', height: '674px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
       <div style={{ width: 628 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
+          <Link href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          </Link>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
@@ -58,7 +58,7 @@ export default function LoginPage() {
             </div>
 
             <div style={{ fontSize: 13, color: '#6B7280' }}>
-              Forgot Password? <a href="/auth/reset" style={{ color: '#2563EB' }}>Reset it here</a>
+              Forgot Password? <Link href="/auth/reset" style={{ color: '#2563EB' }}>Reset it here</Link>
             </div>
 
             <button type="submit" disabled={!canSubmit} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: canSubmit ? '#7DA0FF' : '#AFC0F4', color: '#fff', fontWeight: 700 }}>Login</button>

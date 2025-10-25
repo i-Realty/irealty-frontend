@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ProgressPill from '../ProgressPill';
 
@@ -49,15 +50,15 @@ export default function SignupAccount() {
     <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
       <div style={{ width: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
+          <Link href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          </Link>
         </div>
 
   <ProgressPill step={2} />
   <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Create Your Account</h3>
-          <p style={{ color: '#8E98A8', marginBottom: 18 }}>Already have an account? <a href="/auth/login" style={{ color: '#2563EB' }}>Login</a></p>
+          <p style={{ color: '#8E98A8', marginBottom: 18 }}>Already have an account? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link></p>
 
           <div style={{ display: 'grid', gap: 12 }}>
             <label style={{ fontSize: 13, color: '#374151' }}>User Name/Company Name</label>

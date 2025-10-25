@@ -1,7 +1,10 @@
+"use client";
+
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import ProfileListingsGrid from '@/components/ProfileListingsGrid';
 
 type Property = {
@@ -18,7 +21,8 @@ type Property = {
   area?: string;
 };
 
-export default function ListingAgentProfile({ params }: { params: { id: string } }) {
+export default function ListingAgentProfile() {
+  const params = useParams();
   const listingId = Number(params?.id || 0);
 
   // reproduce the same sampleProperties logic used on the listing page so we can derive agent info
