@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from 'next/image';
 
 export default function AgentDiasporaPromo() {
   return (
@@ -24,7 +25,7 @@ export default function AgentDiasporaPromo() {
             Join As A Verified Agent <span style={{ marginLeft: 6, fontSize: 18 }}>→</span>
           </a>
           <div className="mt-2 flex justify-center">
-            <img src="/images/agent-illustration.png" alt="Agent illustration" style={{ width: 517, height: 386, objectFit: 'contain' }} />
+            <Image src="/images/agent-illustration.png" alt="Agent illustration" width={517} height={386} style={{ objectFit: 'contain' }} />
           </div>
         </div>
         {/* Diaspora Investors Card */}
@@ -45,7 +46,7 @@ export default function AgentDiasporaPromo() {
             Explore Verified Listings <span style={{ marginLeft: 6, fontSize: 18 }}>→</span>
           </a>
           <div className="mt-2 flex justify-center">
-            <img src="/images/diaspora-illustration.png" alt="Diaspora illustration" style={{ width: 517, height: 386, objectFit: 'contain' }} />
+            <Image src="/images/diaspora-illustration.png" alt="Diaspora illustration" width={517} height={386} style={{ objectFit: 'contain' }} />
           </div>
         </div>
       </div>

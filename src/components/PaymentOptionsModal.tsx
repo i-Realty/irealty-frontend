@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 
 type Props = {
@@ -41,26 +42,26 @@ export default function PaymentOptionsModal({ onClose, onSelect }: Props) {
           <button onClick={() => choose('wallet')} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                <img src="/icons/wallet.svg" alt="wallet" className="w-5 h-5" />
+                <Image src="/icons/wallet.svg" alt="wallet" width={20} height={20} />
               </div>
               <div>
                 <div className="font-medium">Wallet</div>
                 <div className="text-xs text-gray-500">Balance: ₦200,000,000.00</div>
               </div>
             </div>
-            <img src="/icons/arrow.svg" alt="arrow" className="w-4 h-4 text-gray-300" />
+            <Image src="/icons/arrow.svg" alt="arrow" width={16} height={16} className="text-gray-300" />
           </button>
 
           <button onClick={() => choose('paystack')} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                <img src="/icons/wallet.svg" alt="paystack" className="w-5 h-5" />
+                <Image src="/icons/wallet.svg" alt="paystack" width={20} height={20} />
               </div>
               <div>
                 <div className="font-medium">Pay With Paystack</div>
               </div>
             </div>
-            <img src="/icons/arrow.svg" alt="arrow" className="w-4 h-4 text-gray-300" />
+            <Image src="/icons/arrow.svg" alt="arrow" width={16} height={16} className="text-gray-300" />
           </button>
         </div>
       </div>

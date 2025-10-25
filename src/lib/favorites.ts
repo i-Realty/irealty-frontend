@@ -4,7 +4,7 @@ export function getFavorites(): number[] {
   try {
     const raw = localStorage.getItem('favorites');
     return raw ? JSON.parse(raw) : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -18,7 +18,7 @@ export function setFavorite(id: number, value: boolean): void {
   const idx = favs.indexOf(id);
   if (value && idx === -1) favs.push(id);
   if (!value && idx !== -1) favs.splice(idx, 1);
-  try { localStorage.setItem('favorites', JSON.stringify(favs)); } catch (e) {}
+  try { localStorage.setItem('favorites', JSON.stringify(favs)); } catch {}
   // emit simple event so other components can listen
   try { window.dispatchEvent(new CustomEvent('favorites-changed', { detail: { id, favorited: value } })); } catch {}
 }

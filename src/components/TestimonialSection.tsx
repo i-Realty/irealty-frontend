@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
+import React from "react";
+import Image from 'next/image';
+import { motion } from "framer-motion";
 import { useRef } from "react";
 
 const testimonials = [
@@ -66,7 +67,7 @@ export default function TestimonialSection() {
     }
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current!);
-  }, [totalScrollWidth, paused]);
+  }, [totalScrollWidth, paused, CARD_WIDTH, totalCards]);
 
   // Dot click: scroll to selected testimonial and pause
   const handleDotDown = (i: number) => {
@@ -119,7 +120,7 @@ export default function TestimonialSection() {
                           <p className="text-lg font-bold" style={{ fontFamily: "Lato", lineHeight: "32px" }}>{t.text}</p>
                         </div>
                         <div className="flex items-center gap-3 mt-8">
-                          <img src={t.avatar} alt={t.name} style={{ width: 40, height: 40, borderRadius: "50%" }} />
+                          <Image src={t.avatar} alt={t.name} width={40} height={40} style={{ borderRadius: "50%" }} />
                           <div>
                             <div className="font-bold" style={{ fontFamily: "Lato", fontSize: 16 }}>{t.name}</div>
                             <div className="text-sm" style={{ color: "#8E98A8", fontFamily: "Lato" }}>{t.role}</div>

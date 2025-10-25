@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getFavorites, toggleFavorite as toggleFavLocal } from '@/lib/favorites';
 
@@ -43,14 +44,14 @@ export default function ProfileListingsGrid({ sampleProperties }: { sampleProper
       {sampleProperties.map((p) => (
         <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative">
           <div className="relative" style={{ height: 200 }}>
-            <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+            <Image src={p.image} alt={p.title} fill className="object-cover" />
             <div className={`absolute left-4 top-4 text-xs font-bold px-3 py-1 rounded-full ${p.tag && p.tag.toLowerCase().includes('sale') ? 'bg-[#2563EB] text-white' : 'bg-white text-[#2563EB]'}`}>{p.tag}</div>
             <button
               onClick={() => toggleLike(p.id)}
               aria-pressed={likedIds.has(p.id)}
               className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/80 p-1 z-30"
             >
-              <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-5 h-5" />
+              <Image src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" width={20} height={20} className="w-5 h-5" />
             </button>
           </div>
           <div className="p-4">
@@ -59,8 +60,8 @@ export default function ProfileListingsGrid({ sampleProperties }: { sampleProper
             <div className="font-bold text-lg">{p.price}</div>
             <div className="text-xs text-gray-500 mt-2">{p.beds ?? '-'} beds • {p.baths ?? '-'} baths • {p.area ?? '-'}</div>
             <div className="flex items-center mt-3">
-              <img src="/images/agent-sarah.png" alt={p.agent} className="w-6 h-6 rounded-full mr-2" />
-              <div className="text-xs text-gray-600">{p.agent} <img src="/icons/verifiedbadge.svg" alt="verified" className="inline w-4 h-4 ml-2" /></div>
+              <Image src="/images/agent-sarah.png" alt={p.agent ?? 'Agent'} width={24} height={24} className="rounded-full mr-2" />
+              <div className="text-xs text-gray-600">{p.agent} <Image src="/icons/verifiedbadge.svg" alt="verified" width={16} height={16} className="inline w-4 h-4 ml-2" /></div>
             </div>
           </div>
           {/* overlay link so clicking the card opens details (favorite remains clickable due to z-30) */}

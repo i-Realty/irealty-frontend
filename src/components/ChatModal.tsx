@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 
 type Props = {
   onClose: () => void;
@@ -15,8 +16,8 @@ export default function ChatModal({ onClose }: Props) {
         {/* Left: chat column */}
         <div className="w-2/3 flex flex-col">
           <div className="flex items-center justify-between p-4 border-b">
-            <div className="flex items-center gap-3">
-              <img src="/images/agent-sarah.png" alt="agent" className="w-10 h-10 rounded-full" />
+              <div className="flex items-center gap-3">
+              <Image src="/images/agent-sarah.png" alt="agent" width={40} height={40} className="w-10 h-10 rounded-full" />
               <div>
                 <div className="font-semibold">Wade Warren</div>
                 <div className="text-xs text-gray-400">Online</div>
@@ -24,8 +25,8 @@ export default function ChatModal({ onClose }: Props) {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="w-9 h-9 rounded-full bg-white border flex items-center justify-center"><img src="/icons/messages2.svg" className="w-4 h-4" alt="call"/></button>
-              <button className="w-9 h-9 rounded-full bg-white border flex items-center justify-center" onClick={onClose}><img src="/icons/x.svg" className="w-4 h-4" alt="close"/></button>
+              <button className="w-9 h-9 rounded-full bg-white border flex items-center justify-center"><Image src="/icons/messages2.svg" alt="call" width={16} height={16} className="w-4 h-4"/></button>
+              <button className="w-9 h-9 rounded-full bg-white border flex items-center justify-center" onClick={onClose}><Image src="/icons/x.svg" alt="close" width={16} height={16} className="w-4 h-4"/></button>
             </div>
           </div>
 
@@ -49,9 +50,9 @@ export default function ChatModal({ onClose }: Props) {
             </div>
           </div>
 
-          <div className="p-4 border-t flex items-center gap-3">
-            <button className="w-10 h-10 rounded-lg bg-white border flex items-center justify-center"><img src="/icons/document.svg" className="w-5 h-5" alt="files"/></button>
-            <button className="w-10 h-10 rounded-lg bg-white border flex items-center justify-center"><img src="/icons/image.png" className="w-5 h-5" alt="photo"/></button>
+            <div className="p-4 border-t flex items-center gap-3">
+            <button className="w-10 h-10 rounded-lg bg-white border flex items-center justify-center"><Image src="/icons/document.svg" alt="files" width={20} height={20} className="w-5 h-5"/></button>
+            <button className="w-10 h-10 rounded-lg bg-white border flex items-center justify-center"><Image src="/icons/image.png" alt="photo" width={20} height={20} className="w-5 h-5"/></button>
             <input className="flex-1 border rounded-full px-4 py-2 text-sm" placeholder="Type a message" aria-label="Type a message" />
             <button className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">Send</button>
           </div>
@@ -61,7 +62,9 @@ export default function ChatModal({ onClose }: Props) {
         <div className="w-1/3 border-l p-6 bg-gray-50">
           <div className="text-xs text-gray-400 mb-4">Conversation about</div>
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <img src="/images/property1.png" alt="prop" className="w-full h-24 object-cover rounded" />
+            <div className="w-full h-24 relative rounded overflow-hidden">
+              <Image src="/images/property1.png" alt="prop" fill className="object-cover" />
+            </div>
             <div className="mt-3 font-semibold">3-Bed Duplex, Lekki</div>
             <div className="text-sm text-gray-600">₦25,000</div>
           </div>

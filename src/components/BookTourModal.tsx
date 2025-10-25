@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 
 type Props = {
@@ -99,8 +100,10 @@ export default function BookTourModal({ onClose }: Props) {
         </div>
 
         {/* Image preview & fee */}
-        <div className="mt-4">
-          <img src="/images/property1.png" alt="preview" className="w-full h-36 object-cover rounded-lg" />
+          <div className="mt-4">
+          <div className="w-full h-36 relative">
+            <Image src="/images/property1.png" alt="preview" fill className="object-cover rounded-lg" />
+          </div>
 
           <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
             <div className="text-sm text-gray-600">Inspection Fee</div>

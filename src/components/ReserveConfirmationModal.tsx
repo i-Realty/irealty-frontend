@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 
 export default function ReserveConfirmationModal({ onClose }: { onClose?: () => void }) {
@@ -22,8 +23,8 @@ export default function ReserveConfirmationModal({ onClose }: { onClose?: () => 
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-[#F4F6F5] flex items-center justify-center mb-4">
             <div className="w-15 h-15 rounded-full bg-[#BDE3CD] flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-[#40B773] flex items-center justify-center text-white">
-                <img src="/icons/confirmed.svg" alt="confirmed" className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-full bg-[#40B773] flex items-center justify-center text-white">
+                	<Image src="/icons/confirmed.svg" alt="confirmed" width={20} height={20} />
               </div>
             </div>
           </div>
@@ -33,18 +34,18 @@ export default function ReserveConfirmationModal({ onClose }: { onClose?: () => 
 
           <div className="mt-6 bg-[#FFF2C7] border border-yellow-200 rounded-lg p-4 text-left text-sm text-gray-700">
             <div className="flex items-start gap-3">
-              <img src="/icons/info.svg" alt="info" className="w-5 h-5 pt-0.5" />
+              <Image src="/icons/info.svg" alt="info" width={20} height={20} className="pt-0.5" />
               <div>We will hold the reservation and notify the agent. Please check your messages for next steps.</div>
             </div>
           </div>
 
           <div className="mt-6 w-full flex gap-3">
             <button onClick={() => { /* TODO: add calendar logic */ }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
-              <img src="/icons/calender.svg" alt="calendar" className="w-4 h-4" />
+              <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
               <span>Add To Calendar</span>
             </button>
             <button onClick={() => router.push(`/listings/${id}`)} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm flex items-center justify-center gap-2">
-              <img src="/icons/messages2.svg" alt="chat" className="w-4 h-4" />
+              <Image src="/icons/messages2.svg" alt="chat" width={16} height={16} />
               <span>Chat Agent</span>
             </button>
           </div>

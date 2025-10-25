@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import Image from 'next/image';
 import { useRouter, useSearchParams } from "next/navigation";
 import { isFavorited, toggleFavorite } from '@/lib/favorites';
 
@@ -87,8 +88,8 @@ export default function VirtualTourModal() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><img src="/icons/share.svg" className="w-6 h-6" alt="share"/></button>
-            <button onClick={toggleFav} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><img src={fav ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} className="w-4 h-4" alt="fav"/></button>
+            <button className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><Image src="/icons/share.svg" alt="share" width={24} height={24} /></button>
+            <button onClick={toggleFav} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><Image src={fav ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} alt="fav" width={16} height={16} /></button>
           </div>
         </div>
 
@@ -102,7 +103,7 @@ export default function VirtualTourModal() {
           </div>
 
           <button className="bg-blue-600 text-white text-[13px] px-3 py-1 rounded-md flex items-center gap-2">
-            <img src="/icons/messages2.svg" className="w-4 h-4" alt="messages" />
+            <Image src="/icons/messages2.svg" alt="messages" width={16} height={16} />
             Chat Agent
           </button>
 
@@ -112,7 +113,7 @@ export default function VirtualTourModal() {
 
       <div onWheel={onWheel} className="h-full w-full flex items-center justify-center">
         <div className="w-full  flex items-center gap-6">
-            <button onClick={prev} aria-label="previous" className="bg-black/30 w-10 h-10 z-60 ml-10 rounded-full flex items-center justify-center"><img src="/icons/scrollback.svg" className="w-5 h-5" alt="prev"/></button>
+            <button onClick={prev} aria-label="previous" className="bg-black/30 w-10 h-10 z-60 ml-10 rounded-full flex items-center justify-center"><Image src="/icons/scrollback.svg" alt="prev" width={20} height={20} /></button>
 
           <div className="flex-1 grid grid-cols-[1fr_3fr_1fr] gap-6 items-center w-full">
             {/* left panel */}
@@ -135,7 +136,7 @@ export default function VirtualTourModal() {
             >
               <div className="absolute inset-0 flex items-center justify-center">
                   <button className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                    <img src="/icons/play.svg" className="w-6 h-6" alt="play" />
+                    <Image src="/icons/play.svg" alt="play" width={24} height={24} />
                   </button>
               </div>
             </div>
@@ -150,7 +151,7 @@ export default function VirtualTourModal() {
             />
           </div>
 
-            <button onClick={next} aria-label="next" className="bg-black/30 w-10 h-10 mr-10 z-60 rounded-full flex items-center justify-center"><img src="/icons/scrollforward.svg" className="w-5 h-5" alt="next"/></button>
+            <button onClick={next} aria-label="next" className="bg-black/30 w-10 h-10 mr-10 z-60 rounded-full flex items-center justify-center"><Image src="/icons/scrollforward.svg" alt="next" width={20} height={20} /></button>
         </div>
       </div>
     </div>

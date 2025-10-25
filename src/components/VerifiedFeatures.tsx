@@ -1,4 +1,5 @@
 import React from "react";
+import Image from 'next/image';
 
 export default function VerifiedFeatures() {
   const cards = [
@@ -39,8 +40,8 @@ export default function VerifiedFeatures() {
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
           {cards.map((c) => (
             <article key={c.title} className={`${c.bg} rounded-xl p-8 shadow-sm flex flex-col items-center text-center`}>
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/60 mb-4">
-                <img src={c.icon} alt="" className="w-6 h-6 object-contain mx-auto" />
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/60 mb-4">
+                <Image src={c.icon} alt={c.title} width={24} height={24} className="object-contain mx-auto" />
               </div>
               <h3 className="font-bold text-lg mb-2 whitespace-pre-line">{c.title}</h3>
               <p className="text-sm text-slate-500">{c.desc}</p>

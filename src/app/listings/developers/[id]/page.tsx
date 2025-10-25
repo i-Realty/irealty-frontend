@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 
 type Property = {
   id: number;
@@ -159,14 +160,14 @@ export default function PropertyDetails() {
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <button type="button" className="w-10 h-10 rounded-full bg-white border flex items-center justify-center shadow-sm" aria-label="share">
-                  <img src="/icons/share.svg" alt="share" className="w-5 h-5" />
+                  <Image src="/icons/share.svg" alt="share" width={20} height={20} />
                 </button>
                 <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded-full px-3 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
                   Share
                 </div>
               </div>
               <button type="button" onClick={toggleLike} className="w-10 h-10 rounded-full bg-white border flex items-center justify-center shadow-sm" aria-pressed={liked} aria-label={liked ? 'Unfavorite' : 'Favorite'}>
-                <img src={liked ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} alt={liked ? 'favorited' : 'favorite'} className="w-5 h-5" />
+                <Image src={liked ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} alt={liked ? 'favorited' : 'favorite'} width={20} height={20} />
               </button>
             </div>
           </div>
@@ -176,10 +177,18 @@ export default function PropertyDetails() {
               {/* Gallery */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 row-span-2 rounded-lg overflow-hidden relative">
-                  <img src={prop.image} alt={prop.title} className="w-full h-[420px] object-cover" />
+                  <Image src={prop.image!} alt={prop.title} fill className="object-cover" />
                   <div className="absolute top-4 left-4 flex gap-3">
-                    <button type="button" onClick={() => router.push(`/listings/developers/${id}/virtual-tour?start=0`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border"><div className='w-4 h-4 bg-red-300 flex items-center justify-center rounded-[50%]'><img src="/icons/virtualtouricon.svg" className="w-2 h-2 " alt="vt"/></div> <span className="text-xs font-extrabold">Virtual Tour</span></button>
-                    <button onClick={() => router.push(`/listings/developers/${id}?viewMap=1`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border"><img src="/icons/viewonmap.svg" className="w-4 h-4" alt="map"/> <span className="text-xs font-extrabold">View On Map</span></button>
+                    <button type="button" onClick={() => router.push(`/listings/developers/${id}/virtual-tour?start=0`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border">
+                      <div className='w-4 h-4 bg-red-300 flex items-center justify-center rounded-[50%]'>
+                        <Image src="/icons/virtualtouricon.svg" alt="vt" width={8} height={8} />
+                      </div>
+                      <span className="text-xs font-extrabold">Virtual Tour</span>
+                    </button>
+                    <button onClick={() => router.push(`/listings/developers/${id}?viewMap=1`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border">
+                      <Image src="/icons/viewonmap.svg" alt="map" width={16} height={16} />
+                      <span className="text-xs font-extrabold">View On Map</span>
+                    </button>
                   </div>
                   {prop.tag && (
                     <div className="absolute bottom-4 left-4">
@@ -190,11 +199,11 @@ export default function PropertyDetails() {
                   )}
                 </div>
 
-                <div className="rounded-lg overflow-hidden">
-                  <img src={prop.image} alt="thumb" className="w-full h-[205px] object-cover" />
+                <div className="rounded-lg overflow-hidden relative">
+                  <Image src={prop.image!} alt="thumb" fill className="object-cover" />
                 </div>
                 <div className="rounded-lg overflow-hidden relative">
-                  <img src={prop.image} alt="thumb" className="w-full h-[205px] object-cover" />
+                  <Image src={prop.image!} alt="thumb" fill className="object-cover" />
                   <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-lg font-semibold">+9</div>
                 </div>
               </div>
@@ -203,7 +212,7 @@ export default function PropertyDetails() {
               <div className="mt-6 flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold">{prop.title}</h1>
-                  <div className="text-sm text-gray-500 mt-1 flex items-center gap-2"><img src="/icons/locationblue.svg" className="w-4 h-4 mt-0.5"/> {prop.location}</div>
+                  <div className="text-sm text-gray-500 mt-1 flex items-center gap-2"><Image src="/icons/locationblue.svg" alt="location" width={16} height={16} /> {prop.location}</div>
                 </div>
                 <div className="text-2xl md:text-3xl font-extrabold text-gray-900">{prop.price}</div>
               </div>
@@ -366,8 +375,8 @@ export default function PropertyDetails() {
                       ].map((a) => (
                         <div key={a.key} className="flex items-start gap-3 p-3 border border-[#E4E4E4] rounded-lg bg-gray-20">
                           <div className="flex-none w-9 h-9 rounded-full bg-white border border-[#E4E4E4] flex items-center justify-center shadow-sm">
-                            <img src="/icons/check.svg" alt="included" className="w-4 h-4" />
-                          </div>
+                                <Image src="/icons/check.svg" alt="included" width={16} height={16} />
+                              </div>
                           <div>
                             <div className="font-medium text-sm">{a.label}</div>
                             <div className="text-xs text-gray-500 mt-0.5">{a.note}</div>
@@ -397,7 +406,7 @@ export default function PropertyDetails() {
                         <div key={d.key} className="flex items-center justify-between gap-3 p-3 border border-[#E4E4E4] rounded-lg bg-white">
                           <div className="flex items-start gap-3">
                             <div className="flex-none w-10 h-10 rounded-full bg-gray-50 border border-[#E4E4E4] flex items-center justify-center">
-                              <img src="/icons/document.svg" alt="doc" className="w-4 h-4" />
+                              <Image src="/icons/document.svg" alt="doc" width={16} height={16} />
                             </div>
                             <div>
                               <div className="font-medium text-sm">{d.title}</div>
@@ -438,7 +447,7 @@ export default function PropertyDetails() {
                         <div key={l.key} className="flex items-center justify-between gap-3 p-3 border border-[#E4E4E4] rounded-lg bg-white">
                           <div className="flex gap-3">
                             <div className="flex-none w-10 h-10 rounded-full bg-gray-50 border border-[#E4E4E4] flex items-center justify-center">
-                              <img src="/icons/locationicon.svg" alt="location" className="w-4 h-4" />
+                              <Image src="/icons/locationicon.svg" alt="location" width={16} height={16} />
                             </div>
                             <div className='flex items-center justify-center'>
                               <div className="font-medium text-sm">{l.label}</div>
@@ -469,18 +478,20 @@ export default function PropertyDetails() {
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                   <div className="text-center">
                     <div className="text-l font-extrabold">Developer</div>
-                    <img src="/images/agent-sarah.png" className="w-20 h-20 rounded-full mx-auto mt-3 shadow-sm" alt="agent" />
+                    <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mt-3 shadow-sm relative">
+                      <Image src="/images/agent-sarah.png" alt="agent" fill className="object-cover" />
+                    </div>
                     <div className="mt-3 flex items-center justify-center gap-2">
                       <h3 className="text-sm font-semibold">{prop.agent}</h3>
-                      <img src="/icons/verified.svg" className="w-5 h-5" alt="verified" />
+                      <Image src="/icons/verified.svg" alt="verified" width={20} height={20} />
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 flex items-center justify-center gap-1">(0) <img src="/icons/star-off.svg" className="w-3 h-3" alt="stars"/></div>
+                    <div className="text-xs text-gray-500 mt-1 flex items-center justify-center gap-1">(0) <Image src="/icons/star-off.svg" alt="stars" width={12} height={12} /></div>
                     <Link href={`/listings/developers/${propId}/profile`} className="text-sm text-blue-600 mt-3 inline-block underline">View Profile</Link>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-2">
-                    <button onClick={() => router.push(`/listings/developers/${propId}?chat=1`)} className="w-full bg-white border border-gray-200 rounded-lg py-3 text-gray-700 text-sm flex items-center justify-center gap-2"><img src="/icons/messages.svg" className="w-4 h-4" alt="chat"/> Chat Agent</button>
-                    <button onClick={() => router.push(`/listings/developers/${propId}?bookTour=1`)} className="w-full border border-blue-200 text-blue-700 rounded-lg py-3 text-sm flex items-center justify-center gap-2"><img src="/icons/calender.svg" className="w-4 h-4" alt="book"/> Book A Tour</button>
+                    <button onClick={() => router.push(`/listings/developers/${propId}?chat=1`)} className="w-full bg-white border border-gray-200 rounded-lg py-3 text-gray-700 text-sm flex items-center justify-center gap-2"><Image src="/icons/messages.svg" alt="chat" width={16} height={16} /> Chat Agent</button>
+                    <button onClick={() => router.push(`/listings/developers/${propId}?bookTour=1`)} className="w-full border border-blue-200 text-blue-700 rounded-lg py-3 text-sm flex items-center justify-center gap-2"><Image src="/icons/calender.svg" alt="book" width={16} height={16} /> Book A Tour</button>
                   </div>
                 </div>
 
@@ -489,7 +500,7 @@ export default function PropertyDetails() {
                   <div className="flex flex-col items-start gap-3 mb-4 mx-2">
                     <div className="text-2xl font-extrabold">Payment Milestone Plan</div>
                     <div className='flex items-center justify-center'>
-                      <img src="/icons/security.svg" alt="security" className="w-5 h-5 mr-2" />
+                      <Image src="/icons/security.svg" alt="security" width={20} height={20} className="mr-2" />
                       <div className="text-xs text-gray-500">Flexible payment structure with escrow protection</div>
                     </div>
                   </div>
@@ -517,13 +528,13 @@ export default function PropertyDetails() {
                           {/* bottom: action area */}
                           <div className="bg-blue-50 p-4 py-6 flex items-center justify-between ">
                             <div className="flex items-center pl-2 gap-3 text-blue-600 text-sm">
-                              <img src="/icons/check-blue.svg" alt="ready" className="w-4 h-4" />
+                              <Image src="/icons/check-blue.svg" alt="ready" width={16} height={16} />
                               <span className="font-medium">Ready to proceed</span>
                             </div>
 
                             <button onClick={() => router.push(`/listings/developers/${propId}?reserve=1`)} className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm px-4 py-2 rounded-md shadow">
                               <span>Make Payment</span>
-                              <img src="/icons/arrowOblique.svg" alt="arrow" className="w-4 h-4" />
+                              <Image src="/icons/arrowOblique.svg" alt="arrow" width={16} height={16} />
                             </button>
                           </div>
                         </div>
@@ -549,10 +560,10 @@ export default function PropertyDetails() {
 
                 <div className="bg-white rounded-lg border border-gray-100 p-4 text-sm text-gray-600 flex items-center justify-between">
                   <div className="flex items-center gap-3 text-red-600">
-                    <img src="/icons/flag.svg" className="w-5 h-5" alt="flag"/>
+                    <Image src="/icons/flag.svg" alt="flag" width={20} height={20} />
                     <span className="font-medium text-red-600">Report Listing</span>
                   </div>
-                  <img src="/icons/redArrowLeft.svg" className="w-4 h-4 mr-2 text-gray-400" alt="arrow"/>
+                  <Image src="/icons/redArrowLeft.svg" alt="arrow" width={16} height={16} className="mr-2 text-gray-400" />
                 </div>
               </div>
             </aside>
