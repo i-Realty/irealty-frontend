@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 type TabName = "buy" | "rent" | "shortlet";
 
@@ -25,17 +26,12 @@ export default function SearchCard() {
 
   return (
     <section
-      className="w-[572px] md:w-[572px] bg-white rounded-2xl shadow-lg mx-auto flex flex-col items-center px-0 pt-0 pb-0"
-      style={{ padding: 0, height: 190 }}
+      className="w-full max-w-[572px] bg-white rounded-2xl shadow-lg mx-auto flex flex-col items-center px-4 py-3"
     >
       {/* Tabs */}
-      <div
-        className="flex flex-row items-center justify-center gap-4 w-full border-b border-[#F1F1F1]"
-        style={{ height: 60 }}
-      >
+      <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full border-b border-[#F1F1F1]" style={{ minHeight: 52 }}>
         <button
           className={tabClass("buy")}
-          style={{ width: 84 }}
           aria-pressed={activeTab === "buy"}
           onClick={() => setActiveTab("buy")}
         >
@@ -43,7 +39,6 @@ export default function SearchCard() {
         </button>
         <button
           className={tabClass("rent")}
-          style={{ width: 84 }}
           aria-pressed={activeTab === "rent"}
           onClick={() => setActiveTab("rent")}
         >
@@ -51,7 +46,6 @@ export default function SearchCard() {
         </button>
         <button
           className={tabClass("shortlet")}
-          style={{ width: 105 }}
           aria-pressed={activeTab === "shortlet"}
           onClick={() => setActiveTab("shortlet")}
         >
@@ -60,19 +54,16 @@ export default function SearchCard() {
       </div>
 
       {/* Search Input */}
-      <div
-        className="flex flex-row justify-between items-center w-[90%] bg-[#F5F5F5] rounded-xl mt-2"
-        style={{ height: 64, marginTop: 16, paddingLeft: 16, paddingRight: 16 }}
-      >
+      <div className="flex flex-row justify-between items-center w-full bg-[#F5F5F5] rounded-xl mt-4 px-3 sm:px-4" style={{ minHeight: 56 }}>
         <div className="flex flex-row items-center gap-2" style={{ flex: 1 }}>
           {/* Location Icon from public folder */}
-          <img src="/icons/locationIcon.svg" alt="Location" className="w-6 h-6 object-contain" />
+          <Image src="/icons/locationIcon.svg" alt="Location" width={20} height={20} className="object-contain" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search By Location"
-            className="text-[#8E98A8] font-lato text-[14px] leading-5 bg-transparent outline-none w-[90%]"
+            className="text-[#8E98A8] font-lato text-[14px] leading-5 bg-transparent outline-none w-full"
             aria-label="Search by location"
           />
         </div>
@@ -101,8 +92,9 @@ export default function SearchCard() {
             if (search && search.trim()) params.set('q', search.trim());
             router.push(`/listings?${params.toString()}`);
           }}
-          className="flex justify-center items-center bg-[#2563EB] rounded-full"
+          className="flex justify-center items-center bg-[#2563EB] rounded-full ml-3"
           style={{ width: 44, height: 44 }}
+          aria-label="Search listings"
         >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="1.5" />
@@ -123,7 +115,7 @@ function PropertyTypeRadios({ activeTab, selected, setSelected }: { activeTab: T
   const options = getOptionsForTab(activeTab);
 
   return (
-    <div className="flex flex-row items-center justify-center gap-6 w-full mt-2" style={{ height: 24 }}>
+    <div className="flex flex-row flex-wrap items-center justify-center gap-4 w-full mt-3">
       {options.map((opt) => {
         const isSelected = selected === opt.id;
         return (
