@@ -52,8 +52,17 @@ export default function PropertyDetails() {
   const id = Number(params?.id || 0);
   const prop = sampleProperties.find((p) => p.id === id);
 
-  // compute propId safely so hooks can be declared unconditionally
-  const propId = prop?.id || 0;
+  if (!prop) {
+    return (
+      <div>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center p-12">Property not found</div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const propId = prop.id;
 
   const [liked, setLiked] = useState(false);
   const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'>('description');
@@ -105,16 +114,6 @@ export default function PropertyDetails() {
     window.addEventListener('favorites-changed', onChange as EventListener);
     return () => window.removeEventListener('favorites-changed', onChange as EventListener);
   }, [propId]);
-
-  if (!prop) {
-    return (
-      <div>
-        <Navbar />
-        <div className="min-h-screen flex items-center justify-center p-12">Property not found</div>
-        <Footer />
-      </div>
-    );
-  }
 
   function toggleLike(arg?: React.MouseEvent | number) {
     // If called with a number, toggle that property's favorite

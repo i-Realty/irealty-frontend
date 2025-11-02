@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function SignupSuccess() {
@@ -11,9 +10,9 @@ export default function SignupSuccess() {
     <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
       <div style={{ width: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
+          <a href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </Link>
+          </a>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center' }}>

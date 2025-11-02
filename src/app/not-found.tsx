@@ -30,9 +30,9 @@ export default function NotFoundPage() {
          
 
           <div className="flex-1 items-center justify-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Whoops — we can&apos;t find <span className="text-blue-600">{lastSegment}</span></h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Whoops — we can't find <span className="text-blue-600">{lastSegment}</span></h1>
 
-            <p className="mt-4 text-gray-600 text-base">It looks like the page you were trying to reach doesn&apos;t exist (anymore) or the link is broken. Don&apos;t worry — here&apos;s how you can continue:</p>
+            <p className="mt-4 text-gray-600 text-base">It looks like the page you were trying to reach doesn't exist (anymore) or the link is broken. Don't worry — here's how you can continue:</p>
 
             <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm ">
               <li className="flex items-start gap-3">

@@ -1,8 +1,5 @@
-"use client";
-
 import React from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -66,8 +63,7 @@ const sampleAgents: Agent[] = [
   },
 ];
 
-export default function AgentProfile() {
-  const params = useParams();
+export default function AgentProfile({ params }: { params: { id: string } }) {
   const agentId = Number(params?.id || 0);
   const agent = sampleAgents.find((a) => a.id === agentId) ?? sampleAgents[0];
 
