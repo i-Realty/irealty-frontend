@@ -177,18 +177,10 @@ export default function PropertyDetails() {
               {/* Gallery */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 row-span-2 rounded-lg overflow-hidden relative">
-                  <Image src={prop.image!} alt={prop.title} fill className="object-cover" />
+                  <img src={prop.image} alt={prop.title} className="w-full h-[420px] object-cover" />
                   <div className="absolute top-4 left-4 flex gap-3">
-                    <button type="button" onClick={() => router.push(`/listings/developers/${id}/virtual-tour?start=0`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border">
-                      <div className='w-4 h-4 bg-red-300 flex items-center justify-center rounded-[50%]'>
-                        <Image src="/icons/virtualtouricon.svg" alt="vt" width={8} height={8} />
-                      </div>
-                      <span className="text-xs font-extrabold">Virtual Tour</span>
-                    </button>
-                    <button onClick={() => router.push(`/listings/developers/${id}?viewMap=1`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border">
-                      <Image src="/icons/viewonmap.svg" alt="map" width={16} height={16} />
-                      <span className="text-xs font-extrabold">View On Map</span>
-                    </button>
+                    <button type="button" onClick={() => router.push(`/listings/developers/${id}/virtual-tour?start=0`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border"><div className='w-4 h-4 bg-red-300 flex items-center justify-center rounded-[50%]'><img src="/icons/virtualtouricon.svg" className="w-2 h-2 " alt="vt"/></div> <span className="text-xs font-extrabold">Virtual Tour</span></button>
+                    <button onClick={() => router.push(`/listings/developers/${id}?viewMap=1`)} className="bg-white/90 px-3 py-2 rounded-lg flex items-center gap-2 border"><img src="/icons/viewonmap.svg" className="w-4 h-4" alt="map"/> <span className="text-xs font-extrabold">View On Map</span></button>
                   </div>
                   {prop.tag && (
                     <div className="absolute bottom-4 left-4">
@@ -199,11 +191,11 @@ export default function PropertyDetails() {
                   )}
                 </div>
 
-                <div className="rounded-lg overflow-hidden relative">
-                  <Image src={prop.image!} alt="thumb" fill className="object-cover" />
+                <div className="rounded-lg overflow-hidden">
+                  <img src={prop.image} alt="thumb" className="w-full h-[205px] object-cover" />
                 </div>
                 <div className="rounded-lg overflow-hidden relative">
-                  <Image src={prop.image!} alt="thumb" fill className="object-cover" />
+                  <img src={prop.image} alt="thumb" className="w-full h-[205px] object-cover" />
                   <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-lg font-semibold">+9</div>
                 </div>
               </div>
@@ -572,7 +564,7 @@ export default function PropertyDetails() {
 
   {/* Full-bleed Similar Properties (spans device width) */}
         <section className="w-full bg-white">
-          <div className="px-40 py-10">
+          <div className="p-4 sm:px-40 sm:py-10 ">
             <h3 className="text-lg font-semibold mb-6 max-w-7xl mx-auto px-4">Similar Properties</h3>
             <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

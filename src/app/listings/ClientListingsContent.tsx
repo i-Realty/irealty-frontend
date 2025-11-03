@@ -40,7 +40,7 @@ const sampleProperties: PropertyWithCoords[] = Array.from({ length: 6 }).map((_,
 
 export default function ClientListingsContent() {
   const searchParams = useSearchParams();
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // allow multiple open sections
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
@@ -535,17 +535,182 @@ export default function ClientListingsContent() {
 
             {/* Property Listings Tabs and View On Map row */}
             <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setActiveTab('all')} className={`px-4 py-2 rounded ${activeTab==='all' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>All</button>
-                <button onClick={() => setActiveTab('sale')} className={`px-4 py-2 rounded ${activeTab==='sale' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Sale</button>
-                <button onClick={() => setActiveTab('rent')} className={`px-4 py-2 rounded ${activeTab==='rent' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Rent</button>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full">
+                <div className="flex sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <button onClick={() => setActiveTab('all')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='all' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>All</button>
+                  <button onClick={() => setActiveTab('sale')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='sale' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Sale</button>
+                  <button onClick={() => setActiveTab('rent')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='rent' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Rent</button>
+                </div>
+
+                {/* Mobile-only filter button (keeps desktop unchanged) */}
+                <div className="flex justify-between mt-2 sm:mt-0">
+                  <button
+                    onClick={() => setFiltersOpen(true)}
+                    className="sm:hidden inline-flex items-center gap-2 px-3 py-2 border rounded text-sm bg-white"
+                    aria-label="Open filters"
+                  >
+                    <img src="/icons/filter.svg" alt="filter" className="w-4 h-4" />
+                    Filter
+                  </button>
+                  <button onClick={() => { setMapMode((m) => !m); setActivePropertyId(null); }} className="sm:hidden flex items-center gap-2">
+                    <span>View On Map</span>
+                    <img src={mapMode ? '/icons/maptoggle-on.svg' : '/icons/maptoggle-off.svg'} alt="map" className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-700">
+              <div className="hidden lg:block flex items-center gap-2 text-sm text-gray-700">
                 <button onClick={() => { setMapMode((m) => !m); setActivePropertyId(null); }} className="flex items-center gap-2">
                   <span>View On Map</span>
                   <img src={mapMode ? '/icons/maptoggle-on.svg' : '/icons/maptoggle-off.svg'} alt="map" className="w-5 h-5" />
                 </button>
+              </div>
+            </div>
+
+            {/* Mobile filter slide-over/modal (mobile-only) */}
+            <div className={`fixed inset-0 z-50 sm:hidden ${filtersOpen ? 'block' : 'hidden'}`} aria-hidden={!filtersOpen}>
+              <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+              <div className="absolute inset-x-4 bottom-4 top-16 bg-white rounded-lg shadow-lg overflow-auto">
+                <div className="p-4">
+                  
+
+                  {/* Reuse same filter markup as sidebar (mobile copy) */}
+                  <div className="mt-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-0">
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-semibold">Filters</h4>
+                          <button className="text-sm text-blue-600">Reset Filters</button>
+                        </div>
+                        {/* Price/Type/Amenities sections - reuse toggleSection and openSections state */}
+                        <div className="space-y-4">
+                          <div>
+                            <button onClick={() => toggleSection('price')} className="w-full flex items-center justify-between text-left">
+                              <span className="text-sm font-medium">Price Range</span>
+                              <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has('price') ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            {openSections.has('price') && (
+                              <div className="mt-3 text-sm text-gray-600">
+                                <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                                  <div>{formatCurrency(priceMin)}</div>
+                                  <div>{formatCurrency(priceMax)}</div>
+                                </div>
+                                {/* price controls (simple) */}
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(Number(e.target.value) || 0)} className="w-full border rounded px-2 py-1 text-sm" />
+                                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(Number(e.target.value) || PRICE_MAX)} className="w-full border rounded px-2 py-1 text-sm" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <button onClick={() => toggleSection('type')} className="w-full flex items-center justify-between text-left">
+                              <span className="text-sm font-medium">Property Type</span>
+                              <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has('type') ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            {openSections.has('type') && (
+                              <div className="mt-3 text-sm text-gray-700 space-y-2">
+                                {['Residential','Commercial','Plots/Land','Service Apartments & Short Lets','PG/Hostel'].map((type) => (
+                                  <label key={type} className="flex items-center gap-2">
+                                    <input type="checkbox" checked={selectedPropertyTypes.has(type)} onChange={() => setSelectedPropertyTypes((prev)=>{const next=new Set(prev); if(next.has(type)) next.delete(type); else next.add(type); return next;})} />
+                                    <span>{type}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <button onClick={() => toggleSection('amenities')} className="w-full flex items-center justify-between text-left">
+                              <span className="text-sm font-medium">Amenities</span>
+                              <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has('amenities') ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            {openSections.has('amenities') && (
+                              <div className="mt-3 text-sm text-gray-700 space-y-2 max-h-64 overflow-auto pr-2">
+                                {displayedAmenities.map((a)=> (
+                                  <label key={a} className="flex items-center gap-2">
+                                    <input type="checkbox" checked={selectedAmenities.has(a)} onChange={()=> setSelectedAmenities((prev)=>{const next=new Set(prev); if(next.has(a)) next.delete(a); else next.add(a); return next;})} />
+                                    <span>{a}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                            {/* Property Status */}
+              <div className="mb-4">
+                <button
+                  onClick={() => toggleSection("status")}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-sm font-medium">Property Status</span>
+                  <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has("status") ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openSections.has("status") && (
+                  <div className="mt-3 text-sm text-gray-700 space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>Ready</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>Under Construction</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Number of Bedrooms */}
+              <div >
+                <button
+                  onClick={() => toggleSection("bedrooms")}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-sm font-medium">Bedrooms</span>
+                  <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has("bedrooms") ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openSections.has("bedrooms") && (
+                  <div className="mt-3 text-sm text-gray-700 space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>1 Bedroom</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>2 Bedrooms</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>3 Bedrooms</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>4 Bedrooms</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>5 Bedrooms</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" />
+                      <span>6+ Bedrooms</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <button onClick={() => setFiltersOpen(false)} className="w-full bg-blue-600 text-white py-3 rounded">Apply Filters</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

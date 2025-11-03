@@ -59,7 +59,7 @@ import Link from 'next/link';
       {/* Mobile menu overlay */}
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0" onClick={() => setOpen(false)} />
           <div className="absolute top-20 right-0 left-0 bg-white shadow-lg p-6">
             <div className="flex flex-col space-y-4">
               <Link href="/listings?purpose=sale" onClick={() => setOpen(false)} className="text-base font-medium">Buy</Link>

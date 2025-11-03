@@ -16,10 +16,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
@@ -29,4 +29,166 @@ body {
   font-family: var(--font-lato);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile-only adjustments (<= 640px) to ensure signup and listing UIs fit the viewport
+   without altering desktop appearance. These rules are intentionally conservative
+   and only apply on small screens. */
+@media (max-width: 640px) {
+  /* Make top-level signup container fill viewport and center content */
+  .signup-outer {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .signup-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .signup-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  /* Compact card so the main content fits into viewport height */
+  .signup-card {
+    padding: 14px !important;
+    border-radius: 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Reserve small space for logo/progress and actions so card fits */
+    max-height: calc(100vh - 56px);
+    justify-content: space-between;
+  }
+
+  /* Make headings slightly smaller on mobile */
+  .signup-card h2,
+  .signup-card h3 {
+    font-size: 18px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .signup-card p {
+    margin-bottom: 8px !important;
+  }
+
+  /* Grid of option cards becomes single-column with reduced gaps */
+  .signup-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Make the full-width developer card behave like others on mobile */
+  .signup-full {
+    grid-column: auto !important;
+    padding: 12px !important;
+  }
+
+  /* Actions compacted and stay visible */
+  .signup-actions {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: space-between !important;
+  }
+
+  /* Inputs and buttons slightly smaller and denser */
+  .signup-card input,
+  .signup-card button {
+    font-size: 14px !important;
+  }
+
+  .signup-card input[type="text"],
+  .signup-card input[type="email"],
+  .signup-card input[type="password"] {
+    padding: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Verify code inputs — slightly smaller so 6 fit comfortably */
+  .signup-card input[id^="code-"] {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* For listings filters and tabs: stack and full-width on mobile */
+  .listings-mobile-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Ensure large decorative images shrink to fit */
+  .signup-logo img,
+  .signup-card img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Signup responsive helpers (desktop preserved, mobile adjustments at <=640px) */
+.signup-outer {
+  background: #F8FAFB;
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+.signup-container {
+  width: 640px;
+}
+.signup-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.signup-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+}
+.signup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.signup-full {
+  grid-column: 1 / -1;
+  padding: 20px;
+  align-items: center;
+  border-radius: 12px;
+  background: #FFFFFF;
+}
+.signup-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+
+@media (max-width: 640px) {
+  .signup-outer { padding: 16px; }
+  .signup-container { width: 100%; }
+  .signup-card { padding: 20px; }
+  .signup-grid { grid-template-columns: 1fr; }
+}
+
+/* Ensure every rendered text node uses Lato. Some components or third-party
+   styles may explicitly set a different font; this rule enforces Lato
+   across the whole app so every page/section uses the Lato family. */
+html, body, #__next, [data-nextjs-root] {
+  font-family: var(--font-lato) !important;
+}
+
+/* Inherit Lato for all elements and pseudo elements. This keeps icons,
+   and other UI elements unaffected except their text will use Lato too. */
+*, *::before, *::after {
+  font-family: inherit !important;
 }

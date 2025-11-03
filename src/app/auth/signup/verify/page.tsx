@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import ProgressPill from '../ProgressPill';
 
 export default function SignupVerify() {
@@ -45,12 +44,12 @@ export default function SignupVerify() {
   const isComplete = code.every(c => c !== '');
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
+    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 8 }}>
       <div style={{ width: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
+          <a href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </Link>
+          </a>
         </div>
 
   <ProgressPill step={3} />

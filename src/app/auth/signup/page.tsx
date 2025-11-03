@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import ProgressPill from './ProgressPill';
 
 export default function SignupStepOne() {
@@ -38,13 +37,13 @@ export default function SignupStepOne() {
   }
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
+    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding:8 ,minHeight: '100vh'}}>
       <div style={{ width: 640 }}>
         {/* Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
+          <a href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </Link>
+          </a>
         </div>
 
         <ProgressPill step={1} />

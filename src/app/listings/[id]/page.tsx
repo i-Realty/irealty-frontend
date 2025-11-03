@@ -502,7 +502,7 @@ export default function PropertyDetails() {
 
   {/* Full-bleed Similar Properties (spans device width) */}
         <section className="w-full bg-white">
-          <div className="px-40 py-10">
+          <div className="p-4 sm:px-40 sm:py-10 ">
             <h3 className="text-lg font-semibold mb-6 max-w-7xl mx-auto px-4">Similar Properties</h3>
             <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

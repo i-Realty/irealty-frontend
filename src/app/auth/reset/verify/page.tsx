@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function ResetVerify() {
   const router = useRouter();
@@ -40,12 +39,12 @@ export default function ResetVerify() {
   const isComplete = code.every(c => c !== '');
 
   return (
-    <div style={{ background: '#F8FAFB', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
+    <div style={{ background: '#F8FAFB', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 8 }}>
       <div style={{ width: 680 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
+          <a href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </Link>
+          </a>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
@@ -98,7 +97,7 @@ export default function ResetVerify() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 12, color: '#9CA3AF' }}>
-            Remembered your password? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link>
+            Remembered your password? <a href="/auth/login" style={{ color: '#2563EB' }}>Login</a>
           </div>
         </div>
       </div>
