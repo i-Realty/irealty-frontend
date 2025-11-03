@@ -595,7 +595,7 @@ export default function PropertyDetails() {
                       <div className="font-bold text-lg">{p.price}</div>
                       <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
                       <div className="flex items-center mt-3">
-                        <Image src="/images/agent-sarah.png" alt={p.agent} width={24} height={24} className="rounded-full mr-2" />
+                        <Image src="/images/agent-sarah.png" alt={p.agent ?? ''} width={24} height={24} className="rounded-full mr-2" />
                         <div className="text-xs text-gray-600">{p.agent} <Image src="/icons/verifiedbadge.svg" alt="verified" width={16} height={16} className="inline ml-2" /></div>
                       </div>
                     </div>

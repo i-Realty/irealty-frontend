@@ -73,6 +73,26 @@ export default function PropertyDetails() {
   const showReservePayment = Boolean(searchParams?.get('reservePayment'));
   const showReserveSuccess = Boolean(searchParams?.get('reserveSuccess'));
 
+  // Hook: initialize favorites set and subscribe to changes (must run unconditionally)
+  useEffect(() => {
+    setLikedIds(new Set(getFavorites()));
+    function onFavChange() {
+      setLikedIds(new Set(getFavorites()));
+    }
+    window.addEventListener('favorites-changed', onFavChange as EventListener);
+    return () => window.removeEventListener('favorites-changed', onFavChange as EventListener);
+  }, []);
+
+  // Hook: track liked state for the current property (must run unconditionally)
+  useEffect(() => {
+    setLiked(isFavorited(propId));
+    function onChange() {
+      setLiked(isFavorited(propId));
+    }
+    window.addEventListener('favorites-changed', onChange as EventListener);
+    return () => window.removeEventListener('favorites-changed', onChange as EventListener);
+  }, [propId]);
+
   if (!prop) {
     return (
       <div>
@@ -99,23 +119,7 @@ export default function PropertyDetails() {
 
   const previewDescription = fullDescription[0].length > 220 ? fullDescription[0].slice(0, 220) + '...' : fullDescription[0];
 
-  useEffect(() => {
-    setLikedIds(new Set(getFavorites()));
-    function onFavChange() {
-      setLikedIds(new Set(getFavorites()));
-    }
-    window.addEventListener('favorites-changed', onFavChange as EventListener);
-    return () => window.removeEventListener('favorites-changed', onFavChange as EventListener);
-  }, []);
-
-  useEffect(() => {
-    setLiked(isFavorited(propId));
-    function onChange() {
-      setLiked(isFavorited(propId));
-    }
-    window.addEventListener('favorites-changed', onChange as EventListener);
-    return () => window.removeEventListener('favorites-changed', onChange as EventListener);
-  }, [propId]);
+  
 
   function toggleLike(arg?: React.MouseEvent | number) {
     // If called with a number, toggle that property's favorite

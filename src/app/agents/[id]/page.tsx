@@ -63,7 +63,8 @@ const sampleAgents: Agent[] = [
   },
 ];
 
-export default function AgentProfile({ params }: { params: { id: string } }) {
+export default function AgentProfile(props: unknown) {
+  const { params } = props as { params: { id: string } };
   const agentId = Number(params?.id || 0);
   const agent = sampleAgents.find((a) => a.id === agentId) ?? sampleAgents[0];
 

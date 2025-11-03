@@ -1,5 +1,9 @@
 "use client";
 
+// Mark this page as dynamic to avoid Next.js prerender attempting to run client-only
+// hooks (like useSearchParams) during build time which requires a Suspense boundary.
+export const dynamic = 'force-dynamic';
+
 import Navbar from "@/components/Navbar";
 import React, { useState, useEffect } from "react";
 import { getFavorites, toggleFavorite as toggleFavLocal } from '@/lib/favorites';

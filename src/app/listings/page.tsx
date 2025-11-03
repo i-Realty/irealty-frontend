@@ -38,6 +38,8 @@ const sampleProperties: PropertyWithCoords[] = Array.from({ length: 6 }).map((_,
   lng: 7.400 + (i % 3) * 0.03,
 }));
 
+export const dynamic = 'force-dynamic';
+
 export default function ListingsPage() {
   const searchParams = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(true);

@@ -18,7 +18,8 @@ type Property = {
   area?: string;
 };
 
-export default function ListingAgentProfile({ params }: { params: { id: string } }) {
+export default function ListingAgentProfile(props: unknown) {
+  const { params } = props as { params: { id: string } };
   const listingId = Number(params?.id || 0);
 
   // reproduce the same sampleProperties logic used on the listing page so we can derive agent info
