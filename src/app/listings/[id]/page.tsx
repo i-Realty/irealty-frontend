@@ -52,6 +52,27 @@ export default function PropertyDetails() {
   const id = Number(params?.id || 0);
   const prop = sampleProperties.find((p) => p.id === id);
 
+  // derive propId from the route id so hooks can be defined unconditionally
+  const propId = id;
+
+  // Hooks must be called at the top level (before any early returns)
+  const [liked, setLiked] = useState(false);
+  const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'>('description');
+  // description expand toggle
+  const [showFullDesc, setShowFullDesc] = useState(false);
+
+  // liked ids for similar properties
+  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+  // derive modal states from URL so navigation (and browser Back) works naturally
+  const searchParams = useSearchParams();
+  const showBookTour = Boolean(searchParams?.get('bookTour'));
+  const showPayment = Boolean(searchParams?.get('bookTourPayment'));
+  const showSuccess = Boolean(searchParams?.get('bookTourSuccess'));
+  const showMap = Boolean(searchParams?.get('viewMap'));
+  const showReserve = Boolean(searchParams?.get('reserve'));
+  const showReservePayment = Boolean(searchParams?.get('reservePayment'));
+  const showReserveSuccess = Boolean(searchParams?.get('reserveSuccess'));
+
   if (!prop) {
     return (
       <div>
@@ -61,13 +82,6 @@ export default function PropertyDetails() {
       </div>
     );
   }
-
-  const propId = prop.id;
-
-  const [liked, setLiked] = useState(false);
-  const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'>('description');
-  // description expand toggle
-  const [showFullDesc, setShowFullDesc] = useState(false);
   const fullDescription = [
     "This residential project is designed to offer residents a high level of luxury and comfort in their daily living. Key features include premium amenities such as a fully equipped fitness center, landscaped outdoor areas, a swimming pool, and communal spaces for recreation and social activities.",
     "The apartments feature spacious floor plans with modern interiors, incorporating high-quality finishes like durable flooring, efficient cabinetry, and contemporary fixtures. Open layouts include large windows and balconies to facilitate natural ventilation and daylight, which contribute to energy efficiency and a healthier indoor environment.",
@@ -84,18 +98,6 @@ export default function PropertyDetails() {
   ];
 
   const previewDescription = fullDescription[0].length > 220 ? fullDescription[0].slice(0, 220) + '...' : fullDescription[0];
-
-  // liked ids for similar properties
-  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
-  // derive modal states from URL so navigation (and browser Back) works naturally
-  const searchParams = useSearchParams();
-  const showBookTour = Boolean(searchParams?.get('bookTour'));
-  const showPayment = Boolean(searchParams?.get('bookTourPayment'));
-  const showSuccess = Boolean(searchParams?.get('bookTourSuccess'));
-  const showMap = Boolean(searchParams?.get('viewMap'));
-  const showReserve = Boolean(searchParams?.get('reserve'));
-  const showReservePayment = Boolean(searchParams?.get('reservePayment'));
-  const showReserveSuccess = Boolean(searchParams?.get('reserveSuccess'));
 
   useEffect(() => {
     setLikedIds(new Set(getFavorites()));

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ResetSuccess() {
   const router = useRouter();
@@ -10,9 +11,9 @@ export default function ResetSuccess() {
     <div style={{ background: '#F8FAFB', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
       <div style={{ width: 680 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
+          <Link href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          </Link>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 32, textAlign: 'center' }}>
@@ -24,7 +25,7 @@ export default function ResetSuccess() {
             </div>
           </div>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Your Password Has Been Reset!</h3>
-          <p style={{ color: '#6B7280', marginBottom: 18 }}>This is the password you should enter when next you're logging in to your I-Realty dashboard</p>
+          <p style={{ color: '#6B7280', marginBottom: 18 }}>This is the password you should enter when next you&apos;re logging in to your I-Realty dashboard</p>
 
           <button onClick={() => router.push('/auth/login')} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontWeight: 700 }}>Back to Login</button>
         </div>

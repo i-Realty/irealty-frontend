@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ResetVerify() {
   const router = useRouter();
@@ -97,7 +98,7 @@ export default function ResetVerify() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 12, color: '#9CA3AF' }}>
-            Remembered your password? <a href="/auth/login" style={{ color: '#2563EB' }}>Login</a>
+            Remembered your password? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link>
           </div>
         </div>
       </div>

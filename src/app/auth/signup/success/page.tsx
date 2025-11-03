@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignupSuccess() {
   const router = useRouter();
@@ -10,9 +11,9 @@ export default function SignupSuccess() {
     <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
       <div style={{ width: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
+          <Link href="/">
             <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          </Link>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center' }}>
