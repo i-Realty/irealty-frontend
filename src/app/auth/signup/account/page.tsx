@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import ProgressPill from '../ProgressPill';
 
 export default function SignupAccount() {
@@ -46,18 +48,18 @@ export default function SignupAccount() {
   }
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding:8}} className="pb-8">
+    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
       <div style={{ width: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
-            <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          <Link href="/">
+            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
+          </Link>
         </div>
 
   <ProgressPill step={2} />
   <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Create Your Account</h3>
-          <p style={{ color: '#8E98A8', marginBottom: 18 }}>Already have an account? <a href="/auth/login" style={{ color: '#2563EB' }}>Login</a></p>
+          <p style={{ color: '#8E98A8', marginBottom: 18 }}>Already have an account? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link></p>
 
           <div style={{ display: 'grid', gap: 12 }}>
             <label style={{ fontSize: 13, color: '#374151' }}>User Name/Company Name</label>
@@ -117,7 +119,7 @@ export default function SignupAccount() {
 
             <div style={{ textAlign: 'center', marginTop: 12, color: '#9CA3AF' }}>Or Continue With</div>
             <button style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-              <img src="/icons/google.svg" alt="Google" style={{ width: 18, height: 18 }} />
+              <Image src="/icons/google.svg" alt="Google" width={18} height={18} />
               Continue with Google
             </button>
           </div>

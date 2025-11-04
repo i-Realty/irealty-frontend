@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ResetRequest() {
   const router = useRouter();
@@ -15,12 +17,12 @@ export default function ResetRequest() {
   }
 
   return (
-    <div style={{ background: '#F8FAFB', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 8 }}>
+    <div style={{ background: '#F8FAFB', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
       <div style={{ width: 680 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
-            <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          <Link href="/">
+            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
+          </Link>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
@@ -33,7 +35,7 @@ export default function ResetRequest() {
             <button type="submit" disabled={!email} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: email ? '#2563EB' : '#A3BFFA', color: '#fff', fontWeight: 700 }}>Send Verification Code</button>
 
             <div style={{ textAlign: 'center', marginTop: 6, color: '#9CA3AF' }}>
-              Remembered your password? <a href="/auth/login" style={{ color: '#2563EB' }}>Login</a>
+              Remembered your password? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link>
             </div>
           </form>
         </div>

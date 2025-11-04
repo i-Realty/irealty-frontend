@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -21,12 +22,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ background: '#F8FAFB', justifyContent: 'center', alignItems: 'center', padding: 8 }}>
+    <div style={{ background: '#F8FAFB', height: '674px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
       <div style={{ width: 628 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
-            <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          <Link href="/">
+        <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
+          </Link>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
@@ -58,7 +59,7 @@ export default function LoginPage() {
             </div>
 
             <div style={{ fontSize: 13, color: '#6B7280' }}>
-              Forgot Password? <a href="/auth/reset" style={{ color: '#2563EB' }}>Reset it here</a>
+              Forgot Password? <Link href="/auth/reset" style={{ color: '#2563EB' }}>Reset it here</Link>
             </div>
 
             <button type="submit" disabled={!canSubmit} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: canSubmit ? '#7DA0FF' : '#AFC0F4', color: '#fff', fontWeight: 700 }}>Login</button>
@@ -70,7 +71,7 @@ export default function LoginPage() {
             </div>
 
             <button type="button" style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-              <img src="/icons/google.svg" alt="Google" style={{ width: 18, height: 18 }} />
+            <Image src="/icons/google.svg" alt="Google" width={18} height={18} />
               Continue with Google
             </button>
           </form>

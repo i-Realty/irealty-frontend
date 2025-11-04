@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import ProgressPill from './ProgressPill';
 
 export default function SignupStepOne() {
@@ -37,13 +39,13 @@ export default function SignupStepOne() {
   }
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding:8 ,minHeight: '100vh'}}>
+    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
       <div style={{ width: 640 }}>
         {/* Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <a href="/">
-            <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
-          </a>
+          <Link href="/">
+            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
+          </Link>
         </div>
 
         <ProgressPill step={1} />
@@ -72,7 +74,7 @@ export default function SignupStepOne() {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: selected === opt.id ? '#FFFFFF' : '#F8FAFB' }}>
-                    <img src={opt.icon} alt="" style={{ width: 22, height: 22 }} />
+                    <Image src={opt.icon} alt={opt.title} width={22} height={22} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontFamily: 'Lato' }}>{opt.title}</div>
@@ -99,7 +101,7 @@ export default function SignupStepOne() {
               }}
             >
               <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex',flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#F8FAFB' }}>
-                <img src="/icons/developericon.svg" alt="" style={{ width: 22, height: 22 }} />
+                <Image src="/icons/developericon.svg" alt="Developers" width={22} height={22} />
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontFamily: 'Lato' }}>Developers</div>

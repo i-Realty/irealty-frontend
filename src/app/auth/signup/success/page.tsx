@@ -3,20 +3,21 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SignupSuccess() {
   const router = useRouter();
 
   return (
-    <div className="signup-outer">
-      <div className="signup-container">
-        <div className="signup-logo">
+    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
+      <div style={{ width: 640 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
           <Link href="/">
-            <img src="/icons/logo-blue.svg" alt="i-Realty" style={{ height: 36 }} />
+            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
           </Link>
         </div>
 
-        <div className="signup-card" style={{ padding: 48, textAlign: 'center' }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
             <div style={{ width: 96, height: 96, borderRadius: 999, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 8px rgba(16,185,129,0.04), 0 0 0 16px rgba(16,185,129,0.02)' }}>
               <div style={{ width: 64, height: 64, borderRadius: 999, background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
