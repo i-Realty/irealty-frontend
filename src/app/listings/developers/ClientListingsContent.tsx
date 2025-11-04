@@ -239,7 +239,7 @@ export default function ClientListingsContent() {
  
   {/* inject range thumb styles */}
   <style dangerouslySetInnerHTML={{__html: rangeThumbStyle}} />
-        <div className="flex gap-6">
+  <div className="flex gap-6 max-w-full box-border">
           {/* Sidebar Filters (hidden on small screens) */}
           <aside className={`hidden lg:block w-72 shrink-0`}>
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -500,7 +500,7 @@ export default function ClientListingsContent() {
           </aside>
 
           {/* Main content */}
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             {/* Top controls: search + map toggle */}
             <div className="mb-4">
               {/* Search input full width with left icon */}
@@ -707,7 +707,7 @@ export default function ClientListingsContent() {
                 {/* Simple placeholder 'map' using an absolutely positioned background image or SVG. For now use a gray bg */}
                 <div className="absolute inset-0 bg-[url('/images/map.png')] bg-center bg-cover" />
                 {/* markers */}
-                <div className="absolute inset-50">
+                    <div className="absolute inset-0">
                   {sampleProperties.map((p) => {
                     const left = `${10 + ((p.lng ?? 0) - 7.4) * 200}%`;
                     const top = `${10 + ((p.lat ?? 0) - 6.5) * 200}%`;
@@ -727,14 +727,14 @@ export default function ClientListingsContent() {
                   {/* popup card */}
                   {activePropertyId && (() => {
                     const p = sampleProperties.find((s) => s.id === activePropertyId)!;
-                    return (
+                      return (
                       <Link
                         href={`/listings/developers/${p.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
+                        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[min(20rem,90vw)] min-w-0 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
                       >
                         <div className="relative">
-                          <img src={p.image} className="w-full h-40 object-cover" alt={p.title} />
+                          <img src={p.image} className="w-full h-40 object-cover max-w-full block" alt={p.title} />
                           {/* tag pill */}
                           <div className="absolute left-3 top-3 bg-white text-xs text-gray-800 px-3 py-1 rounded-full shadow">{p.tag}</div>
                           {/* favorite heart - prevent navigation when clicked */}
@@ -743,17 +743,17 @@ export default function ClientListingsContent() {
                             aria-pressed={likedIds.has(p.id)}
                             className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/90 shadow z-40"
                           >
-                            <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-4 h-4" />
+                            <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-4 h-4 max-w-full" />
                           </button>
                         </div>
 
-                        <div className="p-4">
-                          <h4 className="font-semibold text-sm text-gray-900">{p.title}</h4>
-                          <div className="text-xs text-gray-500 mt-1">{p.location}</div>
+        <div className="p-4">
+          <h4 className="font-semibold text-sm text-gray-900 break-words max-w-full">{p.title}</h4>
+          <div className="text-xs text-gray-500 mt-1 break-words max-w-full">{p.location}</div>
                           <div className="text-lg font-bold text-gray-900 mt-3">{p.price}</div>
                           <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
                           <div className="border-t border-gray-100 mt-4 pt-3 flex items-center gap-3">
-                            <img src="/images/agent-sarah.png" className="w-8 h-8 rounded-full" alt={p.agent} />
+                            <img src="/images/agent-sarah.png" className="w-8 h-8 rounded-full max-w-full" alt={p.agent} />
                             <div className="text-sm text-gray-700 flex items-center gap-2">
                               <span>{p.agent}</span>
                               <img src="/icons/verifiedbadge.svg" alt="verified" className="w-4 h-4" />
@@ -767,10 +767,10 @@ export default function ClientListingsContent() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sampleProperties.map((p) => (
-                  <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative">
-                    <div className="relative" style={{ height: 200 }}>
-                      <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                  {sampleProperties.map((p) => (
+                  <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative min-w-0">
+                    <div className="relative min-w-0" style={{ height: 200 }}>
+                      <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover max-w-full block" />
                       <div className={`absolute left-4 top-4 text-xs font-bold px-3 py-1 rounded-full ${p.tag && p.tag.toLowerCase().includes('sale') ? 'bg-[#2563EB] text-white' : 'bg-white text-[#2563EB]'}`}>{p.tag}</div>
                       <button
                         onClick={() => toggleLike(p.id)}
@@ -780,9 +780,9 @@ export default function ClientListingsContent() {
                         <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="p-4">
-                      <div className="font-bold text-sm">{p.title}</div>
-                      <div className="text-xs text-gray-500 mb-2">{p.location}</div>
+                    <div className="p-4 min-w-0">
+                      <div className="font-bold text-sm break-words max-w-full">{p.title}</div>
+                      <div className="text-xs text-gray-500 mb-2 break-words max-w-full">{p.location}</div>
                       <div className="font-bold text-lg">{p.price}</div>
                       <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
                       <div className="flex items-center mt-3">
@@ -843,7 +843,7 @@ export default function ClientListingsContent() {
           </main>
         </div>
     
-    <Footer/>
+
     </>
   );
 }
