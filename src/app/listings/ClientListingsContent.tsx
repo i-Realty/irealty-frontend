@@ -197,6 +197,219 @@ export default function ClientListingsContent() {
     });
   };
 
+  return (
+    <>
+      <div className="flex gap-6">
+        {/* Sidebar Filters (hidden on small screens) */}
+        <aside className={`hidden lg:block w-72 shrink-0`}>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">Filters</h3>
+              <button className="text-sm text-blue-600">Reset Filters</button>
+            </div>
+
+            {/* Price Range (mock) */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("price")}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <span className="text-sm font-medium">Price Range</span>
+                <svg className={`w-4 h-4 text-gray-400 transform ${openSections.has("price") ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <main className="flex-1">
+          <div className="mb-4">
+            <div className="relative">
+              <img src="/icons/locationIcon.svg" alt="loc" className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search By Location"
+                className="w-full border rounded-xl pl-14 pr-4 py-3 text-sm"
+              />
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full">
+                <div className="flex sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <button onClick={() => setActiveTab('all')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='all' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>All</button>
+                  <button onClick={() => setActiveTab('sale')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='sale' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Sale</button>
+                  <button onClick={() => setActiveTab('rent')} className={`w-full sm:w-auto px-4 py-2 rounded text-center ${activeTab==='rent' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>For Rent</button>
+                </div>
+              </div>
+
+              <div className="hidden lg:block flex items-center gap-2 text-sm text-gray-700">
+                <button className="flex items-center gap-2">
+                  <span>View On Map</span>
+                  <img src={'/icons/maptoggle-off.svg'} alt="map" className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-gray-600">Showing 247 properties in Enugu</div>
+            <div className="text-sm text-gray-500">Page {page} of 30</div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sampleProperties.map((p) => (
+              <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative">
+                <div className="relative" style={{ height: 200 }}>
+                  <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className={`absolute left-4 top-4 text-xs font-bold px-3 py-1 rounded-full ${p.tag && p.tag.toLowerCase().includes('sale') ? 'bg-[#2563EB] text-white' : 'bg-white text-[#2563EB]'}`}>{p.tag}</div>
+                </div>
+                <div className="p-4">
+                  <div className="font-bold text-sm">{p.title}</div>
+                  <div className="text-xs text-gray-500 mb-2">{p.location}</div>
+                  <div className="font-bold text-lg">{p.price}</div>
+                  <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
+                </div>
+                <Link href={`/listings/${p.id}`} className="absolute inset-0 z-10" aria-label={`View property ${p.id}`} />
+              </div>
+            ))}
+          </div>
+
+        </main>
+      </div>
+    </>
+  );
+}
+"use client";
+
+import Navbar from "@/components/Navbar";
+import React, { useState, useEffect, useRef } from "react";
+import { getFavorites, toggleFavorite as toggleFavLocal } from '@/lib/favorites';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Footer from "@/components/Footer";
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+type Property = {
+  id: number;
+  title: string;
+  location: string;
+  price: string;
+  beds: number;
+  baths: number;
+  area: string;
+  tag?: "For Rent" | "For Sale";
+  image?: string;
+  agent?: string;
+};
+
+type PropertyWithCoords = Property & { lat?: number; lng?: number };
+
+const sampleProperties: PropertyWithCoords[] = Array.from({ length: 6 }).map((_, i) => ({
+  id: i + 1,
+  title: "Residential Plot - GRA Enugu",
+  location: "Independence Layout, Enugu",
+  price: "₦ 20,000,000.00",
+  beds: 3,
+  baths: 2,
+  area: "120 sqm",
+  tag: i % 2 === 0 ? "For Rent" : "For Sale",
+  image: i % 2 === 0 ?  "/images/property1.png" : "/images/property2.png",
+  agent: "Sarah Homes",
+  // sample coords (spread around a center)
+  lat: 6.500 + i * 0.02,
+  lng: 7.400 + (i % 3) * 0.03,
+}));
+
+  // amenities mapping per property type
+  const amenitiesByType: Record<string, string[]> = {
+    Residential: [
+      'Furnished',
+      'Air Conditioning',
+      'Balcony / Terrace',
+      'Garden / Green Area',
+      'Pet-Friendly',
+      'laundary Area',
+      'Storage Room',
+      'Ensuite Bathroom',
+      'Walk-in Closet',
+      'Smart Home Features',
+    ],
+    Commercial: [
+      'Conference / Meeting Rooms',
+      'Reception Area',
+      'High-Speed Internet Infrastructure',
+      'Parking Lot (Commercial Scale)',
+      'Fire Safety System',
+      'Wheelchair Accessibility',
+      'Warehouse / Storage Facilities',
+    ],
+    'Plots/Land': [
+      'Good Road Access',
+      'C of O',
+      'Fenced & Gated',
+      'Water Access (Borehole / River)',
+      'Electricity Access (Poles Nearby)',
+      'Government Approved Survey',
+      'Dry Land (Non-Swampy)',
+      'Secure Neighborhood',
+    ],
+    'Service Apartments & Short Lets': [
+      'Housekeeping Service',
+      'Fully Equipped Kitchen',
+      'Concierge Service',
+      'In-house Restaurant / Dining',
+      'Entertainment System',
+      'Workspace / Study Desk',
+      'Daily Cleaning Service',
+      '24hr Front Desk / Reception',
+    ],
+    'PG/Hostel': [
+      'WiFi / Internet Access',
+      'Shared Kitchen Access',
+      'Laundry Facilities',
+      'Furnished Rooms',
+      '24/7 Electricity / Generator',
+      'Water Supply',
+      'Study/Reading Area',
+      'Security / Gated Compound',
+      'Parking (if available)',
+    ],
+  };
+
+  // compute displayed amenities: default if no type selected, otherwise union of selected types
+  const displayedAmenities = React.useMemo(() => {
+    if (selectedPropertyTypes.size === 0) return defaultAmenities;
+    const union = new Set<string>();
+    selectedPropertyTypes.forEach((type) => {
+      const list = amenitiesByType[type];
+      if (list) list.forEach((a) => union.add(a));
+    });
+    return Array.from(union);
+  }, [selectedPropertyTypes]);
+
+  // prune selected amenities when displayed amenities change
+  useEffect(() => {
+    setSelectedAmenities((prev) => {
+      const next = new Set<string>();
+      displayedAmenities.forEach((a) => {
+        if (prev.has(a)) next.add(a);
+      });
+      return next;
+    });
+  }, [displayedAmenities]);
+
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => {
+      const s = new Set(prev);
+      if (s.has(key)) s.delete(key);
+      else s.add(key);
+      return s;
+    });
+  };
+
   // small CSS overrides for range thumb styling
   const rangeThumbStyle = `
     /* track invisible - we render our own */
@@ -207,6 +420,24 @@ export default function ClientListingsContent() {
     input[type=range]::-moz-range-thumb { width: 18px; height:18px; border-radius: 9999px; background: #2563EB; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     input[type=range]:focus { outline: none; }
   `;
+
+  // marker styles for MapLibre bubbles
+  const mapMarkerStyle = `
+    .map-marker-bubble { display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; background:#D35400; color:white; font-weight:700; border-radius:20px; box-shadow: 0 6px 14px rgba(0,0,0,0.18); transform: translateY(-6px); cursor: pointer; }
+    .map-marker-bubble:after { content: ''; width:12px; height:12px; background:#D35400; position: absolute; transform: rotate(45deg); margin-top:18px; margin-left:0; box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+    .map-marker-label { font-size:12px; line-height:1; }
+    .mapboxgl-ctrl-bottom-right { right: 8px; bottom: 8px; }
+  `;
+
+  const formatShortPrice = (priceStr: string) => {
+    if (!priceStr) return '';
+    // extract digits
+    const digits = Number((priceStr + '').replace(/[^0-9.-]/g, ''));
+    if (!isFinite(digits)) return priceStr;
+    if (Math.abs(digits) >= 1_000_000) return `₦${Math.round(digits / 1_000_000)}M`;
+    if (Math.abs(digits) >= 1_000) return `₦${Math.round(digits / 1_000)}K`;
+    return `₦${digits.toLocaleString()}`;
+  };
 
   // which thumb is currently active ("min" | "max" | null)
   const [activeThumb, setActiveThumb] = React.useState<"min" | "max" | null>(null);
@@ -253,8 +484,103 @@ export default function ClientListingsContent() {
     };
   }, []);
 
+  // MapLibre refs
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const popupRef = useRef<any>(null);
+
+  // Initialize MapLibre when mapMode toggled on
+  useEffect(() => {
+    if (!mapMode) return;
+    if (!mapContainerRef.current) return;
+    if (mapRef.current) return; // already initialized
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      center: [7.4, 6.5], // [lng, lat] - Enugu area
+      zoom: 9,
+    });
+
+    mapRef.current = map;
+
+    // navigation control (zoom buttons)
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    // attribution
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+
+    // add markers
+    sampleProperties.forEach((p) => {
+      if (typeof p.lng !== 'number' || typeof p.lat !== 'number') return;
+
+      const el = document.createElement('div');
+      el.className = 'map-marker-bubble';
+      el.style.position = 'relative';
+      const label = document.createElement('span');
+      label.className = 'map-marker-label';
+      label.textContent = formatShortPrice(p.price || '');
+      el.appendChild(label);
+      el.setAttribute('aria-label', `Property ${p.id}`);
+
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        setActivePropertyId(p.id);
+        map.easeTo({ center: [p.lng!, p.lat!], zoom: 14 });
+
+        if (popupRef.current) {
+          try { popupRef.current.remove(); } catch (e) {}
+          popupRef.current = null;
+        }
+
+        const popup = new maplibregl.Popup({ offset: 12, closeOnClick: true })
+          .setLngLat([p.lng!, p.lat!])
+          .setHTML(`
+            <div style="width:260px;font-family:Inter,Arial,Helvetica,sans-serif">
+              <a href="/listings/${p.id}" style="text-decoration:none;color:inherit">
+                <div style="display:flex;gap:8px">
+                  <img src="${p.image}" alt="${p.title}" style="width:84px;height:64px;object-fit:cover;border-radius:6px" />
+                  <div>
+                    <div style="font-weight:700">${p.title}</div>
+                    <div style="font-size:12px;color:#6b7280">${p.location}</div>
+                    <div style="margin-top:6px;font-weight:700">${p.price}</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          `)
+          .addTo(map);
+
+        popupRef.current = popup;
+      });
+
+      new maplibregl.Marker({ element: el as HTMLElement, anchor: 'bottom' }).setLngLat([p.lng!, p.lat!]).addTo(map);
+    });
+
+    // fit to markers
+    const coords = sampleProperties.filter((p) => typeof p.lng === 'number' && typeof p.lat === 'number').map((p) => [p.lng!, p.lat!] as [number, number]);
+    if (coords.length) {
+      const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]));
+      map.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 800 });
+    }
+
+    map.on('click', () => {
+      setActivePropertyId(null);
+      if (popupRef.current) {
+        try { popupRef.current.remove(); } catch (e) {}
+        popupRef.current = null;
+      }
+    });
+
+    return () => {
+      try { if (popupRef.current) popupRef.current.remove(); } catch (e) {}
+      try { map.remove(); } catch (e) {}
+      mapRef.current = null;
+    };
+  }, [mapMode]);
+
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: mapMarkerStyle }} />
       <div className="flex gap-6">
         {/* Sidebar Filters (hidden on small screens) */}
         <aside className={`hidden lg:block w-72 shrink-0`}>
@@ -726,68 +1052,15 @@ export default function ClientListingsContent() {
             <div
               className="relative rounded-lg overflow-hidden border bg-white"
               style={{ height: 600 }}
-              onClick={() => setActivePropertyId(null)}
+              onClick={() => {
+                setActivePropertyId(null);
+                if (popupRef.current) {
+                  try { popupRef.current.remove(); } catch (e) {}
+                  popupRef.current = null;
+                }
+              }}
             >
-              {/* Simple placeholder 'map' using an absolutely positioned background image or SVG. For now use a gray bg */}
-              <div className="absolute inset-0 bg-[url('/images/map.png')] bg-center bg-cover" />
-              {/* markers */}
-              <div className="absolute inset-50">
-                {sampleProperties.map((p) => {
-                  const left = `${10 + ((p.lng ?? 0) - 7.4) * 200}%`;
-                  const top = `${10 + ((p.lat ?? 0) - 6.5) * 200}%`;
-                  return (
-                    <button
-                      key={`marker-${p.id}`}
-                      onClick={(e) => { e.stopPropagation(); setActivePropertyId(p.id); }}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                      style={{ left, top }}
-                      aria-label={`Property ${p.id}`}
-                    >
-                      <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow" />
-                    </button>
-                  );
-                })}
-
-                {/* popup card */}
-                {activePropertyId && (() => {
-                  const p = sampleProperties.find((s) => s.id === activePropertyId)!;
-                  return (
-                    <Link
-                      href={`/listings/${p.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
-                    >
-                      <div className="relative">
-                        <img src={p.image} className="w-full h-40 object-cover" alt={p.title} />
-                        {/* tag pill */}
-                        <div className="absolute left-3 top-3 bg-white text-xs text-gray-800 px-3 py-1 rounded-full shadow">{p.tag}</div>
-                        {/* favorite heart - prevent navigation when clicked */}
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleLike(p.id); }}
-                          aria-pressed={likedIds.has(p.id)}
-                          className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/90 shadow z-40"
-                        >
-                          <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="p-4">
-                        <h4 className="font-semibold text-sm text-gray-900">{p.title}</h4>
-                        <div className="text-xs text-gray-500 mt-1">{p.location}</div>
-                        <div className="text-lg font-bold text-gray-900 mt-3">{p.price}</div>
-                        <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
-                        <div className="border-t border-gray-100 mt-4 pt-3 flex items-center gap-3">
-                          <img src="/images/agent-sarah.png" className="w-8 h-8 rounded-full" alt={p.agent} />
-                          <div className="text-sm text-gray-700 flex items-center gap-2">
-                            <span>{p.agent}</span>
-                            <img src="/icons/verifiedbadge.svg" alt="verified" className="w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })()}
-              </div>
+              <div ref={mapContainerRef} className="absolute inset-0" style={{ height: '100%' }} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

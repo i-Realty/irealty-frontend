@@ -441,7 +441,7 @@ export default function PropertyDetails() {
                         <div key={l.key} className="flex items-center justify-between gap-3 p-3 border border-[#E4E4E4] rounded-lg bg-white">
                           <div className="flex gap-3">
                             <div className="flex-none w-10 h-10 rounded-full bg-gray-50 border border-[#E4E4E4] flex items-center justify-center">
-                              <img src="/icons/locationicon.svg" alt="location" className="w-4 h-4" />
+                              <img src="/icons/locationIcon.svg" alt="location" className="w-4 h-4" />
                             </div>
                             <div className='flex items-center justify-center'>
                               <div className="font-medium text-sm">{l.label}</div>

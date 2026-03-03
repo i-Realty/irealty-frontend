@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://www.i-realty.app/</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings?purpose=sale</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings?purpose=rent</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/developers</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/auth/login</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/auth/signup</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/1</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/2</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/3</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/4</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/5</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/6</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/auth/reset</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/1/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/2/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/3/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/4/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/5/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/6/profile</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/7</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/8</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/9</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://www.i-realty.app/listings/10</loc>
+  <lastmod>2026-03-03T00:35:56+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+
+
+</urlset>
