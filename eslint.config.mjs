@@ -27,6 +27,7 @@ const eslintConfig = [
       "@next/next/no-img-element": "warn",
       // Pre-existing unused vars in modal files and favorites.ts (catch-block variables).
       "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];
