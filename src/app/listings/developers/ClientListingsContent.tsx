@@ -433,7 +433,7 @@ export default function ClientListingsContent() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: rangeThumbStyle }} />
+      <style dangerouslySetInnerHTML={{ __html: mapMarkerStyle + rangeThumbStyle }} />
       <div className="flex gap-6">
         {/* Desktop sidebar */}
         <aside className="hidden lg:block w-72 shrink-0">
