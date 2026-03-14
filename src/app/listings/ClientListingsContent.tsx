@@ -534,7 +534,7 @@ export default function ClientListingsContent() {
           {/* Grid or Map */}
           {mapMode ? (
             <div
-              className="relative rounded-lg overflow-hidden border bg-white"
+              className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm"
               style={{ height: 600 }}
               onClick={() => {
                 setActivePropertyId(null);
