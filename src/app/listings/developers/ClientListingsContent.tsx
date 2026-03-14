@@ -442,67 +442,20 @@ export default function ClientListingsContent() {
             <div className="text-sm text-gray-500">Page {page} of 30</div>
           </div>
 
-          {/* Grid or simple map placeholder */}
+          {/* Grid or Map */}
           {mapMode ? (
             <div
-              className="relative rounded-lg overflow-hidden border bg-white"
+              className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm"
               style={{ height: 600 }}
-              onClick={() => setActivePropertyId(null)}
+              onClick={() => {
+                setActivePropertyId(null);
+                if (popupRef.current) {
+                  try { popupRef.current.remove(); } catch { }
+                  popupRef.current = null;
+                }
+              }}
             >
-              <div className="absolute inset-0 bg-[url('/images/map.png')] bg-center bg-cover" />
-              <div className="absolute inset-0">
-                {sampleProperties.map((p) => {
-                  const left = `${10 + ((p.lng ?? 0) - 7.4) * 200}%`;
-                  const top = `${10 + ((p.lat ?? 0) - 6.5) * 200}%`;
-                  return (
-                    <button
-                      key={`marker-${p.id}`}
-                      onClick={(e) => { e.stopPropagation(); setActivePropertyId(p.id); }}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                      style={{ left, top }}
-                      aria-label={`Property ${p.id}`}
-                    >
-                      <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow" />
-                    </button>
-                  );
-                })}
-
-                {activePropertyId && (() => {
-                  const p = sampleProperties.find((s) => s.id === activePropertyId)!;
-                  return (
-                    <Link
-                      href={`/listings/developers/${p.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
-                    >
-                      <div className="relative">
-                        <img src={p.image} className="w-full h-40 object-cover" alt={p.title} />
-                        <div className="absolute left-3 top-3 bg-white text-xs text-gray-800 px-3 py-1 rounded-full shadow">{p.tag}</div>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleLike(p.id); }}
-                          aria-pressed={likedIds.has(p.id)}
-                          className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/90 shadow z-40"
-                        >
-                          <img src={likedIds.has(p.id) ? "/icons/favorite-filled.svg" : "/icons/favorite.svg"} alt="fav" className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-sm text-gray-900">{p.title}</h4>
-                        <div className="text-xs text-gray-500 mt-1">{p.location}</div>
-                        <div className="text-lg font-bold text-gray-900 mt-3">{p.price}</div>
-                        <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
-                        <div className="border-t border-gray-100 mt-4 pt-3 flex items-center gap-3">
-                          <img src="/images/agent-sarah.png" className="w-8 h-8 rounded-full" alt={p.agent} />
-                          <div className="text-sm text-gray-700 flex items-center gap-2">
-                            <span>{p.agent}</span>
-                            <img src="/icons/verifiedbadge.svg" alt="verified" className="w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })()}
-              </div>
+              <div ref={mapContainerRef} className="absolute inset-0" style={{ height: "100%" }} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
