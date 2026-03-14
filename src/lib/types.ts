@@ -14,4 +14,19 @@ export type Property = {
   agentId?: number;
 };
 
-export type PropertyWithCoords = Property & { lat?: number; lng?: number };
+export type PropertyWithCoords = Property & {
+  lat?: number;
+  lng?: number;
+  // Extended map fields
+  category?: 'sale' | 'rent' | 'shortlet';
+  neighbourhood?: string;
+  thumbnail?: string;
+  isVerified?: boolean;
+  hasVirtualTour?: boolean;
+  isFavourited?: boolean;
+  listedAt?: string; // ISO date string
+  priceReduced?: boolean;
+  originalPrice?: string;
+  priceLabel?: string; // pre-formatted e.g. "₦1.5M"
+  sizeSqm?: number;
+};

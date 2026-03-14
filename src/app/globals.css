@@ -1,5 +1,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap');
+@import "mapbox-gl/dist/mapbox-gl.css";
 @import "tailwindcss";
+
+/* ── Mapbox GL JS control visibility fixes ─────────────────────────────────
+   Tailwind's CSS reset and our font-family !important rule can clash with
+   Mapbox control styles. These overrides restore correct rendering.       */
+.mapboxgl-ctrl-group {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10 !important;
+  background: #fff !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.1) !important;
+  overflow: hidden !important;
+}
+
+.mapboxgl-ctrl-group button {
+  display: block !important;
+  width: 29px !important;
+  height: 29px !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  background-color: #fff !important;
+  border: 0 !important;
+  border-bottom: 1px solid #ddd !important;
+  box-sizing: border-box !important;
+}
+
+.mapboxgl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: rgba(0,0,0,.05) !important;
+}
+
+.mapboxgl-ctrl-top-right,
+.mapboxgl-ctrl-top-left,
+.mapboxgl-ctrl-bottom-right,
+.mapboxgl-ctrl-bottom-left {
+  z-index: 10 !important;
+  pointer-events: auto !important;
+  position: absolute !important;
+}
+
+.mapboxgl-ctrl-top-right {
+  top: 10px !important;
+  right: 10px !important;
+}
+
+/* Zoom icon SVG backgrounds — prevent our font-family override from hiding them */
+.mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon,
+.mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon,
+.mapboxgl-ctrl-compass .mapboxgl-ctrl-icon {
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 29px 29px !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Attribution */
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-attrib-inner,
+.mapboxgl-ctrl-attrib-button {
+  display: none !important;
+}
+
+/* Popup */
+.mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 18px !important;
+  color: #6b7280 !important;
+  padding: 4px 8px !important;
+  z-index: 10 !important;
+}
+
 
 :root {
   --background: #ffffff;

@@ -1,31 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { getFavorites, toggleFavorite as toggleFavLocal } from "@/lib/favorites";
 import { sampleProperties } from "@/lib/data/properties";
 import PropertyCard from "@/components/shared/PropertyCard";
 
 export default function RecentProperties() {
-  const [likedIds, setLikedIds] = useState<Set<number>>(() => new Set(getFavorites()));
-
-  useEffect(() => {
-    function onChange() {
-      setLikedIds(new Set(getFavorites()));
-    }
-    window.addEventListener("favorites-changed", onChange as EventListener);
-    window.addEventListener("storage", onChange as EventListener);
-    return () => {
-      window.removeEventListener("favorites-changed", onChange as EventListener);
-      window.removeEventListener("storage", onChange as EventListener);
-    };
-  }, []);
-
-  function toggleLike(id: number) {
-    toggleFavLocal(id);
-    setLikedIds(new Set(getFavorites()));
-  }
-
   return (
     <section className="w-full bg-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,12 +16,7 @@ export default function RecentProperties() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {sampleProperties.map((prop) => (
-              <PropertyCard
-                key={prop.id}
-                property={prop}
-                likedIds={likedIds}
-                onToggleLike={toggleLike}
-              />
+              <PropertyCard key={prop.id} property={prop} />
             ))}
           </div>
 

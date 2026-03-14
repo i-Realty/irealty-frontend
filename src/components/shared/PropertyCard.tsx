@@ -3,11 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import type { Property } from "@/lib/types";
+import { useFavouritesStore } from "@/lib/store/useFavouritesStore";
 
 type Props = {
   property: Property;
-  likedIds: Set<number>;
-  onToggleLike: (id: number) => void;
   /** Override the link href. Defaults to /listings/{id} */
   href?: string;
 };
@@ -18,8 +17,12 @@ type Props = {
  * - listings/ClientListingsContent
  * - listings/developers/ClientListingsContent
  * - ProfileListingsGrid
+ *
+ * Favourites state is read directly from useFavouritesStore — no props needed.
  */
-export default function PropertyCard({ property: p, likedIds, onToggleLike, href }: Props) {
+export default function PropertyCard({ property: p, href }: Props) {
+  const { likedIds, toggleLike } = useFavouritesStore();
+  const isLiked = likedIds.has(p.id);
   const isForSale = p.tag?.toLowerCase().includes("sale");
   const linkHref = href ?? `/listings/${p.id}`;
 
@@ -41,13 +44,13 @@ export default function PropertyCard({ property: p, likedIds, onToggleLike, href
           </div>
         )}
         <button
-          onClick={() => onToggleLike(p.id)}
-          aria-pressed={likedIds.has(p.id)}
+          onClick={(e) => { e.preventDefault(); toggleLike(p.id); }}
+          aria-pressed={isLiked}
           className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/80 p-1 z-30"
-          aria-label={likedIds.has(p.id) ? "Unfavorite" : "Favorite"}
+          aria-label={isLiked ? "Unfavorite" : "Favorite"}
         >
           <img
-            src={likedIds.has(p.id) ? "/icons/favorite-filled.svg" : "/icons/favorite.svg"}
+            src={isLiked ? "/icons/favorite-filled.svg" : "/icons/favorite.svg"}
             alt=""
             className="w-5 h-5"
           />
