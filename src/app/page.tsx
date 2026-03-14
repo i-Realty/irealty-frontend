@@ -6,7 +6,7 @@ import CategoryGrid from "@/components/CategoryGrid";
 import RecentProperties from "@/components/RecentProperties";
 import AgentDiasporaPromo from "@/components/AgentDiasporaPromo";
 import TestimonialSection from "@/components/TestimonialSection";
-import FAQSection from "../components/FAQSection";
+import FAQSection from "@/components/FAQSection";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 

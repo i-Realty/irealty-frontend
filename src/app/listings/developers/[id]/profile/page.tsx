@@ -3,20 +3,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import ProfileListingsGrid from '@/components/ProfileListingsGrid';
-
-type Property = {
-  id: number;
-  title: string;
-  location: string;
-  price: string;
-  image: string;
-  agentId?: number;
-  agent?: string;
-  tag?: string;
-  beds?: number;
-  baths?: number;
-  area?: string;
-};
+import type { Property } from '@/lib/types';
 
 export default function ListingAgentProfile(props: unknown) {
   const { params } = props as { params: { id: string } };

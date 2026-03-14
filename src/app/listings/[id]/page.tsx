@@ -14,37 +14,11 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { sampleProperties } from '@/lib/data/properties';
+import type { Property } from '@/lib/types';
+import PropertyCard from '@/components/shared/PropertyCard';
 
-type Property = {
-  id: number;
-  title: string;
-  location: string;
-  price: string;
-  beds: number;
-  baths: number;
-  area: string;
-  tag?: "For Rent" | "For Sale";
-  image?: string;
-  agent?: string;
-  agentId?: number;
-};
 
-// replicate the same sample data shape from listings page (static for now)
-const agentNames = ['Sarah Homes', 'Kelly Williams', 'John Ade'];
-
-const sampleProperties: Property[] = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  title: 'Residential Plot - GRA Enugu',
-  location: 'Independence Layout, Enugu',
-  price: '₦ 20,000,000.00',
-  beds: 3,
-  baths: 2,
-  area: '120 sqm',
-  tag: i % 2 === 0 ? 'For Rent' : 'For Sale',
-  image: i % 2 === 0 ? '/images/property1.png' : '/images/property2.png',
-  agent: agentNames[i % agentNames.length],
-  agentId: (i % agentNames.length) + 1,
-}));
 
 export default function PropertyDetails() {
   const router = useRouter();
@@ -507,30 +481,12 @@ export default function PropertyDetails() {
             <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sampleProperties.map((p) => (
-                  <div key={p.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative">
-                    <div className="relative" style={{ height: 200 }}>
-                      <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
-                      <div className={`absolute left-4 top-4 text-xs font-bold px-3 py-1 rounded-full ${p.tag && p.tag.toLowerCase().includes('sale') ? 'bg-[#2563EB] text-white' : 'bg-white text-[#2563EB]'}`}>{p.tag}</div>
-                      <button
-                        onClick={() => toggleLike(p.id)}
-                        aria-pressed={likedIds.has(p.id)}
-                        className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/80 p-1 z-30"
-                      >
-                        <img src={likedIds.has(p.id) ? '/icons/favorite-filled.svg' : '/icons/favorite.svg'} alt="fav" className="w-5 h-5" />
-                      </button>
-                    </div>
-                    <div className="p-4">
-                      <div className="font-bold text-sm">{p.title}</div>
-                      <div className="text-xs text-gray-500 mb-2">{p.location}</div>
-                      <div className="font-bold text-lg">{p.price}</div>
-                      <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
-                      <div className="flex items-center mt-3">
-                        <img src="/images/agent-sarah.png" alt={p.agent} className="w-6 h-6 rounded-full mr-2" />
-                        <div className="text-xs text-gray-600">{p.agent} <img src="/icons/verifiedbadge.svg" alt="verified" className="inline w-4 h-4 ml-2" /></div>
-                      </div>
-                    </div>
-                    <Link href={`/listings/${p.id}`} className="absolute inset-0 z-10" aria-label={`View property ${p.id}`} />
-                  </div>
+                  <PropertyCard
+                    key={p.id}
+                    property={p}
+                    likedIds={likedIds}
+                    onToggleLike={(id) => toggleLike(id)}
+                  />
                 ))}
               </div>
             </div>
