@@ -172,7 +172,98 @@ export default function ClientListingsContent() {
     });
   };
 
-  // Chevron SVG helper
+  // Initialize MapLibre when map mode is toggled on
+  useEffect(() => {
+    if (!mapMode || !mapContainerRef.current || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+      center: [7.4, 6.5],
+      zoom: 9,
+    });
+
+    mapRef.current = map;
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
+
+    sampleProperties.forEach((p) => {
+      if (typeof p.lng !== "number" || typeof p.lat !== "number") return;
+
+      const el = document.createElement("div");
+      el.className = "map-marker-bubble";
+      el.style.position = "relative";
+      const label = document.createElement("span");
+      label.className = "map-marker-label";
+      label.textContent = formatShortPrice(p.price || "");
+      el.appendChild(label);
+      el.setAttribute("aria-label", `Property ${p.id}`);
+
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setActivePropertyId(p.id);
+        map.easeTo({ center: [p.lng!, p.lat!], zoom: 14 });
+
+        if (popupRef.current) {
+          try { popupRef.current.remove(); } catch { }
+          popupRef.current = null;
+        }
+
+        const popup = new maplibregl.Popup({ offset: 12, closeOnClick: true })
+          .setLngLat([p.lng!, p.lat!])
+          .setHTML(`
+            <div style="width:270px;font-family:'Lato',sans-serif">
+              <a href="/listings/developers/${p.id}" style="text-decoration:none;color:inherit">
+                <div style="position:relative">
+                  <img src="${p.image}" alt="${p.title}" style="width:100%;height:140px;object-fit:cover" />
+                  <span style="position:absolute;left:10px;top:10px;background:white;font-size:11px;padding:3px 10px;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">${p.tag}</span>
+                </div>
+                <div style="padding:12px 14px">
+                  <div style="font-weight:700;font-size:14px;color:#111827">${p.title}</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:4px">${p.location}</div>
+                  <div style="margin-top:8px;font-weight:700;font-size:16px;color:#2563EB">${p.price}</div>
+                  <div style="font-size:11px;color:#9ca3af;margin-top:4px">${p.beds} beds • ${p.baths} baths • ${p.area}</div>
+                </div>
+              </a>
+            </div>
+          `)
+          .addTo(map);
+
+        popupRef.current = popup;
+      });
+
+      new maplibregl.Marker({ element: el as HTMLElement, anchor: "bottom" })
+        .setLngLat([p.lng!, p.lat!])
+        .addTo(map);
+    });
+
+    const coords = sampleProperties
+      .filter((p) => typeof p.lng === "number" && typeof p.lat === "number")
+      .map((p) => [p.lng!, p.lat!] as [number, number]);
+
+    if (coords.length) {
+      const bounds = coords.reduce(
+        (b, c) => b.extend(c),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 800 });
+    }
+
+    map.on("click", () => {
+      setActivePropertyId(null);
+      if (popupRef.current) {
+        try { popupRef.current.remove(); } catch { }
+        popupRef.current = null;
+      }
+    });
+
+    return () => {
+      try { if (popupRef.current) popupRef.current.remove(); } catch { }
+      try { map.remove(); } catch { }
+      mapRef.current = null;
+    };
+  }, [mapMode]);
+
   const ChevronIcon = ({ open }: { open: boolean }) => (
     <svg
       className={`w-4 h-4 text-gray-400 transform ${open ? "rotate-180" : ""}`}
