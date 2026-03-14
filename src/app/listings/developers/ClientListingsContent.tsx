@@ -33,6 +33,15 @@ const rangeThumbStyle = `
   input[type=range]:focus { outline: none; }
 `;
 
+function formatShortPrice(priceStr: string): string {
+  if (!priceStr) return "";
+  const digits = Number((priceStr + "").replace(/[^0-9.-]/g, ""));
+  if (!isFinite(digits)) return priceStr;
+  if (Math.abs(digits) >= 1_000_000) return `₦${Math.round(digits / 1_000_000)}M`;
+  if (Math.abs(digits) >= 1_000) return `₦${Math.round(digits / 1_000)}K`;
+  return `₦${digits.toLocaleString()}`;
+}
+
 function formatCurrency(v: number): string {
   try {
     return new Intl.NumberFormat("en-NG", {
