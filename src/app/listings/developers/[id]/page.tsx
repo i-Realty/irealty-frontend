@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { isFavorited, toggleFavorite as toggleFavLocal, getFavorites } from '@/lib/favorites';
+import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
 import Link from 'next/link';
 import BookTourModal from '@/components/BookTourModal';
 import PaymentOptionsModal from '@/components/PaymentOptionsModal';
@@ -57,7 +57,8 @@ export default function PropertyDetails() {
   // compute propId safely so hooks can be declared unconditionally
   const propId = prop?.id || 0;
 
-  const [liked, setLiked] = useState(false);
+  const { likedIds, toggleLike: toggleStoreLike } = useFavouritesStore();
+  const liked = likedIds.has(propId);
   const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'>('description');
   // description expand toggle
   const [showFullDesc, setShowFullDesc] = useState(false);
@@ -78,8 +79,7 @@ export default function PropertyDetails() {
 
   const previewDescription = fullDescription[0].length > 220 ? fullDescription[0].slice(0, 220) + '...' : fullDescription[0];
 
-  // liked ids for similar properties
-  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+
   // derive modal states from URL so navigation (and browser Back) works naturally
   const searchParams = useSearchParams();
   const showBookTour = Boolean(searchParams?.get('bookTour'));
@@ -91,23 +91,7 @@ export default function PropertyDetails() {
   const showReserveSuccess = Boolean(searchParams?.get('reserveSuccess'));
   const showChat = Boolean(searchParams?.get('chat'));
 
-  useEffect(() => {
-    setLikedIds(new Set(getFavorites()));
-    function onFavChange() {
-      setLikedIds(new Set(getFavorites()));
-    }
-    window.addEventListener('favorites-changed', onFavChange as EventListener);
-    return () => window.removeEventListener('favorites-changed', onFavChange as EventListener);
-  }, []);
 
-  useEffect(() => {
-    setLiked(isFavorited(propId));
-    function onChange() {
-      setLiked(isFavorited(propId));
-    }
-    window.addEventListener('favorites-changed', onChange as EventListener);
-    return () => window.removeEventListener('favorites-changed', onChange as EventListener);
-  }, [propId]);
 
   if (!prop) {
     return (
@@ -120,23 +104,13 @@ export default function PropertyDetails() {
   }
 
   function toggleLike(arg?: React.MouseEvent | number) {
-    // If called with a number, toggle that property's favorite
     if (typeof arg === 'number') {
-      const id = arg;
-      const newVal = toggleFavLocal(id);
-      setLikedIds((prev) => {
-        const s = new Set(prev);
-        if (newVal) s.add(id); else s.delete(id);
-        return s;
-      });
+      toggleStoreLike(arg);
       return;
     }
-
-    // Called as event for main property
     const e = arg as React.MouseEvent | undefined;
     e?.stopPropagation();
-    const newVal = toggleFavLocal(propId);
-    setLiked(newVal);
+    toggleStoreLike(propId);
   }
 
   return (

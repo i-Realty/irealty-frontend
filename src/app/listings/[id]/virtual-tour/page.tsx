@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { isFavorited, toggleFavorite } from '@/lib/favorites';
+import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
 
 export default function VirtualTourModal() {
   const router = useRouter();
@@ -14,8 +14,8 @@ export default function VirtualTourModal() {
   const images = Array.from({ length: 9 }).map((_, i) => `/images/property${(i % 2) + 1}.png`);
 
   const [index, setIndex] = useState(Math.max(0, Math.min(start, images.length - 1)));
-  // avoid reading localStorage during server render/hydration — initialize on mount
-  const [fav, setFav] = useState(false);
+  const { likedIds, toggleLike } = useFavouritesStore();
+  const fav = likedIds.has(pid);
   const prevIndexRef = useRef(index);
 
   // animation state drives an initial offset -> to-zero transition
@@ -30,13 +30,8 @@ export default function VirtualTourModal() {
       if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
     }
     document.addEventListener('keydown', onKey);
-    // initialize favorite state on mount (client-only)
-    setFav(isFavorited(pid));
-    function onFavChange() { setFav(isFavorited(pid)); }
-    window.addEventListener('favorites-changed', onFavChange as EventListener);
     return () => {
       document.removeEventListener('keydown', onKey);
-      window.removeEventListener('favorites-changed', onFavChange as EventListener);
     };
   }, [router, images.length, pid]);
 
@@ -59,7 +54,7 @@ export default function VirtualTourModal() {
   function close() { try { router.back(); } catch { router.push('/listings'); } }
   function next() { setIndex((i) => Math.min(images.length - 1, i + 1)); }
   function prev() { setIndex((i) => Math.max(0, i - 1)); }
-  function toggleFav() { toggleFavorite(pid); setFav(isFavorited(pid)); }
+  function toggleFav() { toggleLike(pid); }
 
   // wheel handler: vertical scroll to switch slides (throttled)
   const onWheel = useCallback((e: React.WheelEvent) => {
