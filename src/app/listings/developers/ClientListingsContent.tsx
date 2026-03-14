@@ -1,15 +1,27 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getFavorites, toggleFavorite as toggleFavLocal } from "@/lib/favorites";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Footer from "@/components/Footer";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { sampleProperties } from "@/lib/data/properties";
 import { defaultAmenities, amenitiesByType } from "@/lib/data/amenities";
 import { PRICE_MIN, PRICE_MAX } from "@/lib/constants";
 import PropertyCard from "@/components/shared/PropertyCard";
+
+// Marker styles for MapLibre price bubbles — refined blue palette
+const mapMarkerStyle = `
+  .map-marker-bubble { display:inline-flex; align-items:center; justify-content:center; padding:6px 14px; background:#2563EB; color:white; font-weight:700; border-radius:24px; box-shadow: 0 4px 16px rgba(37,99,235,0.35); transform: translateY(-6px); cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  .map-marker-bubble:hover { background:#1d4ed8; box-shadow: 0 6px 20px rgba(37,99,235,0.5); }
+  .map-marker-bubble:after { content: ''; width:10px; height:10px; background:#2563EB; position: absolute; transform: rotate(45deg); margin-top:16px; margin-left:0; box-shadow: 0 4px 8px rgba(37,99,235,0.18); }
+  .map-marker-label { font-size:12px; line-height:1; letter-spacing:0.01em; }
+  .mapboxgl-ctrl-bottom-right { right: 8px; bottom: 8px; }
+  .maplibregl-popup-content { border-radius:12px !important; padding:0 !important; overflow:hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; border: 1px solid #e5e7eb !important; }
+  .maplibregl-popup-close-button { font-size:18px; padding:4px 8px; color:#6b7280; }
+  .maplibregl-popup-close-button:hover { color:#111827; background:transparent; }
+`;
 
 // CSS for the double-thumb price range slider
 const rangeThumbStyle = `
