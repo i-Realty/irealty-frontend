@@ -64,6 +64,11 @@ export default function ClientListingsContent() {
   const [activePropertyId, setActivePropertyId] = useState<number | null>(null);
   const [likedIds, setLikedIds] = useState<Set<number>>(() => new Set(getFavorites()));
 
+  // MapLibre refs
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+
   // Sync property type filter from URL param
   useEffect(() => {
     try {
