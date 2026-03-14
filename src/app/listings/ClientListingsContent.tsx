@@ -13,10 +13,14 @@ import PropertyCard from "@/components/shared/PropertyCard";
 
 // Marker styles for MapLibre price bubbles
 const mapMarkerStyle = `
-  .map-marker-bubble { display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; background:#D35400; color:white; font-weight:700; border-radius:20px; box-shadow: 0 6px 14px rgba(0,0,0,0.18); transform: translateY(-6px); cursor: pointer; }
-  .map-marker-bubble:after { content: ''; width:12px; height:12px; background:#D35400; position: absolute; transform: rotate(45deg); margin-top:18px; margin-left:0; box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
-  .map-marker-label { font-size:12px; line-height:1; }
+  .map-marker-bubble { display:inline-flex; align-items:center; justify-content:center; padding:6px 14px; background:#2563EB; color:white; font-weight:700; border-radius:24px; box-shadow: 0 4px 16px rgba(37,99,235,0.35); transform: translateY(-6px); cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  .map-marker-bubble:hover { background:#1d4ed8; box-shadow: 0 6px 20px rgba(37,99,235,0.5); }
+  .map-marker-bubble:after { content: ''; width:10px; height:10px; background:#2563EB; position: absolute; transform: rotate(45deg); margin-top:16px; margin-left:0; box-shadow: 0 4px 8px rgba(37,99,235,0.18); }
+  .map-marker-label { font-size:12px; line-height:1; letter-spacing:0.01em; }
   .mapboxgl-ctrl-bottom-right { right: 8px; bottom: 8px; }
+  .maplibregl-popup-content { border-radius:12px !important; padding:0 !important; overflow:hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; border: 1px solid #e5e7eb !important; }
+  .maplibregl-popup-close-button { font-size:18px; padding:4px 8px; color:#6b7280; }
+  .maplibregl-popup-close-button:hover { color:#111827; background:transparent; }
 `;
 
 // CSS for the double-thumb price range slider
@@ -205,15 +209,17 @@ export default function ClientListingsContent() {
         const popup = new maplibregl.Popup({ offset: 12, closeOnClick: true })
           .setLngLat([p.lng!, p.lat!])
           .setHTML(`
-            <div style="width:260px;font-family:Inter,Arial,Helvetica,sans-serif">
+            <div style="width:270px;font-family:'Lato',sans-serif">
               <a href="/listings/${p.id}" style="text-decoration:none;color:inherit">
-                <div style="display:flex;gap:8px">
-                  <img src="${p.image}" alt="${p.title}" style="width:84px;height:64px;object-fit:cover;border-radius:6px" />
-                  <div>
-                    <div style="font-weight:700">${p.title}</div>
-                    <div style="font-size:12px;color:#6b7280">${p.location}</div>
-                    <div style="margin-top:6px;font-weight:700">${p.price}</div>
-                  </div>
+                <div style="position:relative">
+                  <img src="${p.image}" alt="${p.title}" style="width:100%;height:140px;object-fit:cover" />
+                  <span style="position:absolute;left:10px;top:10px;background:white;font-size:11px;padding:3px 10px;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">${p.tag}</span>
+                </div>
+                <div style="padding:12px 14px">
+                  <div style="font-weight:700;font-size:14px;color:#111827">${p.title}</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:4px">${p.location}</div>
+                  <div style="margin-top:8px;font-weight:700;font-size:16px;color:#2563EB">${p.price}</div>
+                  <div style="font-size:11px;color:#9ca3af;margin-top:4px">${p.beds} beds • ${p.baths} baths • ${p.area}</div>
                 </div>
               </a>
             </div>
@@ -528,7 +534,7 @@ export default function ClientListingsContent() {
           {/* Grid or Map */}
           {mapMode ? (
             <div
-              className="relative rounded-lg overflow-hidden border bg-white"
+              className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm"
               style={{ height: 600 }}
               onClick={() => {
                 setActivePropertyId(null);

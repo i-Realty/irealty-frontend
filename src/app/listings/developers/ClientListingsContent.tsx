@@ -1,15 +1,27 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getFavorites, toggleFavorite as toggleFavLocal } from "@/lib/favorites";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Footer from "@/components/Footer";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { sampleProperties } from "@/lib/data/properties";
 import { defaultAmenities, amenitiesByType } from "@/lib/data/amenities";
 import { PRICE_MIN, PRICE_MAX } from "@/lib/constants";
 import PropertyCard from "@/components/shared/PropertyCard";
+
+// Marker styles for MapLibre price bubbles — refined blue palette
+const mapMarkerStyle = `
+  .map-marker-bubble { display:inline-flex; align-items:center; justify-content:center; padding:6px 14px; background:#2563EB; color:white; font-weight:700; border-radius:24px; box-shadow: 0 4px 16px rgba(37,99,235,0.35); transform: translateY(-6px); cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  .map-marker-bubble:hover { background:#1d4ed8; box-shadow: 0 6px 20px rgba(37,99,235,0.5); }
+  .map-marker-bubble:after { content: ''; width:10px; height:10px; background:#2563EB; position: absolute; transform: rotate(45deg); margin-top:16px; margin-left:0; box-shadow: 0 4px 8px rgba(37,99,235,0.18); }
+  .map-marker-label { font-size:12px; line-height:1; letter-spacing:0.01em; }
+  .mapboxgl-ctrl-bottom-right { right: 8px; bottom: 8px; }
+  .maplibregl-popup-content { border-radius:12px !important; padding:0 !important; overflow:hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; border: 1px solid #e5e7eb !important; }
+  .maplibregl-popup-close-button { font-size:18px; padding:4px 8px; color:#6b7280; }
+  .maplibregl-popup-close-button:hover { color:#111827; background:transparent; }
+`;
 
 // CSS for the double-thumb price range slider
 const rangeThumbStyle = `
@@ -20,6 +32,15 @@ const rangeThumbStyle = `
   input[type=range]::-moz-range-thumb { width: 18px; height:18px; border-radius: 9999px; background: #2563EB; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   input[type=range]:focus { outline: none; }
 `;
+
+function formatShortPrice(priceStr: string): string {
+  if (!priceStr) return "";
+  const digits = Number((priceStr + "").replace(/[^0-9.-]/g, ""));
+  if (!isFinite(digits)) return priceStr;
+  if (Math.abs(digits) >= 1_000_000) return `₦${Math.round(digits / 1_000_000)}M`;
+  if (Math.abs(digits) >= 1_000) return `₦${Math.round(digits / 1_000)}K`;
+  return `₦${digits.toLocaleString()}`;
+}
 
 function formatCurrency(v: number): string {
   try {
@@ -51,6 +72,11 @@ export default function ClientListingsContent() {
   const [mapMode, setMapMode] = useState(false);
   const [activePropertyId, setActivePropertyId] = useState<number | null>(null);
   const [likedIds, setLikedIds] = useState<Set<number>>(() => new Set(getFavorites()));
+
+  // MapLibre refs
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
 
   // Sync property type filter from URL param
   useEffect(() => {
@@ -146,7 +172,98 @@ export default function ClientListingsContent() {
     });
   };
 
-  // Chevron SVG helper
+  // Initialize MapLibre when map mode is toggled on
+  useEffect(() => {
+    if (!mapMode || !mapContainerRef.current || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+      center: [7.4, 6.5],
+      zoom: 9,
+    });
+
+    mapRef.current = map;
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
+
+    sampleProperties.forEach((p) => {
+      if (typeof p.lng !== "number" || typeof p.lat !== "number") return;
+
+      const el = document.createElement("div");
+      el.className = "map-marker-bubble";
+      el.style.position = "relative";
+      const label = document.createElement("span");
+      label.className = "map-marker-label";
+      label.textContent = formatShortPrice(p.price || "");
+      el.appendChild(label);
+      el.setAttribute("aria-label", `Property ${p.id}`);
+
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setActivePropertyId(p.id);
+        map.easeTo({ center: [p.lng!, p.lat!], zoom: 14 });
+
+        if (popupRef.current) {
+          try { popupRef.current.remove(); } catch { }
+          popupRef.current = null;
+        }
+
+        const popup = new maplibregl.Popup({ offset: 12, closeOnClick: true })
+          .setLngLat([p.lng!, p.lat!])
+          .setHTML(`
+            <div style="width:270px;font-family:'Lato',sans-serif">
+              <a href="/listings/developers/${p.id}" style="text-decoration:none;color:inherit">
+                <div style="position:relative">
+                  <img src="${p.image}" alt="${p.title}" style="width:100%;height:140px;object-fit:cover" />
+                  <span style="position:absolute;left:10px;top:10px;background:white;font-size:11px;padding:3px 10px;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">${p.tag}</span>
+                </div>
+                <div style="padding:12px 14px">
+                  <div style="font-weight:700;font-size:14px;color:#111827">${p.title}</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:4px">${p.location}</div>
+                  <div style="margin-top:8px;font-weight:700;font-size:16px;color:#2563EB">${p.price}</div>
+                  <div style="font-size:11px;color:#9ca3af;margin-top:4px">${p.beds} beds • ${p.baths} baths • ${p.area}</div>
+                </div>
+              </a>
+            </div>
+          `)
+          .addTo(map);
+
+        popupRef.current = popup;
+      });
+
+      new maplibregl.Marker({ element: el as HTMLElement, anchor: "bottom" })
+        .setLngLat([p.lng!, p.lat!])
+        .addTo(map);
+    });
+
+    const coords = sampleProperties
+      .filter((p) => typeof p.lng === "number" && typeof p.lat === "number")
+      .map((p) => [p.lng!, p.lat!] as [number, number]);
+
+    if (coords.length) {
+      const bounds = coords.reduce(
+        (b, c) => b.extend(c),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 800 });
+    }
+
+    map.on("click", () => {
+      setActivePropertyId(null);
+      if (popupRef.current) {
+        try { popupRef.current.remove(); } catch { }
+        popupRef.current = null;
+      }
+    });
+
+    return () => {
+      try { if (popupRef.current) popupRef.current.remove(); } catch { }
+      try { map.remove(); } catch { }
+      mapRef.current = null;
+    };
+  }, [mapMode]);
+
   const ChevronIcon = ({ open }: { open: boolean }) => (
     <svg
       className={`w-4 h-4 text-gray-400 transform ${open ? "rotate-180" : ""}`}
@@ -316,7 +433,7 @@ export default function ClientListingsContent() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: rangeThumbStyle }} />
+      <style dangerouslySetInnerHTML={{ __html: mapMarkerStyle + rangeThumbStyle }} />
       <div className="flex gap-6">
         {/* Desktop sidebar */}
         <aside className="hidden lg:block w-72 shrink-0">
@@ -416,67 +533,20 @@ export default function ClientListingsContent() {
             <div className="text-sm text-gray-500">Page {page} of 30</div>
           </div>
 
-          {/* Grid or simple map placeholder */}
+          {/* Grid or Map */}
           {mapMode ? (
             <div
-              className="relative rounded-lg overflow-hidden border bg-white"
+              className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm"
               style={{ height: 600 }}
-              onClick={() => setActivePropertyId(null)}
+              onClick={() => {
+                setActivePropertyId(null);
+                if (popupRef.current) {
+                  try { popupRef.current.remove(); } catch { }
+                  popupRef.current = null;
+                }
+              }}
             >
-              <div className="absolute inset-0 bg-[url('/images/map.png')] bg-center bg-cover" />
-              <div className="absolute inset-0">
-                {sampleProperties.map((p) => {
-                  const left = `${10 + ((p.lng ?? 0) - 7.4) * 200}%`;
-                  const top = `${10 + ((p.lat ?? 0) - 6.5) * 200}%`;
-                  return (
-                    <button
-                      key={`marker-${p.id}`}
-                      onClick={(e) => { e.stopPropagation(); setActivePropertyId(p.id); }}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                      style={{ left, top }}
-                      aria-label={`Property ${p.id}`}
-                    >
-                      <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow" />
-                    </button>
-                  );
-                })}
-
-                {activePropertyId && (() => {
-                  const p = sampleProperties.find((s) => s.id === activePropertyId)!;
-                  return (
-                    <Link
-                      href={`/listings/developers/${p.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
-                    >
-                      <div className="relative">
-                        <img src={p.image} className="w-full h-40 object-cover" alt={p.title} />
-                        <div className="absolute left-3 top-3 bg-white text-xs text-gray-800 px-3 py-1 rounded-full shadow">{p.tag}</div>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleLike(p.id); }}
-                          aria-pressed={likedIds.has(p.id)}
-                          className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/90 shadow z-40"
-                        >
-                          <img src={likedIds.has(p.id) ? "/icons/favorite-filled.svg" : "/icons/favorite.svg"} alt="fav" className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-sm text-gray-900">{p.title}</h4>
-                        <div className="text-xs text-gray-500 mt-1">{p.location}</div>
-                        <div className="text-lg font-bold text-gray-900 mt-3">{p.price}</div>
-                        <div className="text-xs text-gray-500 mt-2">{p.beds} beds • {p.baths} baths • {p.area}</div>
-                        <div className="border-t border-gray-100 mt-4 pt-3 flex items-center gap-3">
-                          <img src="/images/agent-sarah.png" className="w-8 h-8 rounded-full" alt={p.agent} />
-                          <div className="text-sm text-gray-700 flex items-center gap-2">
-                            <span>{p.agent}</span>
-                            <img src="/icons/verifiedbadge.svg" alt="verified" className="w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })()}
-              </div>
+              <div ref={mapContainerRef} className="absolute inset-0" style={{ height: "100%" }} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
