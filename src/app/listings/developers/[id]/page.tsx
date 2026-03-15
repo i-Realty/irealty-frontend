@@ -16,37 +16,10 @@ import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
+import { sampleProperties } from '@/lib/data/properties';
+import type { PropertyWithCoords } from '@/lib/types';
 
-type Property = {
-  id: number;
-  title: string;
-  location: string;
-  price: string;
-  beds: number;
-  baths: number;
-  area: string;
-  tag?: "For Rent" | "For Sale";
-  image?: string;
-  agent?: string;
-  agentId?: number;
-};
 
-// replicate the same sample data shape from listings page (static for now)
-const agentNames = ['Sarah Homes', 'Kelly Williams', 'John Ade'];
-
-const sampleProperties: Property[] = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  title: 'Residential Plot - GRA Enugu',
-  location: 'Independence Layout, Enugu',
-  price: '₦ 20,000,000.00',
-  beds: 3,
-  baths: 2,
-  area: '120 sqm',
-  tag: i % 2 === 0 ? 'For Rent' : 'For Sale',
-  image: i % 2 === 0 ? '/images/property1.png' : '/images/property2.png',
-  agent: agentNames[i % agentNames.length],
-  agentId: (i % agentNames.length) + 1,
-}));
 
 export default function PropertyDetails() {
   const router = useRouter();
@@ -588,7 +561,7 @@ export default function PropertyDetails() {
         )}
 
         {showMap && (
-          <MapModal onClose={() => router.back()} />
+          <MapModal lat={prop.lat} lng={prop.lng} onClose={() => router.back()} />
         )}
 
         {showChat && (

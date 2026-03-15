@@ -159,19 +159,21 @@ export default function PropertyDetails() {
                 <div className="bg-gray-50 rounded-xl shadow-sm p-4">
                   <div className="flex text-center divide-x divide-gray-200">
                     <div className="flex-1 px-4">
-                      <div className="font-semibold mt-2">Land</div>
+                      <div className="font-semibold mt-2 capitalize">{prop.category || 'Property'}</div>
                       <div className="text-xs text-gray-500">Property Type</div>
                     </div>
                     <div className="flex-1 px-4">
-                      <div className="font-semibold mt-2">350 sqm</div>
+                      <div className="font-semibold mt-2">{prop.area || 'N/A'}</div>
                       <div className="text-xs text-gray-500">Total Area</div> 
                     </div>
                     <div className="flex-1 px-4">
-                      <div className="font-semibold mt-2">{prop.beds}</div>
+                      <div className="font-semibold mt-2">{prop.beds || 0}</div>
                       <div className="text-xs text-gray-500">Beds</div>
                     </div>
                     <div className="flex-1 px-4">
-                      <div className="font-semibold mt-2">02-May-2024</div>
+                      <div className="font-semibold mt-2">
+                        {prop.listedAt ? new Date(prop.listedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}
+                      </div>
                       <div className="text-xs text-gray-500">Date Added</div>  
                     </div>
                   </div>
@@ -472,7 +474,7 @@ export default function PropertyDetails() {
         )}
 
         {showMap && (
-          <MapModal onClose={() => router.back()} />
+          <MapModal lat={prop.lat} lng={prop.lng} onClose={() => router.back()} />
         )}
 
         {showReserve && (
