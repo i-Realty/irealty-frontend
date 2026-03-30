@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 
-export default function ResetVerify() {
+function ResetVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams?.get('email') || '';
@@ -47,7 +47,7 @@ export default function ResetVerify() {
         </div>
 
         <div className="text-sm text-gray-500 mb-8">
-          Didn't receive a code?{' '}
+          Didn&apos;t receive a code?{' '}
           <button type="button" onClick={() => alert("Code resent!")} className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer border-none bg-transparent">
             Resend
           </button>
@@ -64,5 +64,13 @@ export default function ResetVerify() {
         </button>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function ResetVerify() {
+  return (
+    <Suspense>
+      <ResetVerifyContent />
+    </Suspense>
   );
 }

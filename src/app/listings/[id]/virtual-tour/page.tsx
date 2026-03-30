@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
 import Image from 'next/image';
 
-export default function VirtualTourModal() {
+function VirtualTourModalContent() {
   const router = useRouter();
   const search = useSearchParams();
   const start = Number(search?.get('start') || 0);
@@ -150,5 +150,13 @@ export default function VirtualTourModal() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VirtualTourModal() {
+  return (
+    <Suspense fallback={<div className="fixed inset-0 bg-black" />}>
+      <VirtualTourModalContent />
+    </Suspense>
   );
 }

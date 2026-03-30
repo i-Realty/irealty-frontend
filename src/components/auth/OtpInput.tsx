@@ -3,10 +3,10 @@
 import React, { useRef, useCallback } from "react";
 
 interface OtpInputProps {
-  /** Current code value as an array of single-digit strings */
-  value: string[];
-  /** Called with the updated code array on every change */
-  onChange: (code: string[]) => void;
+  /** Current code value as a string */
+  value: string;
+  /** Called with the updated code string on every change */
+  onChange: (code: string) => void;
   /** Number of digits, defaults to 6 */
   length?: number;
   /** HTML id prefix for the inputs */
@@ -21,32 +21,34 @@ interface OtpInputProps {
 export default function OtpInput({ value, onChange, length = 6, idPrefix = "otp" }: OtpInputProps) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const valueArr = value.split("").concat(Array(length).fill("")).slice(0, length);
+
   const handleChange = useCallback(
     (raw: string, idx: number) => {
       const digit = raw.replace(/[^0-9]/g, "").slice(-1);
-      const next = [...value];
+      const next = [...valueArr];
       next[idx] = digit;
-      onChange(next);
+      onChange(next.join(""));
       if (digit && idx < length - 1) {
         refs.current[idx + 1]?.focus();
       }
     },
-    [value, onChange, length],
+    [valueArr, onChange, length],
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
       if (e.key === "Backspace") {
-        const next = [...value];
+        const next = [...valueArr];
         if (next[idx]) {
           next[idx] = "";
-          onChange(next);
+          onChange(next.join(""));
         } else if (idx > 0) {
           refs.current[idx - 1]?.focus();
         }
       }
     },
-    [value, onChange],
+    [valueArr, onChange],
   );
 
   const handlePaste = useCallback(
@@ -54,14 +56,14 @@ export default function OtpInput({ value, onChange, length = 6, idPrefix = "otp"
       e.preventDefault();
       const paste = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, length);
       if (!paste) return;
-      const next = [...value];
+      const next = [...valueArr];
       for (let i = 0; i < paste.length; i++) next[i] = paste[i];
-      onChange(next);
+      onChange(next.join(""));
       // Focus the next empty slot or the last filled slot
       const focusIdx = Math.min(paste.length, length - 1);
       refs.current[focusIdx]?.focus();
     },
-    [value, onChange, length],
+    [valueArr, onChange, length],
   );
 
   return (
@@ -73,7 +75,7 @@ export default function OtpInput({ value, onChange, length = 6, idPrefix = "otp"
           ref={(el) => { refs.current[i] = el; }}
           inputMode="numeric"
           maxLength={1}
-          value={value[i] || ""}
+          value={valueArr[i] || ""}
           onChange={(e) => handleChange(e.target.value, i)}
           onKeyDown={(e) => handleKeyDown(e, i)}
           onPaste={handlePaste}

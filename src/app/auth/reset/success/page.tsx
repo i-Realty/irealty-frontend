@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { validatePassword } from '@/lib/utils/authValidation';
 
-export default function ResetSuccess() {
+function ResetSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams?.get('email') || '';
@@ -126,5 +126,13 @@ export default function ResetSuccess() {
         </form>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function ResetSuccess() {
+  return (
+    <Suspense>
+      <ResetSuccessContent />
+    </Suspense>
   );
 }

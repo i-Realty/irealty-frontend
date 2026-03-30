@@ -61,7 +61,7 @@ export default function VerifyCode() {
         </div>
 
         <div className="text-sm text-gray-500 mb-8">
-          Didn't receive a code?{' '}
+          Didn&apos;t receive a code?{' '}
           <button type="button" onClick={() => alert("Verification code resent")} className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer bg-transparent border-none p-0 inline">
             Resend
           </button>

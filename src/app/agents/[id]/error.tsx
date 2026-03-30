@@ -28,7 +28,7 @@ export default function ErrorBoundary({
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong!</h2>
           <p className="text-gray-600 mb-8">
-            We encountered an error while trying to load this agent's profile. Please try again.
+            We encountered an error while trying to load this agent&apos;s profile. Please try again.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button

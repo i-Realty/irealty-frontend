@@ -1,1 +1,214 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"}],"headers":[]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/agents/[id]",
+      "regex": "^/agents/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/agents/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/listings/developers/[id]",
+      "regex": "^/listings/developers/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/developers/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/listings/developers/[id]/book-tour",
+      "regex": "^/listings/developers/([^/]+?)/book\\-tour(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/developers/(?<nxtPid>[^/]+?)/book\\-tour(?:/)?$"
+    },
+    {
+      "page": "/listings/developers/[id]/book-tour/payment",
+      "regex": "^/listings/developers/([^/]+?)/book\\-tour/payment(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/developers/(?<nxtPid>[^/]+?)/book\\-tour/payment(?:/)?$"
+    },
+    {
+      "page": "/listings/developers/[id]/profile",
+      "regex": "^/listings/developers/([^/]+?)/profile(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/developers/(?<nxtPid>[^/]+?)/profile(?:/)?$"
+    },
+    {
+      "page": "/listings/developers/[id]/virtual-tour",
+      "regex": "^/listings/developers/([^/]+?)/virtual\\-tour(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/developers/(?<nxtPid>[^/]+?)/virtual\\-tour(?:/)?$"
+    },
+    {
+      "page": "/listings/[id]",
+      "regex": "^/listings/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/listings/[id]/book-tour",
+      "regex": "^/listings/([^/]+?)/book\\-tour(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/(?<nxtPid>[^/]+?)/book\\-tour(?:/)?$"
+    },
+    {
+      "page": "/listings/[id]/book-tour/payment",
+      "regex": "^/listings/([^/]+?)/book\\-tour/payment(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/(?<nxtPid>[^/]+?)/book\\-tour/payment(?:/)?$"
+    },
+    {
+      "page": "/listings/[id]/profile",
+      "regex": "^/listings/([^/]+?)/profile(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/(?<nxtPid>[^/]+?)/profile(?:/)?$"
+    },
+    {
+      "page": "/listings/[id]/virtual-tour",
+      "regex": "^/listings/([^/]+?)/virtual\\-tour(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/listings/(?<nxtPid>[^/]+?)/virtual\\-tour(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/auth/login",
+      "regex": "^/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/login(?:/)?$"
+    },
+    {
+      "page": "/auth/reset",
+      "regex": "^/auth/reset(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset(?:/)?$"
+    },
+    {
+      "page": "/auth/reset/new-password",
+      "regex": "^/auth/reset/new\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset/new\\-password(?:/)?$"
+    },
+    {
+      "page": "/auth/reset/success",
+      "regex": "^/auth/reset/success(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset/success(?:/)?$"
+    },
+    {
+      "page": "/auth/reset/verify",
+      "regex": "^/auth/reset/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset/verify(?:/)?$"
+    },
+    {
+      "page": "/auth/signup",
+      "regex": "^/auth/signup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/signup(?:/)?$"
+    },
+    {
+      "page": "/auth/signup/account",
+      "regex": "^/auth/signup/account(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/signup/account(?:/)?$"
+    },
+    {
+      "page": "/auth/signup/success",
+      "regex": "^/auth/signup/success(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/signup/success(?:/)?$"
+    },
+    {
+      "page": "/auth/signup/verify",
+      "regex": "^/auth/signup/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/signup/verify(?:/)?$"
+    },
+    {
+      "page": "/listings",
+      "regex": "^/listings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/listings(?:/)?$"
+    },
+    {
+      "page": "/listings/developers",
+      "regex": "^/listings/developers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/listings/developers(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
