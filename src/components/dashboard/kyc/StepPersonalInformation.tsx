@@ -82,7 +82,7 @@ export default function StepPersonalInformation() {
           <div className="relative">
             <select 
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm appearance-none bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              value={formData.dobDate}
+              value={formData.dobDay}
               onChange={(e) => setFormData({...formData, dobDay: e.target.value})}
             >
               <option value="" disabled>Date</option>
