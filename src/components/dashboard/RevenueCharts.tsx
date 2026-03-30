@@ -1,7 +1,7 @@
 'use client';
 
 import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, Legend } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, Legend } from 'recharts';
 import { PieChart, Pie, Cell } from 'recharts';
 import { Coins, ChevronDown } from 'lucide-react';
 
@@ -82,7 +82,7 @@ export default function RevenueCharts() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => `₦${value.toLocaleString()}`} />
+              <Tooltip formatter={(value: any) => `₦${typeof value === 'number' ? value.toLocaleString() : value}`} />
             </PieChart>
           </ResponsiveContainer>
           {/* Centered text in doughnut */}
