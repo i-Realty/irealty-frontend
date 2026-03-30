@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { PRICE_MIN, PRICE_MAX } from '@/lib/constants';
 
-interface ListingsState {
+export interface ListingsState {
   query: string;
   activeTab: 'all' | 'sale' | 'rent';
   page: number;
   selectedPropertyTypes: Set<string>;
   selectedAmenities: Set<string>;
+  selectedBedrooms: Set<string>;
+  selectedStatuses: Set<string>;
   priceMin: number;
   priceMax: number;
   activeThumb: 'min' | 'max' | null;
@@ -20,6 +22,8 @@ interface ListingsState {
   setPage: (page: number) => void;
   togglePropertyType: (type: string) => void;
   toggleAmenity: (a: string) => void;
+  toggleBedroom: (b: string) => void;
+  toggleStatus: (s: string) => void;
   setPriceMin: (v: number) => void;
   setPriceMax: (v: number) => void;
   setActiveThumb: (t: 'min' | 'max' | null) => void;
@@ -36,6 +40,8 @@ export const useListingsStore = create<ListingsState>((set) => ({
   page: 1,
   selectedPropertyTypes: new Set(),
   selectedAmenities: new Set(),
+  selectedBedrooms: new Set(),
+  selectedStatuses: new Set(),
   priceMin: PRICE_MIN,
   priceMax: PRICE_MAX,
   activeThumb: null,
@@ -62,6 +68,20 @@ export const useListingsStore = create<ListingsState>((set) => ({
       return { selectedAmenities: next };
     }),
 
+  toggleBedroom: (b) =>
+    set((s) => {
+      const next = new Set(s.selectedBedrooms);
+      if (next.has(b)) next.delete(b); else next.add(b);
+      return { selectedBedrooms: next };
+    }),
+
+  toggleStatus: (st) =>
+    set((s) => {
+      const next = new Set(s.selectedStatuses);
+      if (next.has(st)) next.delete(st); else next.add(st);
+      return { selectedStatuses: next };
+    }),
+
   setPriceMin: (v) => set({ priceMin: v }),
   setPriceMax: (v) => set({ priceMax: v }),
   setActiveThumb: (t) => set({ activeThumb: t }),
@@ -79,6 +99,8 @@ export const useListingsStore = create<ListingsState>((set) => ({
     page: 1,
     selectedPropertyTypes: new Set(),
     selectedAmenities: new Set(),
+    selectedBedrooms: new Set(),
+    selectedStatuses: new Set(),
     priceMin: PRICE_MIN,
     priceMax: PRICE_MAX,
   }),

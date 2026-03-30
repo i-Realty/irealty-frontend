@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 import ProfileListingsGrid from '@/components/ProfileListingsGrid';
 import type { Property } from '@/lib/types';
+import Image from 'next/image';
 
 export default function ListingAgentProfile(props: unknown) {
   const { params } = props as { params: { id: string } };
@@ -73,7 +74,7 @@ export default function ListingAgentProfile(props: unknown) {
             {/* Share controls on the right (stacked) */}
             <div className="flex flex-col items-end gap-2">
               <button aria-label="Share options" className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center">
-                <img src="/icons/share.svg" alt="share" className="w-5 h-5 text-gray-600" />
+                <Image src="/icons/share.svg" alt="share" width={20} height={20} className="text-gray-600" />
               </button>
             </div>
           </div>
@@ -83,32 +84,32 @@ export default function ListingAgentProfile(props: unknown) {
             <aside className="lg:col-span-3">
               <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                 <div className="flex flex-col items-center">
-                  <div className="w-28 h-28 rounded-full overflow-hidden bg-white shadow-sm">
-                    <img src="/images/agent-sarah.png" alt={agentName} className="w-full h-full object-cover" />
+                  <div className="relative w-28 h-28 rounded-full overflow-hidden bg-white shadow-sm">
+                    <Image src="/images/agent-sarah.png" alt={agentName} fill className="object-cover" />
                   </div>
 
                   <div className="mt-4 flex items-center gap-2">
                     <h2 className="text-lg font-semibold">{agentName}</h2>
-                    <img src="/icons/verifiedbadge.svg" alt="verified" className="w-5 h-5" />
+                    <Image src="/icons/verifiedbadge.svg" alt="verified" width={20} height={20} />
                   </div>
 
                   <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                     <span>(0)</span>
-                    <img src="/icons/star-off.svg" alt="stars" className="w-4 h-4" />
+                    <Image src="/icons/star-off.svg" alt="stars" width={16} height={16} />
                   </div>
                 </div>
 
                 <div className="mt-6">
                   <button className="w-full border border-gray-200 rounded-lg py-3 text-sm text-gray-700 flex items-center justify-center gap-3 hover:bg-gray-50">
-                    <img src="/icons/messages.svg" className="w-5 h-5 text-gray-500" alt="msg" />
+                    <Image src="/icons/messages.svg" width={20} height={20} className="text-gray-500" alt="msg" />
                     <span className="font-medium">Send a message</span>
                   </button>
 
                   <div className="mt-6 flex items-center justify-center gap-6 text-gray-400">
-                    <img src="/icons/x.svg" className="w-5 h-5" alt="tw" />
-                    <img src="/icons/instagram.svg" className="w-5 h-5" alt="ig" />
-                    <img src="/icons/linkedin.svg" className="w-5 h-5" alt="li" />
-                    <img src="/icons/fb.svg" className="w-5 h-5" alt="fb" />
+                    <Image src="/icons/x.svg" width={20} height={20} alt="tw" />
+                    <Image src="/icons/instagram.svg" width={20} height={20} alt="ig" />
+                    <Image src="/icons/linkedin.svg" width={20} height={20} alt="li" />
+                    <Image src="/icons/fb.svg" width={20} height={20} alt="fb" />
                   </div>
                 </div>
               </div>
@@ -142,7 +143,7 @@ export default function ListingAgentProfile(props: unknown) {
 
                 <div className="bg-white rounded-lg border p-4 shadow-sm">
                   <div className="flex items-start gap-4">
-                    <img src="/images/agent-sarah.png" className="w-10 h-10 rounded-full" alt="reviewer" />
+                    <Image src="/images/agent-sarah.png" width={40} height={40} className="rounded-full" alt="reviewer" />
                     <div>
                       <div className="flex items-center gap-3">
                         <div className="font-medium">Kelly Williams</div>

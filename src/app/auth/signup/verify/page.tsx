@@ -2,95 +2,81 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import ProgressPill from '../ProgressPill';
+import AuthLayout from '@/components/auth/AuthLayout';
+import ProgressPill from '@/components/auth/ProgressPill';
+import OtpInput from '@/components/auth/OtpInput';
+import { useSignupStore } from '@/lib/store/useSignupStore';
 
-export default function SignupVerify() {
+export default function VerifyCode() {
   const router = useRouter();
-  const [code, setCode] = useState<string[]>(['', '', '', '', '', '']);
-  const [email, setEmail] = useState('user@example.com');
+  const { email } = useSignupStore();
+  
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
+  // Guard: if no email in store, they skipped steps
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('signupData');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setEmail(parsed.email ? parsed.email : 'user@example.com');
-      }
-    } catch {
+    if (!email) {
+      router.replace('/auth/signup');
     }
-  }, []);
+  }, [email, router]);
 
-  function handleChange(val: string, idx: number) {
-    const cleaned = val.replace(/[^0-9]/g, '').slice(-1);
-    const next = [...code];
-    next[idx] = cleaned;
-    setCode(next);
-    if (cleaned) {
-      const nextEl = document.getElementById(`code-${idx+2}`) as HTMLInputElement | null;
-      nextEl?.focus();
-    }
+  function verifyBase() {
+    if (code.length < 6) return;
+    setLoading(true);
+    
+    // Simulate API validation
+    setTimeout(() => {
+      router.push('/auth/signup/success');
+    }, 1000);
   }
 
-  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
-    if (paste) {
-      const next = [...code];
-      for (let i = 0; i < paste.length; i++) next[i] = paste[i];
-      setCode(next);
-    }
-  }
-
-  const isComplete = code.every(c => c !== '');
+  // Prevent render flicker while redirecting
+  if (!email) return null;
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
-      <div style={{ width: 640 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
-            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
-          </Link>
+    <AuthLayout maxWidth={640}>
+      <ProgressPill step={3} />
+
+      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100 mt-4 text-center">
+        <h3 className="text-2xl font-bold mb-2">Verify Your Account</h3>
+        <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+          We sent a 6-digit code to <br/>
+          <strong className="text-gray-900">{email}</strong><br/>
+          Please enter it below.
+        </p>
+
+        <div className="flex justify-center mb-8">
+          <OtpInput 
+            length={6} 
+            value={code} 
+            onChange={(val) => {
+              setCode(val);
+              if (val.length === 6 && !loading) {
+                // Auto-submit when completely filled
+                // Note: The button is still available but auto-submit is good UX
+              }
+            }} 
+          />
         </div>
 
-  <ProgressPill step={3} />
-  <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
-          <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Verify Email address</h3>
-          <p style={{ color: '#6B7280', marginBottom: 18 }}>Enter the 6 digit code sent to {email.replace(/(.{3}).+(@.+)/, "$1***$2")}</p>
-
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 12 }}>
-            {code.map((d, i) => (
-              <input
-                key={i}
-                id={`code-${i+1}`}
-                inputMode="numeric"
-                maxLength={1}
-                value={d}
-                onChange={e => handleChange(e.target.value, i)}
-                onKeyDown={e => {
-                  if (e.key === 'Backspace') {
-                    const next = [...code];
-                    if (next[i]) { next[i] = ''; setCode(next); } else {
-                      const prevEl = document.getElementById(`code-${i}`) as HTMLInputElement | null; prevEl?.focus();
-                    }
-                  }
-                }}
-                onPaste={handlePaste}
-                style={{ width: 56, height: 56, textAlign: 'center', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 18, background: '#fff' }}
-              />
-            ))}
-          </div>
-
-          <div style={{ textAlign: 'center', marginBottom: 12 }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); /* resend */ }} style={{ color: '#2563EB' }}>Resend code</a>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <button onClick={() => router.push('/auth/signup/success')} disabled={!isComplete} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: isComplete ? '#2563EB' : '#A3BFFA', color: '#fff', fontWeight: 700 }}>Verify Email Address</button>
-          </div>
+        <div className="text-sm text-gray-500 mb-8">
+          Didn't receive a code?{' '}
+          <button type="button" onClick={() => alert("Verification code resent")} className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer bg-transparent border-none p-0 inline">
+            Resend
+          </button>
         </div>
+
+        <button 
+          onClick={verifyBase} 
+          disabled={code.length < 6 || loading}
+          className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
+            code.length === 6 && !loading ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 'bg-blue-300 cursor-not-allowed'
+          } ${loading ? 'opacity-80' : ''}`}
+        >
+          {loading ? 'Verifying...' : 'Verify Email'}
+        </button>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

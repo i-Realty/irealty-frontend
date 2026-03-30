@@ -3,15 +3,42 @@
 import React from "react";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { standardProperties, developerProperties } from '@/lib/data/properties';
 
-const categories = [
-  { title: "Residential for Sale", count: 543, image: "/images/cat-residential.png" },
-  { title: "Commercial Properties", count: 543, image: "/images/cat-commercial.png" },
-  { title: "Land & Plots", count: 543, image: "/images/cat-land.png" },
-  { title: "Short-Term & Vacation Rentals", count: 90, image: "/images/cat-shortlet.png" },
-  { title: "Off-Plan & New Developments", count: 40, image: "/images/cat-offplan.png" },
-  { title: "Diaspora-Friendly Listings", count: 543, image: "/images/cat-diaspora.png" },
+const categoryConfig = [
+  { title: "Residential for Sale", image: "/images/cat-residential.png" },
+  { title: "Commercial Properties", image: "/images/cat-commercial.png" },
+  { title: "Land & Plots", image: "/images/cat-land.png" },
+  { title: "Short-Term & Vacation Rentals", image: "/images/cat-shortlet.png" },
+  { title: "Off-Plan & New Developments", image: "/images/cat-offplan.png" },
+  { title: "Diaspora-Friendly Listings", image: "/images/cat-diaspora.png" },
 ];
+
+const allProps = [...standardProperties, ...developerProperties];
+
+const getCount = (title: string) => {
+  switch (title) {
+    case "Residential for Sale":
+      return allProps.filter((p) => p.category === 'sale' && !p.title.toLowerCase().match(/commercial|plot|land/)).length;
+    case "Commercial Properties":
+      return allProps.filter((p) => p.title.toLowerCase().includes('commercial')).length;
+    case "Land & Plots":
+      return allProps.filter((p) => p.title.toLowerCase().match(/plot|land/)).length;
+    case "Short-Term & Vacation Rentals":
+      return allProps.filter((p) => p.category === 'shortlet').length;
+    case "Off-Plan & New Developments":
+      return developerProperties.filter((p) => p.title.toLowerCase().includes('off-plan')).length;
+    case "Diaspora-Friendly Listings":
+      return developerProperties.length;
+    default:
+      return 0;
+  }
+};
+
+const categories = categoryConfig.map(cat => ({
+  ...cat,
+  count: getCount(cat.title),
+}));
 
 export default function CategoryGrid() {
   const router = useRouter();
@@ -22,6 +49,24 @@ export default function CategoryGrid() {
     if (title.toLowerCase().includes('land') || title.toLowerCase().includes('plot')) return 'Plots/Land';
     if (title.toLowerCase().includes('short-term') || title.toLowerCase().includes('short') || title.toLowerCase().includes('vacation')) return 'Service Apartments & Short Lets';
     return '';
+  };
+
+  const handleCardClick = (title: string) => {
+    if (title === "Diaspora-Friendly Listings") {
+      router.push('/listings/developers');
+      return;
+    }
+    if (title === "Off-Plan & New Developments") {
+      router.push('/listings/developers?propertyType=Off-Plan');
+      return;
+    }
+
+    const type = mapTitleToType(title);
+    if (type) {
+      router.push(`/listings?propertyType=${encodeURIComponent(type)}`);
+    } else {
+      router.push('/listings');
+    }
   };
   return (
     <section className="w-full bg-white py-16">
@@ -35,12 +80,12 @@ export default function CategoryGrid() {
                 key={cat.title + i}
                 role="button"
                 tabIndex={0}
-                onClick={() => {
-                  const type = mapTitleToType(cat.title);
-                  if (type) router.push(`/listings?propertyType=${encodeURIComponent(type)}`);
-                  else router.push('/listings');
+                onClick={() => handleCardClick(cat.title)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleCardClick(cat.title);
+                  }
                 }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { const type = mapTitleToType(cat.title); if (type) router.push(`/listings?propertyType=${encodeURIComponent(type)}`); else router.push('/listings'); } }}
                 className="relative rounded-lg overflow-hidden transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                 style={{ height: 220 }}
               >

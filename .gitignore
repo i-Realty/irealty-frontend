@@ -39,3 +39,57 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# build artifacts & logs
+/dist
+build.log
+build_output.txt
+build_output2.txt
+build_output3.txt
+build_full.txt
+build_error_log.txt
+build_error_utf8.txt
+lint_output.txt
+lint_full.txt
+lint_all.txt
+lint_results.txt
+eslint.json
+react-loadable-manifest.json
+
+# non-canonical lockfiles
+bun.lock
+
+# scratch / debug files
+*.log
+diff_stat.txt
+diff_src.txt
+git_check.txt
+git_log_out.txt
+git_status.txt
+git_status2.txt
+git_status_out.txt
+git_tree.txt
+git_modified.txt
+src_changes.txt
+import_check.txt
+status.txt
+stash.txt
+reflog.txt
+figma_data.json
+figma_dashboard.txt
+figma_texts.txt
+figma_tree.txt
+mcp.json
+
+# one-off scripts (not part of the app)
+add_layouts.js
+add_static_meta.js
+extract_figma.js
+fix_chat.js
+fix_dev.js
+fix_imports.js
+replace_images.js
+wire_chat.js
+
+# cursor
+.cursor/

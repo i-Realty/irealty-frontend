@@ -1,5 +1,9 @@
 import type { PropertyWithCoords } from '@/lib/types';
 
+// Re-export the dedicated datasets so everything can be imported from '@/lib/data/properties'
+export { standardProperties } from './standardProperties';
+export { developerProperties } from './developerProperties';
+
 // Single source of truth for sample property data with all API fields populated.
 const today = new Date();
 const daysAgo = (n: number) => new Date(today.getTime() - n * 86400000).toISOString();

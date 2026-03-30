@@ -1,5 +1,9 @@
 {
   "/page": "app/page.js",
-  "/listings/developers/page": "app/listings/developers/page.js",
-  "/listings/developers/[id]/page": "app/listings/developers/[id]/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
+  "/auth/signup/account/page": "app/auth/signup/account/page.js",
+  "/auth/signup/verify/page": "app/auth/signup/verify/page.js",
+  "/auth/signup/success/page": "app/auth/signup/success/page.js"
 }

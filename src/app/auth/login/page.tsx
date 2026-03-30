@@ -4,79 +4,114 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import AuthLayout from '@/components/auth/AuthLayout';
+import PasswordInput from '@/components/auth/PasswordInput';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { validateEmail, validateRequired } from '@/lib/utils/authValidation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const login = useAuthStore(state => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // Errors state
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
-  const canSubmit = email.trim() !== '' && password.trim() !== '';
+  const canSubmit = email.trim() !== '' && password.trim() !== '' && !loading;
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    // placeholder: in production call your auth API then redirect on success
-    if (canSubmit) {
-      router.push('/');
+    setErrors({});
+
+    // Validate
+    const emailErr = validateEmail(email) || validateRequired(email, 'Email');
+    const pwdErr = validateRequired(password, 'Password');
+
+    if (emailErr || pwdErr) {
+      setErrors({ email: emailErr, password: pwdErr });
+      return;
     }
+
+    setLoading(true);
+
+    // Simulate network delay
+    setTimeout(() => {
+      login({ name: 'Demo User', email });
+      router.push('/');
+    }, 500);
   }
 
   return (
-    <div style={{ background: '#F8FAFB', height: '674px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
-      <div style={{ width: 628 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
-        <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
+    <AuthLayout maxWidth={500}>
+      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100">
+        <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
+        <p className="text-gray-500 mb-6">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+            Sign up
           </Link>
-        </div>
+        </p>
 
-        <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 6 }}>Welcome Back!</h2>
-          <p style={{ color: '#6B7280', marginBottom: 18 }}>Don&apos;t have an account? <Link href="/auth/signup" style={{ color: '#2563EB' }}>Sign up</Link></p>
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          {errors.general && (
+            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-2">{errors.general}</div>
+          )}
 
-          <form onSubmit={handleLogin} style={{ display: 'grid', gap: 12 }}>
-            <label style={{ fontSize: 13, color: '#374151' }}>Email address</label>
-            <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter Email Address" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Email address</label>
+            <input
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({...errors, email: ''}); }}
+              placeholder="Enter Email Address"
+              className={`px-3 py-2.5 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-blue-200 focus:border-blue-500'} focus:outline-none focus:ring-2 transition-all`}
+            />
+            {errors.email && <span className="text-xs text-red-500 mt-1">{errors.email}</span>}
+          </div>
 
-            <label style={{ fontSize: 13, color: '#374151' }}>Password</label>
-            <div style={{ position: 'relative' }}>
-              <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter Password" type={showPassword ? 'text' : 'password'} style={{ padding: '10px 40px 10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', width: '100%' }} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 6 }}>
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 3L21 21" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10.58 10.58A3 3 0 0013.42 13.42" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9.88 5.53A10.94 10.94 0 003 12c1.73 3.02 4.7 5.5 8.88 6.47" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M20.12 18.47A10.94 10.94 0 0021 12c-1.73-3.02-4.7-5.5-8.88-6.47" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-            </div>
+          <div className="flex flex-col gap-1" style={{ marginTop: '-4px' }}>
+            <PasswordInput
+              label="Password"
+              value={password}
+              onChange={(v) => { setPassword(v); if (errors.password) setErrors({...errors, password: ''}); }}
+              placeholder="Enter Password"
+              error={errors.password}
+            />
+          </div>
 
-            <div style={{ fontSize: 13, color: '#6B7280' }}>
-              Forgot Password? <Link href="/auth/reset" style={{ color: '#2563EB' }}>Reset it here</Link>
-            </div>
+          <div className="flex justify-start">
+            <Link href="/auth/reset" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              Forgot Password? Reset it here
+            </Link>
+          </div>
 
-            <button type="submit" disabled={!canSubmit} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: canSubmit ? '#7DA0FF' : '#AFC0F4', color: '#fff', fontWeight: 700 }}>Login</button>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className={`w-full py-3 mt-4 rounded-lg font-bold text-white transition-all
+              ${canSubmit ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'}
+              ${loading ? 'opacity-80' : ''}`}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
-              <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-              <div style={{ color: '#9CA3AF', fontSize: 13 }}>Or Continue With</div>
-              <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-            </div>
+          <div className="flex items-center gap-4 my-2">
+            <div className="flex-1 h-px bg-gray-200" />
+            <div className="text-gray-400 text-sm">Or Continue With</div>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
 
-            <button type="button" style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-            <Image src="/icons/google.svg" alt="Google" width={18} height={18} />
-              Continue with Google
-            </button>
-          </form>
-        </div>
+          <button
+            type="button"
+            onClick={() => alert("Google OAuth Coming Soon")}
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-gray-700"
+          >
+            <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+            Continue with Google
+          </button>
+        </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useMapStore } from "@/lib/store/useMapStore";
 import type { PropertyWithCoords } from "@/lib/types";
 
@@ -41,12 +42,12 @@ export default function ClusterPanel({ listingHrefPrefix = "/listings" }: Cluste
             href={`${listingHrefPrefix}/${p.id}`}
             className="flex gap-3 p-3 hover:bg-gray-50 transition-colors"
           >
-            {/* Thumbnail */}
-            <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-              <img
+            <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden relative bg-gray-100">
+              <Image
                 src={p.thumbnail ?? p.image ?? "/images/property1.png"}
                 alt={p.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
 

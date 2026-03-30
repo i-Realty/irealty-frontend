@@ -1,41 +1,69 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
+import AuthLayout from '@/components/auth/AuthLayout';
+import { useSignupStore } from '@/lib/store/useSignupStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 
 export default function SignupSuccess() {
   const router = useRouter();
+  
+  // Extract all final state to commit to Auth Store
+  const signupStore = useSignupStore();
+  const { login } = useAuthStore();
+  
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    // If we land here but have no email, something is wrong
+    if (!signupStore.email) {
+      router.replace('/auth/signup');
+      return;
+    }
+
+    // Persist to actual auth session
+    login({ 
+      name: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
+      email: signupStore.email,
+    });
+
+  }, [signupStore.email, signupStore.firstName, signupStore.lastName, signupStore.username, login, router]);
+
+  function handleContinue() {
+    setRedirecting(true);
+    // Cleanup the signup wizard explicitly
+    signupStore.reset();
+    
+    setTimeout(() => {
+      router.push('/');
+    }, 500);
+  }
+
+  // Prevent flash
+  if (!signupStore.email) return null;
 
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
-      <div style={{ width: 640 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
-            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
-          </Link>
+    <AuthLayout maxWidth={500}>
+      <div className="bg-white rounded-xl p-10 shadow-sm border border-gray-100 flex flex-col items-center">
+        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+          <Image src="/icons/successicon.svg" alt="Success" width={32} height={32} />
         </div>
 
-        <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <div style={{ width: 96, height: 96, borderRadius: 999, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 8px rgba(16,185,129,0.04), 0 0 0 16px rgba(16,185,129,0.02)' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 999, background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-          </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Created!</h3>
+        <p className="text-gray-500 text-center mb-8 px-4">
+          Your i-Realty account has been successfully created. Welcome aboard, {signupStore.firstName || 'User'}!
+        </p>
 
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Welcome To i-Realty!</h2>
-          <p style={{ color: '#6B7280', marginBottom: 20 }}>Your account has been created successfully</p>
-
-          <div style={{ maxWidth: 420, margin: '0 auto' }}>
-            <button onClick={() => router.push('/')} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff' }}>Back to homepage</button>
-          </div>
-        </div>
+        <button 
+          onClick={handleContinue} 
+          disabled={redirecting}
+          className={`w-full py-3 rounded-lg font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 cursor-pointer ${redirecting ? 'opacity-80' : ''}`}
+        >
+          {redirecting ? 'Taking you home...' : 'Go to Homepage'}
+        </button>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

@@ -1,24 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
-import ProgressPill from './ProgressPill';
+import ProgressPill from '@/components/auth/ProgressPill';
+import AuthLayout from '@/components/auth/AuthLayout';
+import { useSignupStore } from '@/lib/store/useSignupStore';
 
 export default function SignupStepOne() {
   const router = useRouter();
-  const [selected, setSelected] = useState<string>(() => {
-    try {
-      const raw = localStorage.getItem('signupData');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return parsed.role || 'property-seeker';
-      }
-    } catch {
-    }
-    return 'property-seeker';
-  });
+  const { role, setRole } = useSignupStore();
 
   const options = [
     { id: "property-seeker", title: "Property Seeker", subtitle: "Buy or rent", icon: "/icons/seekericon.svg" },
@@ -27,95 +18,74 @@ export default function SignupStepOne() {
     { id: "diaspora-investors", title: "Diaspora investors", subtitle: "Invest from abroad", icon: "/icons/diasporaicon.svg" },
   ];
 
-  function saveRole(role: string) {
-    try {
-      const raw = localStorage.getItem('signupData');
-      const parsed = raw ? JSON.parse(raw) : {};
-      parsed.role = role;
-      localStorage.setItem('signupData', JSON.stringify(parsed));
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
-      <div style={{ width: 640 }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
-            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
-          </Link>
-        </div>
+    <AuthLayout maxWidth={640}>
+      <ProgressPill step={1} />
 
-        <ProgressPill step={1} />
+      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100 mt-4">
+        <h2 className="text-2xl font-bold mb-2">How will you use i-Realty?</h2>
+        <p className="text-gray-500 mb-6">Select your primary role on the platform</p>
 
-        {/* Card */}
-        <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: 'Lato', marginBottom: 8 }}>How will you use I-Realty?</h2>
-          <p style={{ color: '#8E98A8', marginBottom: 20 }}>Select your primary role on the platform</p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { setSelected(opt.id); saveRole(opt.id); }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: 18,
-                  borderRadius: 12,
-                  border: selected === opt.id ? '2px solid #2563EB' : '1px solid #EDEFF1',
-                  background: selected === opt.id ? '#EEF2FF' : '#FFFFFF',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: selected === opt.id ? '#FFFFFF' : '#F8FAFB' }}>
-                    <Image src={opt.icon} alt={opt.title} width={22} height={22} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontFamily: 'Lato' }}>{opt.title}</div>
-                    <div style={{ fontSize: 13, color: '#8E98A8' }}>{opt.subtitle}</div>
-                  </div>
-                </div>
-              </button>
-            ))}
-
-            {/* Developers full width */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {options.map(opt => (
             <button
-              onClick={() => { setSelected('developers'); saveRole('developers'); }}
-              style={{
-                gridColumn: '1 / -1',
-                padding: 20,
-                alignItems: 'center',
-                borderRadius: 12,
-                border: selected === 'developers' ? '2px solid #2563EB' : '1px solid #EDEFF1',
-                background: '#FFFFFF',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12
-              }}
+              key={opt.id}
+              onClick={() => setRole(opt.id)}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                role === opt.id 
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-gray-100 bg-white hover:border-gray-300'
+              }`}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex',flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#F8FAFB' }}>
-                <Image src="/icons/developericon.svg" alt="Developers" width={22} height={22} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontFamily: 'Lato' }}>Developers</div>
-                <div style={{ fontSize: 13, color: '#8E98A8' }}>Showcase projects and connect with investors.</div>
+              <div className="flex flex-col items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${role === opt.id ? 'bg-white' : 'bg-gray-50'}`}>
+                  <Image src={opt.icon} alt={opt.title} width={22} height={22} />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-gray-900">{opt.title}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{opt.subtitle}</div>
+                </div>
               </div>
             </button>
-          </div>
+          ))}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28 }}>
-            <button style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff' }} onClick={() => {/* nothing to go back to */}}>Back</button>
-            <button style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff' }} onClick={() => router.push('/auth/signup/account')}>Proceed</button>
-          </div>
+          {/* Developers full width */}
+          <button
+            onClick={() => setRole('developers')}
+            className={`sm:col-span-2 flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all cursor-pointer ${
+              role === 'developers' 
+                ? 'border-blue-600 bg-blue-50' 
+                : 'border-gray-100 bg-white hover:border-gray-300'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${role === 'developers' ? 'bg-white' : 'bg-gray-50'}`}>
+              <Image src="/icons/developericon.svg" alt="Developers" width={22} height={22} />
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-gray-900">Developers</div>
+              <div className="text-xs text-gray-500 mt-0.5">Showcase projects and connect with investors.</div>
+            </div>
+          </button>
+        </div>
+
+        <div className="flex justify-between items-center mt-8">
+          <button 
+            onClick={() => router.back()}
+            className="px-6 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            Back
+          </button>
+          <button 
+            onClick={() => router.push('/auth/signup/account')}
+            disabled={!role}
+            className={`px-6 py-2.5 rounded-lg border-none font-bold text-white transition-all ${
+              role ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 'bg-blue-300 cursor-not-allowed'
+            }`}
+          >
+            Proceed
+          </button>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

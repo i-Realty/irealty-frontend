@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 
  export default function Navbar(){
   const [open, setOpen] = useState(false);
+  const { isLoggedIn, user, logout } = useAuthStore();
 
   return (
     <nav className="fixed w-full h-20 top-0 bg-white shadow-sm z-50">
@@ -29,12 +31,28 @@ import Link from 'next/link';
 
         {/* Auth Buttons */}
         <div className="hidden lg:flex items-center gap-4">
-          <Link href="/auth/login" className="flex justify-center items-center px-6 py-3 h-11 border border-[#2563EB] rounded-lg hover:bg-blue-50 transition-colors">
-            <span className="text-sm font-bold text-[#2563EB]">Login</span>
-          </Link>
-          <Link href="/auth/signup" className="flex justify-center items-center px-6 py-3 h-11 bg-[#2563EB] rounded-lg hover:bg-blue-600 transition-colors">
-            <span className="text-sm font-bold text-white">Sign up</span>
-          </Link>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold">
+                  {user?.name?.[0] || 'U'}
+                </div>
+                <span className="text-sm font-medium">{user?.name}</span>
+              </div>
+              <button onClick={logout} className="text-sm text-gray-500 hover:text-gray-900 font-medium cursor-pointer">
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link href="/auth/login" className="flex justify-center items-center px-6 py-3 h-11 border border-[#2563EB] rounded-lg hover:bg-blue-50 transition-colors">
+                <span className="text-sm font-bold text-[#2563EB]">Login</span>
+              </Link>
+              <Link href="/auth/signup" className="flex justify-center items-center px-6 py-3 h-11 bg-[#2563EB] rounded-lg hover:bg-blue-600 transition-colors">
+                <span className="text-sm font-bold text-white">Sign up</span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -70,8 +88,24 @@ import Link from 'next/link';
               <Link href="/listings/developers" onClick={() => setOpen(false)} className="text-base font-medium">Developers</Link>
 
               <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:gap-4">
-                <Link href="/auth/login" onClick={() => setOpen(false)} className="w-full text-center px-4 py-3 border border-[#2563EB] rounded-lg">Login</Link>
-                <Link href="/auth/signup" onClick={() => setOpen(false)} className="w-full mt-2 sm:mt-0 text-center px-4 py-3 bg-[#2563EB] text-white rounded-lg">Sign up</Link>
+                {isLoggedIn ? (
+                  <>
+                    <div className="flex items-center gap-3 py-3 w-full border-b border-gray-50">
+                      <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-lg">
+                        {user?.name?.[0] || 'U'}
+                      </div>
+                      <span className="font-medium text-lg">{user?.name}</span>
+                    </div>
+                    <button onClick={() => { logout(); setOpen(false); }} className="w-full text-center px-4 py-3 mt-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer">
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/login" onClick={() => setOpen(false)} className="w-full text-center px-4 py-3 text-[#2563EB] border border-[#2563EB] rounded-lg font-medium">Login</Link>
+                    <Link href="/auth/signup" onClick={() => setOpen(false)} className="w-full mt-2 sm:mt-0 text-center px-4 py-3 bg-[#2563EB] text-white rounded-lg font-medium">Sign up</Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

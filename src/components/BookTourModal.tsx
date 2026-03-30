@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 
 type Props = {
   onClose?: () => void;
@@ -100,7 +101,9 @@ export default function BookTourModal({ onClose }: Props) {
 
         {/* Image preview & fee */}
         <div className="mt-4">
-          <img src="/images/property1.png" alt="preview" className="w-full h-36 object-cover rounded-lg" />
+          <div className="relative w-full h-36 border border-gray-100 rounded-lg overflow-hidden">
+             <Image src="/images/property1.png" alt="preview" fill className="object-cover" />
+          </div>
 
           <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
             <div className="text-sm text-gray-600">Inspection Fee</div>

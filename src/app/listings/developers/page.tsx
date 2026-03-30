@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ClientListingsContent from "./ClientListingsContent";
+import DeveloperListingsClient from "./DeveloperListingsClient";
 
 export default function ListingsDevelopersPage() {
   return (
@@ -12,7 +12,7 @@ export default function ListingsDevelopersPage() {
           
           {/* Only the interactive client part (which reads searchParams) is wrapped in Suspense */}
           <Suspense fallback={<div className="py-20 text-center text-gray-500">Loading listings…</div>}>
-            <ClientListingsContent />
+            <DeveloperListingsClient />
           </Suspense>
         </div>
       </div>

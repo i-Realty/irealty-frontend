@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 
 export default function ReserveModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function ReserveModal({ onClose }: { onClose?: () => void }) {
         <div className="mt-6">
           <button onClick={proceed} className="w-full bg-blue-600 text-white rounded-lg py-3 text-sm flex items-center justify-center gap-2">
             Proceed To Payment
-            <img src="/icons/arrowOblique.svg" className="w-6 h-6" alt="proceed"/>
+            <Image src="/icons/arrowOblique.svg" width={24} height={24} alt="proceed"/>
           </button>
         </div>
       </div>

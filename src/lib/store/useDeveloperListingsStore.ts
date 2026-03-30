@@ -1,45 +1,19 @@
 import { create } from 'zustand';
 import { PRICE_MIN, PRICE_MAX } from '@/lib/constants';
+import type { ListingsState } from './useListingsStore';
 
 const DEVELOPER_PROPERTY_TYPES = ['Residential', 'Commercial', 'Off-Plan'];
 
-interface DeveloperListingsState {
-  query: string;
-  activeTab: 'all' | 'sale' | 'rent';
-  page: number;
-  selectedPropertyTypes: Set<string>;
-  selectedAmenities: Set<string>;
-  priceMin: number;
-  priceMax: number;
-  activeThumb: 'min' | 'max' | null;
-  mapMode: boolean;
-  mapStyle: 'light' | 'satellite';
-  activePropertyId: number | null;
-  filtersOpen: boolean;
-  // Actions
-  setQuery: (q: string) => void;
-  setActiveTab: (tab: 'all' | 'sale' | 'rent') => void;
-  setPage: (page: number) => void;
-  togglePropertyType: (type: string) => void;
-  toggleAmenity: (a: string) => void;
-  setPriceMin: (v: number) => void;
-  setPriceMax: (v: number) => void;
-  setActiveThumb: (t: 'min' | 'max' | null) => void;
-  setMapMode: (v: boolean | ((prev: boolean) => boolean)) => void;
-  setMapStyle: (s: 'light' | 'satellite') => void;
-  setActivePropertyId: (id: number | null) => void;
-  setFiltersOpen: (v: boolean) => void;
-  resetFilters: () => void;
-}
-
 export const DEVELOPER_TYPES = DEVELOPER_PROPERTY_TYPES;
 
-export const useDeveloperListingsStore = create<DeveloperListingsState>((set) => ({
+export const useDeveloperListingsStore = create<ListingsState>((set) => ({
   query: '',
   activeTab: 'all',
   page: 1,
   selectedPropertyTypes: new Set(),
   selectedAmenities: new Set(),
+  selectedBedrooms: new Set(),
+  selectedStatuses: new Set(),
   priceMin: PRICE_MIN,
   priceMax: PRICE_MAX,
   activeThumb: null,
@@ -66,6 +40,20 @@ export const useDeveloperListingsStore = create<DeveloperListingsState>((set) =>
       return { selectedAmenities: next };
     }),
 
+  toggleBedroom: (b) =>
+    set((s) => {
+      const next = new Set(s.selectedBedrooms);
+      if (next.has(b)) next.delete(b); else next.add(b);
+      return { selectedBedrooms: next };
+    }),
+
+  toggleStatus: (st) =>
+    set((s) => {
+      const next = new Set(s.selectedStatuses);
+      if (next.has(st)) next.delete(st); else next.add(st);
+      return { selectedStatuses: next };
+    }),
+
   setPriceMin: (v) => set({ priceMin: v }),
   setPriceMax: (v) => set({ priceMax: v }),
   setActiveThumb: (t) => set({ activeThumb: t }),
@@ -83,6 +71,8 @@ export const useDeveloperListingsStore = create<DeveloperListingsState>((set) =>
     page: 1,
     selectedPropertyTypes: new Set(),
     selectedAmenities: new Set(),
+    selectedBedrooms: new Set(),
+    selectedStatuses: new Set(),
     priceMin: PRICE_MIN,
     priceMax: PRICE_MAX,
   }),

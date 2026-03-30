@@ -271,8 +271,12 @@ html, body, #__next, [data-nextjs-root] {
   font-family: var(--font-lato) !important;
 }
 
-/* Inherit Lato for all elements and pseudo elements. This keeps icons,
-   and other UI elements unaffected except their text will use Lato too. */
-*, *::before, *::after {
-  font-family: inherit !important;
-}
+/* ── Double-thumb price range slider ──────────────────────────────────────────
+   Used by the listings filter sidebar. Kept in globals.css instead of
+   dangerouslySetInnerHTML to avoid CSP issues and keep styles centralized. */
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track { height: 8px; background: transparent; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 9999px; background: #2563EB; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+input[type=range]::-moz-range-track { height: 8px; background: transparent; }
+input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 9999px; background: #2563EB; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+input[type=range]:focus { outline: none; }

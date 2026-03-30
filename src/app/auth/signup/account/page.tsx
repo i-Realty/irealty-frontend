@@ -4,127 +4,188 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProgressPill from '../ProgressPill';
+import ProgressPill from '@/components/auth/ProgressPill';
+import AuthLayout from '@/components/auth/AuthLayout';
+import PasswordInput from '@/components/auth/PasswordInput';
+import { useSignupStore } from '@/lib/store/useSignupStore';
+import { validateEmail, validatePassword, validatePhone, validateRequired } from '@/lib/utils/authValidation';
 
 export default function SignupAccount() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [agree, setAgree] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  
+  // Extract all state and the setter
+  const { 
+    role, 
+    username: storeUser, 
+    firstName: storeFirst, 
+    lastName: storeLast, 
+    email: storeEmail, 
+    phone: storePhone,
+    password: storePassword,
+    setAccountInfo
+  } = useSignupStore();
 
+  // Guard: if no role selected, go back to step 1
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('signupData');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setUsername(parsed.username || '');
-        setFirstName(parsed.firstName || '');
-        setLastName(parsed.lastName || '');
-        setEmail(parsed.email || '');
-        setPhone(parsed.phone || '');
-      }
-  } catch {
-  }
-  }, []);
+    if (!role) {
+      router.replace('/auth/signup');
+    }
+  }, [role, router]);
+
+  // Local state initialized carefully from store (which persists across steps in memory)
+  const [username, setUsername] = useState(storeUser || '');
+  const [firstName, setFirstName] = useState(storeFirst || '');
+  const [lastName, setLastName] = useState(storeLast || '');
+  const [email, setEmail] = useState(storeEmail || '');
+  const [phone, setPhone] = useState(storePhone || '');
+  const [password, setPassword] = useState(storePassword || '');
+  const [agree, setAgree] = useState(false);
+  
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   function saveAndNext() {
-    try {
-      const raw = localStorage.getItem('signupData');
-      const parsed = raw ? JSON.parse(raw) : {};
-      parsed.username = username;
-      parsed.firstName = firstName;
-      parsed.lastName = lastName;
-      parsed.email = email;
-      parsed.phone = phone;
-  parsed.password = password; // be careful storing passwords in localStorage in production
-      localStorage.setItem('signupData', JSON.stringify(parsed));
-  } catch (err) { console.error(err); }
+    setErrors({});
+
+    // Validate fields
+    const newErrors: Record<string, string> = {};
+    if (validateRequired(username, 'Username')) newErrors.username = validateRequired(username, 'Username');
+    if (validateRequired(firstName, 'First Name')) newErrors.firstName = validateRequired(firstName, 'First Name');
+    if (validateRequired(lastName, 'Last Name')) newErrors.lastName = validateRequired(lastName, 'Last Name');
+    if (validateEmail(email) || validateRequired(email, 'Email')) newErrors.email = validateEmail(email) || validateRequired(email, 'Email');
+    if (validatePhone(phone) || validateRequired(phone, 'Phone')) newErrors.phone = validatePhone(phone) || validateRequired(phone, 'Phone');
+    if (validatePassword(password)) newErrors.password = validatePassword(password);
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return; // Stop if errors
+    }
+
+    // Persist to Memory Store (NO PLAINTEXT LOCAL STORAGE)
+    setAccountInfo({ username, firstName, lastName, email, phone, password });
+    
+    // Proceed
     router.push('/auth/signup/verify');
   }
 
+  // Hide the page if redirecting
+  if (!role) return null;
+
   return (
-    <div style={{ background: '#F8FAFB', display: 'flex', justifyContent: 'center', padding: 48 }}>
-      <div style={{ width: 640 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <Link href="/">
-            <Image src="/icons/logo-blue.svg" alt="i-Realty" width={120} height={36} />
-          </Link>
-        </div>
+    <AuthLayout maxWidth={640}>
+      <ProgressPill step={2} />
 
-  <ProgressPill step={2} />
-  <div style={{ background: '#fff', borderRadius: 12, padding: 32 }}>
-          <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Create Your Account</h3>
-          <p style={{ color: '#8E98A8', marginBottom: 18 }}>Already have an account? <Link href="/auth/login" style={{ color: '#2563EB' }}>Login</Link></p>
+      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100 mt-4">
+        <h3 className="text-xl font-bold mb-2">Create Your Account</h3>
+        <p className="text-gray-500 mb-6">
+          Already have an account? <Link href="/auth/login" className="text-blue-600 font-medium hover:text-blue-700">Login</Link>
+        </p>
 
-          <div style={{ display: 'grid', gap: 12 }}>
-            <label style={{ fontSize: 13, color: '#374151' }}>User Name/Company Name</label>
-            <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter User Name" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
-
-            <label style={{ fontSize: 13, color: '#374151' }}>First Name</label>
-            <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Enter First Name" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
-
-            <label style={{ fontSize: 13, color: '#374151' }}>Last Name</label>
-            <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter Last Name" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
-
-            <label style={{ fontSize: 13, color: '#374151' }}>Email address</label>
-            <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter Email Address" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
-
-            <label style={{ fontSize: 13, color: '#374151' }}>Phone Number</label>
-            <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234  Enter Phone Number" style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB' }} />
-
-            <label style={{ fontSize: 13, color: '#374151' }}>Create Password</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Password (Min. of 8 characters)"
-                type={showPassword ? 'text' : 'password'}
-                style={{ padding: '10px 40px 10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', width: '100%' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label="Toggle password visibility"
-                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 6 }}
-              >
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 3L21 21" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10.58 10.58A3 3 0 0013.42 13.42" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9.88 5.53A10.94 10.94 0 003 12c1.73 3.02 4.7 5.5 8.88 6.47" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M20.12 18.47A10.94 10.94 0 0021 12c-1.73-3.02-4.7-5.5-8.88-6.47" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input id="agree" type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
-              <label htmlFor="agree" style={{ fontSize: 13, color: '#6B7280' }}>I agree to i-Realty&apos;s <a href="#" style={{ color: '#2563EB' }}>Terms of Service</a> and <a href="#" style={{ color: '#2563EB' }}>Privacy Policy</a></label>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <button onClick={saveAndNext} disabled={!agree} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: 'none', background: agree ? '#2563EB' : '#CBD5E1', color: '#fff', fontWeight: 700 }}>Proceed</button>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: 12, color: '#9CA3AF' }}>Or Continue With</div>
-            <button style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-              <Image src="/icons/google.svg" alt="Google" width={18} height={18} />
-              Continue with Google
-            </button>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">User Name/Company Name</label>
+            <input 
+              value={username} onChange={e => { setUsername(e.target.value); if(errors.username) setErrors({...errors, username:''}); }} 
+              placeholder="Enter User Name" 
+              className={`px-3 py-2.5 rounded-lg border ${errors.username ? 'border-red-500' : 'border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} outline-none transition-all`} 
+            />
+            {errors.username && <span className="text-xs text-red-500">{errors.username}</span>}
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">First Name</label>
+              <input 
+                value={firstName} onChange={e => { setFirstName(e.target.value); if(errors.firstName) setErrors({...errors, firstName:''}); }} 
+                placeholder="Enter First Name" 
+                className={`px-3 py-2.5 rounded-lg border ${errors.firstName ? 'border-red-500' : 'border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} outline-none transition-all`} 
+              />
+              {errors.firstName && <span className="text-xs text-red-500">{errors.firstName}</span>}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Last Name</label>
+              <input 
+                value={lastName} onChange={e => { setLastName(e.target.value); if(errors.lastName) setErrors({...errors, lastName:''}); }} 
+                placeholder="Enter Last Name" 
+                className={`px-3 py-2.5 rounded-lg border ${errors.lastName ? 'border-red-500' : 'border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} outline-none transition-all`} 
+              />
+              {errors.lastName && <span className="text-xs text-red-500">{errors.lastName}</span>}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Email address</label>
+            <input 
+              value={email} onChange={e => { setEmail(e.target.value); if(errors.email) setErrors({...errors, email:''}); }} 
+              placeholder="Enter Email Address" 
+              className={`px-3 py-2.5 rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} outline-none transition-all`} 
+            />
+            {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Phone Number</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium leading-none">+234</span>
+              <input 
+                value={phone} onChange={e => { setPhone(e.target.value); if(errors.phone) setErrors({...errors, phone:''}); }} 
+                placeholder="Enter Phone Number" 
+                className={`w-full pl-12 pr-3 py-2.5 rounded-lg border ${errors.phone ? 'border-red-500' : 'border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} outline-none transition-all`} 
+              />
+            </div>
+            {errors.phone && <span className="text-xs text-red-500">{errors.phone}</span>}
+          </div>
+
+          <div className="flex flex-col gap-1 mt--1" style={{ marginTop: '-4px' }}>
+            <PasswordInput
+              label="Create Password"
+              value={password}
+              onChange={(v) => { setPassword(v); if(errors.password) setErrors({...errors, password:''}); }}
+              placeholder="Password (Min. of 8 characters)"
+              error={errors.password}
+            />
+          </div>
+
+          <div className="flex items-start gap-3 mt-2">
+            <input 
+              id="agree" 
+              type="checkbox" 
+              checked={agree} 
+              onChange={e => setAgree(e.target.checked)} 
+              className="mt-1 flex-shrink-0"
+            />
+            <label htmlFor="agree" className="text-sm text-gray-500 leading-tight">
+              I agree to i-Realty&apos;s <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Terms of Service</a> and <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Privacy Policy</a>
+            </label>
+          </div>
+
+          <button 
+            onClick={saveAndNext} 
+            disabled={!agree} 
+            className={`w-full py-3 mt-4 rounded-lg font-bold text-white transition-all cursor-pointer ${
+              agree ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'
+            }`}
+          >
+            Proceed
+          </button>
+
+          <div className="flex items-center gap-4 my-2">
+            <div className="flex-1 h-px bg-gray-200" />
+            <div className="text-gray-400 text-sm">Or Continue With</div>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          <button 
+            type="button"
+            onClick={() => alert("Google OAuth Coming Soon")}
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors font-medium text-gray-700 cursor-pointer"
+          >
+            <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+            Continue with Google
+          </button>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
