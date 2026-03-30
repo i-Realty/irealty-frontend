@@ -58,8 +58,8 @@ export default function StepIDVerification() {
           >
             <option value="" disabled>Select Means Of Identification</option>
             <option value="International passport">International passport</option>
-            <option value="Driver's license">Driver's license</option>
-            <option value="Voter's card">Voter's card</option>
+            <option value="Driver's license">Driver&apos;s license</option>
+            <option value="Voter's card">Voter&apos;s card</option>
             <option value="NIN">NIN</option>
           </select>
           <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
