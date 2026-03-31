@@ -24,15 +24,15 @@ export default function Sidebar() {
     { label: 'OVERVIEW', isHeader: true },
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/agent' },
     { label: 'My Properties', icon: Home, href: '/dashboard/agent/properties' },
-    { label: 'Messages', icon: MessageSquare, href: '/dashboard/messages' },
-    { label: 'Documents', icon: FileText, href: '/dashboard/documents' },
+    { label: 'Messages', icon: MessageSquare, href: '/dashboard/agent/messages' },
+    { label: 'Documents', icon: FileText, href: '/dashboard/agent/documents' },
     
     { label: 'FINANCIAL', isHeader: true },
-    { label: 'Wallet', icon: Wallet, href: '/dashboard/wallet' },
+    { label: 'Wallet', icon: Wallet, href: '/dashboard/agent/wallet' },
     { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/transactions' },
     
     { label: 'TOOLS', isHeader: true },
-    { label: 'Calendar', icon: Calendar, href: '/dashboard/calendar' },
+    { label: 'Calendar', icon: Calendar, href: '/dashboard/agent/calendar' },
     
     { label: 'ACCOUNT', isHeader: true },
     { label: 'Settings', icon: Settings, href: '/dashboard/settings' },

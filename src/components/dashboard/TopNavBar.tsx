@@ -4,10 +4,12 @@ import { Menu, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
+import { useMessagesStore } from '@/lib/store/useMessagesStore';
 
 export default function TopNavBar() {
   const pathname = usePathname();
   const { toggle } = useSidebarStore();
+  const activeChatId = useMessagesStore((state) => state.activeChatId);
   
   const getPageTitle = () => {
     if (!pathname) return 'Dashboard';
@@ -21,8 +23,10 @@ export default function TopNavBar() {
     return 'Dashboard';
   };
 
+  const isMessagesActive = pathname?.includes('/messages') && activeChatId !== null;
+
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6">
+    <header className={`h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6 ${isMessagesActive ? 'hidden md:flex' : ''}`}>
       <div className="flex items-center gap-4 border-l border-gray-100 pl-4 ml-0 md:ml-0 md:border-l-0 md:pl-0">
          <div className="flex items-center gap-2">
            <Image src="/logo.png" alt="i-Realty" width={110} height={36} className="md:hidden object-contain" />

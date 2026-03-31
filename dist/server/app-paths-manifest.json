@@ -1,7 +1,10 @@
 {
   "/page": "app/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/agent/messages/page": "app/dashboard/agent/messages/page.js",
+  "/dashboard/agent/calendar/page": "app/dashboard/agent/calendar/page.js",
+  "/dashboard/agent/wallet/page": "app/dashboard/agent/wallet/page.js",
+  "/dashboard/agent/documents/page": "app/dashboard/agent/documents/page.js",
   "/dashboard/agent/properties/page": "app/dashboard/agent/properties/page.js",
-  "/dashboard/agent/page": "app/dashboard/agent/page.js",
-  "/dashboard/agent/properties/[id]/page": "app/dashboard/agent/properties/[id]/page.js"
+  "/dashboard/agent/page": "app/dashboard/agent/page.js"
 }
