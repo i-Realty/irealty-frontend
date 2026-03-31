@@ -69,7 +69,7 @@ interface MessagesStore {
   
   // Media Upload Flow States
   uploadModalState: UploadModalState;
-  stagedFiles: File[]; // In-memory JS files before API upload
+  stagedFiles: any[]; // In-memory JS files before API upload
 
   // Actions
   fetchThreadsMock: () => Promise<void>;
@@ -80,7 +80,7 @@ interface MessagesStore {
   toggleMobileContext: (isOpen: boolean) => void;
   
   setUploadModalState: (state: UploadModalState) => void;
-  setStagedFiles: (files: File[]) => void;
+  setStagedFiles: (files: any[]) => void;
   clearUploadState: () => void;
 }
 

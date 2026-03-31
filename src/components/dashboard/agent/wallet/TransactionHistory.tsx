@@ -8,8 +8,6 @@ export default function TransactionHistory() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Local Pagination Mock Logic
-  const pageSize = 5;
-  const currentPage = 3; // Hardcoded purely to match exactly what the mockup Pagination shows ("3" is selected)
   // Real implementation would calculate derived state arrays based on filtered queries.
 
   const filteredData = transactions.filter(t => 
@@ -59,7 +57,7 @@ export default function TransactionHistory() {
                      )}
 
                      {filteredData.length === 0 && !isLoadingLedger ? (
-                        <div className="py-8 text-center text-gray-500 text-sm">No transactions found matching "{searchQuery}"</div>
+                        <div className="py-8 text-center text-gray-500 text-sm">No transactions found matching &quot;{searchQuery}&quot;</div>
                      ) : (
                         filteredData.map(tx => <TransactionRow key={tx.id} transaction={tx} />)
                      )}

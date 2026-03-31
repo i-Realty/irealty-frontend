@@ -30,7 +30,7 @@ export default function SetupAvailabilityModal() {
                 Set Up Your Availability
               </h2>
               <p className="text-[15px] font-medium text-gray-400 mt-2">
-                Choose the days and times you're available for property inspections
+                Choose the days and times you&apos;re available for property inspections
               </p>
            </div>
 
