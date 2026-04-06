@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
+import ToastContainer from "@/components/ui/ToastContainer";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
         <main className="pt-0">
           {children}
         </main>
+        <ToastContainer />
       </body>
     </html>
   );

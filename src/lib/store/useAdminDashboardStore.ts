@@ -1,0 +1,540 @@
+import { create } from 'zustand';
+import type { UserRole } from './useAuthStore';
+
+// ── Types ──────────────────────────────────────────────────────────────
+
+export type KycStatus = 'unverified' | 'in-progress' | 'verified';
+export type AccountStatus = 'active' | 'suspended';
+export type ModerationStatus = 'Pending Review' | 'Verified' | 'Flagged' | 'Rejected';
+export type TransactionType = 'Inspection' | 'Sale' | 'Rental' | 'Developer Milestone' | 'Diaspora Service';
+export type TransactionStatus = 'Pending' | 'In-progress' | 'Completed' | 'Declined';
+export type EscrowItemStatus = 'Held' | 'Releasing' | 'Released';
+export type PayoutStatus = 'Pending' | 'Approved' | 'Rejected' | 'Processing';
+
+export interface AdminStats {
+  totalUsers: number;
+  activeListings: number;
+  pendingKyc: number;
+  totalRevenue: number;
+  escrowBalance: number;
+  pendingPayouts: number;
+}
+
+export interface RevenueDataPoint {
+  period: string;
+  amount: number;
+}
+
+export interface UserGrowthPoint {
+  period: string;
+  agents: number;
+  seekers: number;
+  developers: number;
+  diaspora: number;
+  landlords: number;
+}
+
+export interface TransactionVolumePoint {
+  category: string;
+  count: number;
+  amount: number;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  kycStatus: KycStatus;
+  joinDate: string;
+  accountStatus: AccountStatus;
+  totalListings: number;
+  totalTransactions: number;
+}
+
+export interface KycDocument {
+  step: string;
+  status: 'submitted' | 'verified' | 'pending' | 'rejected';
+  data?: string;
+}
+
+export interface AdminUserDetail extends AdminUser {
+  avatarUrl: string;
+  phone: string;
+  kycProgress: number;
+  kycDocuments: KycDocument[];
+  recentTransactions: AdminTransaction[];
+  lastLogin: string;
+}
+
+export interface AdminProperty {
+  id: string;
+  title: string;
+  type: 'Property' | 'Project';
+  ownerName: string;
+  ownerRole: 'Agent' | 'Developer';
+  category: string;
+  price: number;
+  moderationStatus: ModerationStatus;
+  dateListed: string;
+  image: string;
+  location: string;
+}
+
+export interface AdminTransaction {
+  id: string;
+  date: string;
+  type: TransactionType;
+  partyA: string;
+  partyB: string;
+  amount: number;
+  irealtyFee: number;
+  status: TransactionStatus;
+}
+
+export interface AdminTransactionDetail extends AdminTransaction {
+  escrowAmount: number;
+  netToParties: number;
+  partyAAvatar: string;
+  partyBAvatar: string;
+  auditLog: { timestamp: string; action: string; by: string }[];
+}
+
+export interface EscrowItem {
+  id: string;
+  transactionId: string;
+  parties: string;
+  amount: number;
+  dateDeposited: string;
+  expectedRelease: string;
+  status: EscrowItemStatus;
+  ageDays: number;
+}
+
+export interface PayoutRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  role: UserRole;
+  amount: number;
+  method: 'Bank' | 'Crypto';
+  bankName?: string;
+  accountNumber?: string;
+  cryptoCurrency?: string;
+  cryptoAddress?: string;
+  requestDate: string;
+  status: PayoutStatus;
+}
+
+export interface RevenueBreakdown {
+  category: string;
+  amount: number;
+  count: number;
+}
+
+// ── Filter Types ──────────────────────────────────────────────────────
+
+export interface UserFilters {
+  role: string;
+  kycStatus: string;
+  accountStatus: string;
+  search: string;
+  page: number;
+}
+
+export interface PropertyFilters {
+  tab: string;
+  category: string;
+  search: string;
+  page: number;
+}
+
+export interface TransactionFilters {
+  tab: string;
+  status: string;
+  search: string;
+  page: number;
+}
+
+// ── Store Interface ───────────────────────────────────────────────────
+
+interface AdminDashboardState {
+  // Overview
+  stats: AdminStats;
+  revenueData: RevenueDataPoint[];
+  userGrowthData: UserGrowthPoint[];
+  transactionVolumeData: TransactionVolumePoint[];
+  recentTransactions: AdminTransaction[];
+  pendingKycUsers: AdminUser[];
+
+  // Users
+  users: AdminUser[];
+  selectedUser: AdminUserDetail | null;
+  userFilters: UserFilters;
+  setUserFilters: (filters: Partial<UserFilters>) => void;
+
+  // Properties
+  properties: AdminProperty[];
+  propertyFilters: PropertyFilters;
+  setPropertyFilters: (filters: Partial<PropertyFilters>) => void;
+
+  // Transactions
+  transactions: AdminTransaction[];
+  selectedTransaction: AdminTransactionDetail | null;
+  transactionFilters: TransactionFilters;
+  setTransactionFilters: (filters: Partial<TransactionFilters>) => void;
+
+  // Finance
+  revenueBreakdown: RevenueBreakdown[];
+  escrowItems: EscrowItem[];
+  payouts: PayoutRequest[];
+  payoutFilter: string;
+  setPayoutFilter: (f: string) => void;
+
+  // Platform fees
+  platformFees: { inspection: number; sale: number; rental: number; developer: number; diaspora: number };
+  updatePlatformFees: (fees: Partial<AdminDashboardState['platformFees']>) => void;
+
+  // Loading
+  isLoading: boolean;
+  isActionLoading: boolean;
+  error: string | null;
+
+  // Actions
+  fetchDashboardDataMock: () => Promise<void>;
+  fetchUsersMock: () => Promise<void>;
+  fetchUserByIdMock: (id: string) => Promise<void>;
+  approveKycMock: (userId: string) => Promise<void>;
+  rejectKycMock: (userId: string) => Promise<void>;
+  suspendUserMock: (userId: string) => Promise<void>;
+  reactivateUserMock: (userId: string) => Promise<void>;
+  fetchPropertiesMock: () => Promise<void>;
+  approvePropertyMock: (id: string) => Promise<void>;
+  rejectPropertyMock: (id: string) => Promise<void>;
+  flagPropertyMock: (id: string) => Promise<void>;
+  fetchTransactionsMock: () => Promise<void>;
+  fetchTransactionByIdMock: (id: string) => Promise<void>;
+  fetchFinanceMock: () => Promise<void>;
+  approvePayoutMock: (id: string) => Promise<void>;
+  rejectPayoutMock: (id: string) => Promise<void>;
+}
+
+// ── Mock Data ─────────────────────────────────────────────────────────
+
+const MOCK_USERS: AdminUser[] = [
+  { id: 'USR-001', name: 'Sarah Homes', email: 'sarah@homes.ng', role: 'Agent', kycStatus: 'verified', joinDate: '15 Jan 2025', accountStatus: 'active', totalListings: 12, totalTransactions: 45 },
+  { id: 'USR-002', name: 'Marcus Bell', email: 'marcus@mail.com', role: 'Property Seeker', kycStatus: 'in-progress', joinDate: '22 Feb 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 8 },
+  { id: 'USR-003', name: 'Amara Osei', email: 'amara@dev.co', role: 'Developer', kycStatus: 'verified', joinDate: '10 Mar 2025', accountStatus: 'active', totalListings: 5, totalTransactions: 22 },
+  { id: 'USR-004', name: 'Ngozi Adeyemi', email: 'ngozi@invest.uk', role: 'Diaspora', kycStatus: 'in-progress', joinDate: '05 Apr 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 3 },
+  { id: 'USR-005', name: 'Emeka Nwosu', email: 'emeka@land.ng', role: 'Landlord', kycStatus: 'unverified', joinDate: '18 Apr 2025', accountStatus: 'active', totalListings: 2, totalTransactions: 0 },
+  { id: 'USR-006', name: 'Fatima Ibrahim', email: 'fatima@props.ng', role: 'Agent', kycStatus: 'verified', joinDate: '01 Jan 2025', accountStatus: 'suspended', totalListings: 8, totalTransactions: 30 },
+  { id: 'USR-007', name: 'Chidi Okeke', email: 'chidi@mail.com', role: 'Property Seeker', kycStatus: 'in-progress', joinDate: '28 Mar 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 5 },
+  { id: 'USR-008', name: 'Ada Obi', email: 'ada@dev.ng', role: 'Developer', kycStatus: 'verified', joinDate: '12 Feb 2025', accountStatus: 'active', totalListings: 3, totalTransactions: 15 },
+  { id: 'USR-009', name: 'Tunde Bakare', email: 'tunde@diaspora.com', role: 'Diaspora', kycStatus: 'verified', joinDate: '20 Jan 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 12 },
+  { id: 'USR-010', name: 'Grace Adekunle', email: 'grace@homes.ng', role: 'Agent', kycStatus: 'in-progress', joinDate: '15 May 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 0 },
+  { id: 'USR-011', name: 'Obinna Eze', email: 'obinna@mail.com', role: 'Property Seeker', kycStatus: 'verified', joinDate: '08 Jun 2025', accountStatus: 'active', totalListings: 0, totalTransactions: 20 },
+  { id: 'USR-012', name: 'Kemi Afolabi', email: 'kemi@land.ng', role: 'Landlord', kycStatus: 'verified', joinDate: '25 May 2025', accountStatus: 'active', totalListings: 4, totalTransactions: 7 },
+];
+
+const MOCK_PROPERTIES: AdminProperty[] = [
+  { id: 'PRP-001', title: '3-Bed Duplex, Lekki Phase 1', type: 'Property', ownerName: 'Sarah Homes', ownerRole: 'Agent', category: 'Residential', price: 45000000, moderationStatus: 'Verified', dateListed: '20 Jul 2025', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=400&auto=format&fit=crop', location: 'Lekki, Lagos' },
+  { id: 'PRP-002', title: 'Opal Residences Tower', type: 'Project', ownerName: 'Amara Osei', ownerRole: 'Developer', category: 'Commercial', price: 120000000, moderationStatus: 'Pending Review', dateListed: '15 Aug 2025', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400&auto=format&fit=crop', location: 'Victoria Island, Lagos' },
+  { id: 'PRP-003', title: '5-Bed Mansion, Ikoyi', type: 'Property', ownerName: 'Fatima Ibrahim', ownerRole: 'Agent', category: 'Residential', price: 85000000, moderationStatus: 'Verified', dateListed: '10 Jul 2025', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400&auto=format&fit=crop', location: 'Ikoyi, Lagos' },
+  { id: 'PRP-004', title: 'Green Valley Estate', type: 'Project', ownerName: 'Ada Obi', ownerRole: 'Developer', category: 'Off-Plan', price: 50000000, moderationStatus: 'Pending Review', dateListed: '25 Aug 2025', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=400&auto=format&fit=crop', location: 'Magodo, Lagos' },
+  { id: 'PRP-005', title: 'Office Space, Ikeja GRA', type: 'Property', ownerName: 'Sarah Homes', ownerRole: 'Agent', category: 'Commercial', price: 35000000, moderationStatus: 'Flagged', dateListed: '05 Aug 2025', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=400&auto=format&fit=crop', location: 'Ikeja GRA, Lagos' },
+  { id: 'PRP-006', title: '2-Bed Flat, VI', type: 'Property', ownerName: 'Fatima Ibrahim', ownerRole: 'Agent', category: 'Residential', price: 3500000, moderationStatus: 'Rejected', dateListed: '01 Aug 2025', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=400&auto=format&fit=crop', location: 'Victoria Island, Lagos' },
+  { id: 'PRP-007', title: 'Asokoro Villas Phase 2', type: 'Project', ownerName: 'Amara Osei', ownerRole: 'Developer', category: 'Residential', price: 90000000, moderationStatus: 'Verified', dateListed: '18 Jun 2025', image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=400&auto=format&fit=crop', location: 'Asokoro, Abuja' },
+  { id: 'PRP-008', title: 'Banana Island Terrace', type: 'Property', ownerName: 'Sarah Homes', ownerRole: 'Agent', category: 'Residential', price: 200000000, moderationStatus: 'Pending Review', dateListed: '28 Aug 2025', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=400&auto=format&fit=crop', location: 'Banana Island, Lagos' },
+];
+
+const MOCK_TRANSACTIONS: AdminTransaction[] = [
+  { id: 'TXN-A001', date: '28 Aug 2025', type: 'Inspection', partyA: 'Marcus Bell', partyB: 'Sarah Homes', amount: 25000, irealtyFee: 2500, status: 'Completed' },
+  { id: 'TXN-A002', date: '27 Aug 2025', type: 'Sale', partyA: 'Obinna Eze', partyB: 'Sarah Homes', amount: 45000000, irealtyFee: 1125000, status: 'In-progress' },
+  { id: 'TXN-A003', date: '25 Aug 2025', type: 'Developer Milestone', partyA: 'Chidi Okeke', partyB: 'Amara Osei', amount: 18000000, irealtyFee: 540000, status: 'Completed' },
+  { id: 'TXN-A004', date: '24 Aug 2025', type: 'Diaspora Service', partyA: 'Ngozi Adeyemi', partyB: 'i-Realty Team', amount: 625000, irealtyFee: 625000, status: 'Pending' },
+  { id: 'TXN-A005', date: '22 Aug 2025', type: 'Rental', partyA: 'Marcus Bell', partyB: 'Kemi Afolabi', amount: 3500000, irealtyFee: 87500, status: 'Completed' },
+  { id: 'TXN-A006', date: '20 Aug 2025', type: 'Inspection', partyA: 'Obinna Eze', partyB: 'Fatima Ibrahim', amount: 25000, irealtyFee: 2500, status: 'Declined' },
+  { id: 'TXN-A007', date: '18 Aug 2025', type: 'Sale', partyA: 'Tunde Bakare', partyB: 'Ada Obi', amount: 90000000, irealtyFee: 2700000, status: 'Completed' },
+  { id: 'TXN-A008', date: '15 Aug 2025', type: 'Developer Milestone', partyA: 'Grace Adekunle', partyB: 'Amara Osei', amount: 36000000, irealtyFee: 1080000, status: 'In-progress' },
+  { id: 'TXN-A009', date: '12 Aug 2025', type: 'Rental', partyA: 'Chidi Okeke', partyB: 'Sarah Homes', amount: 5000000, irealtyFee: 125000, status: 'Pending' },
+  { id: 'TXN-A010', date: '10 Aug 2025', type: 'Diaspora Service', partyA: 'Tunde Bakare', partyB: 'i-Realty Team', amount: 450000, irealtyFee: 450000, status: 'Completed' },
+];
+
+const MOCK_ESCROW: EscrowItem[] = [
+  { id: 'ESC-001', transactionId: 'TXN-A002', parties: 'Obinna Eze ↔ Sarah Homes', amount: 45000000, dateDeposited: '27 Aug 2025', expectedRelease: '15 Sep 2025', status: 'Held', ageDays: 5 },
+  { id: 'ESC-002', transactionId: 'TXN-A008', parties: 'Grace Adekunle ↔ Amara Osei', amount: 36000000, dateDeposited: '15 Aug 2025', expectedRelease: '30 Oct 2025', status: 'Held', ageDays: 17 },
+  { id: 'ESC-003', transactionId: 'TXN-A009', parties: 'Chidi Okeke ↔ Sarah Homes', amount: 5000000, dateDeposited: '12 Aug 2025', expectedRelease: '12 Sep 2025', status: 'Held', ageDays: 20 },
+  { id: 'ESC-004', transactionId: 'TXN-A003', parties: 'Chidi Okeke ↔ Amara Osei', amount: 18000000, dateDeposited: '10 Jul 2025', expectedRelease: '25 Aug 2025', status: 'Released', ageDays: 52 },
+  { id: 'ESC-005', transactionId: 'TXN-A007', parties: 'Tunde Bakare ↔ Ada Obi', amount: 90000000, dateDeposited: '01 Jul 2025', expectedRelease: '18 Aug 2025', status: 'Released', ageDays: 62 },
+];
+
+const MOCK_PAYOUTS: PayoutRequest[] = [
+  { id: 'PAY-001', userId: 'USR-001', userName: 'Sarah Homes', role: 'Agent', amount: 12500000, method: 'Bank', bankName: 'GTBank', accountNumber: '0123456789', requestDate: '28 Aug 2025', status: 'Pending' },
+  { id: 'PAY-002', userId: 'USR-003', userName: 'Amara Osei', role: 'Developer', amount: 35000000, method: 'Bank', bankName: 'First Bank', accountNumber: '9876543210', requestDate: '27 Aug 2025', status: 'Pending' },
+  { id: 'PAY-003', userId: 'USR-009', userName: 'Tunde Bakare', role: 'Diaspora', amount: 5000000, method: 'Crypto', cryptoCurrency: 'USDT', cryptoAddress: '0x1a2b...9f0e', requestDate: '25 Aug 2025', status: 'Processing' },
+  { id: 'PAY-004', userId: 'USR-006', userName: 'Fatima Ibrahim', role: 'Agent', amount: 8000000, method: 'Bank', bankName: 'Zenith Bank', accountNumber: '5678901234', requestDate: '22 Aug 2025', status: 'Approved' },
+  { id: 'PAY-005', userId: 'USR-008', userName: 'Ada Obi', role: 'Developer', amount: 20000000, method: 'Bank', bankName: 'Access Bank', accountNumber: '1122334455', requestDate: '20 Aug 2025', status: 'Rejected' },
+];
+
+// ── Store ──────────────────────────────────────────────────────────────
+
+export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => ({
+  // Overview
+  stats: { totalUsers: 0, activeListings: 0, pendingKyc: 0, totalRevenue: 0, escrowBalance: 0, pendingPayouts: 0 },
+  revenueData: [],
+  userGrowthData: [],
+  transactionVolumeData: [],
+  recentTransactions: [],
+  pendingKycUsers: [],
+
+  // Users
+  users: [],
+  selectedUser: null,
+  userFilters: { role: 'all', kycStatus: 'all', accountStatus: 'all', search: '', page: 1 },
+  setUserFilters: (filters) => set((s) => ({ userFilters: { ...s.userFilters, ...filters, page: filters.page ?? 1 } })),
+
+  // Properties
+  properties: [],
+  propertyFilters: { tab: 'all', category: 'all', search: '', page: 1 },
+  setPropertyFilters: (filters) => set((s) => ({ propertyFilters: { ...s.propertyFilters, ...filters, page: filters.page ?? 1 } })),
+
+  // Transactions
+  transactions: [],
+  selectedTransaction: null,
+  transactionFilters: { tab: 'all', status: 'all', search: '', page: 1 },
+  setTransactionFilters: (filters) => set((s) => ({ transactionFilters: { ...s.transactionFilters, ...filters, page: filters.page ?? 1 } })),
+
+  // Finance
+  revenueBreakdown: [],
+  escrowItems: [],
+  payouts: [],
+  payoutFilter: 'all',
+  setPayoutFilter: (f) => set({ payoutFilter: f }),
+
+  // Platform fees
+  platformFees: { inspection: 10, sale: 2.5, rental: 2.5, developer: 3, diaspora: 100 },
+  updatePlatformFees: (fees) => set((s) => ({ platformFees: { ...s.platformFees, ...fees } })),
+
+  // Loading
+  isLoading: false,
+  isActionLoading: false,
+  error: null,
+
+  // ── Dashboard Overview ──────────────────────────────────────────────
+
+  fetchDashboardDataMock: async () => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 600));
+    set({
+      stats: {
+        totalUsers: 1247,
+        activeListings: 342,
+        pendingKyc: 28,
+        totalRevenue: 156000000,
+        escrowBalance: 86000000,
+        pendingPayouts: 15,
+      },
+      revenueData: [
+        { period: 'Mon', amount: 12000000 }, { period: 'Tue', amount: 18000000 },
+        { period: 'Wed', amount: 9000000 },  { period: 'Thu', amount: 25000000 },
+        { period: 'Fri', amount: 22000000 }, { period: 'Sat', amount: 35000000 },
+        { period: 'Sun', amount: 20000000 },
+      ],
+      userGrowthData: [
+        { period: 'Jan', agents: 12, seekers: 45, developers: 3, diaspora: 8, landlords: 5 },
+        { period: 'Feb', agents: 18, seekers: 60, developers: 5, diaspora: 12, landlords: 8 },
+        { period: 'Mar', agents: 25, seekers: 80, developers: 7, diaspora: 18, landlords: 10 },
+        { period: 'Apr', agents: 30, seekers: 110, developers: 9, diaspora: 25, landlords: 14 },
+        { period: 'May', agents: 38, seekers: 140, developers: 12, diaspora: 32, landlords: 18 },
+        { period: 'Jun', agents: 45, seekers: 180, developers: 15, diaspora: 40, landlords: 22 },
+      ],
+      transactionVolumeData: [
+        { category: 'Inspections', count: 450, amount: 11250000 },
+        { category: 'Sales', count: 85, amount: 3400000000 },
+        { category: 'Rentals', count: 210, amount: 735000000 },
+        { category: 'Developer', count: 45, amount: 810000000 },
+        { category: 'Diaspora', count: 30, amount: 18750000 },
+      ],
+      recentTransactions: MOCK_TRANSACTIONS.slice(0, 5),
+      pendingKycUsers: MOCK_USERS.filter((u) => u.kycStatus === 'in-progress'),
+      isLoading: false,
+    });
+  },
+
+  // ── Users ───────────────────────────────────────────────────────────
+
+  fetchUsersMock: async () => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 500));
+    set({ users: MOCK_USERS, isLoading: false });
+  },
+
+  fetchUserByIdMock: async (id) => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 400));
+    const user = MOCK_USERS.find((u) => u.id === id) ?? MOCK_USERS[0];
+    set({
+      selectedUser: {
+        ...user,
+        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+        phone: '+234 904 543 3344',
+        kycProgress: user.kycStatus === 'verified' ? 100 : user.kycStatus === 'in-progress' ? 60 : 0,
+        kycDocuments: [
+          { step: 'Personal Information (BVN)', status: 'submitted', data: '2234 **** **** 5678' },
+          { step: 'Phone Verification', status: user.kycStatus === 'unverified' ? 'pending' : 'verified' },
+          { step: 'ID Verification', status: user.kycStatus === 'verified' ? 'verified' : 'submitted', data: 'NIN - 1234567890' },
+          { step: 'Face Match', status: user.kycStatus === 'verified' ? 'verified' : 'pending' },
+          { step: 'Payment Details', status: user.kycStatus === 'verified' ? 'verified' : 'pending', data: 'GTBank - 0123456789' },
+        ],
+        recentTransactions: MOCK_TRANSACTIONS.filter((t) => t.partyA === user.name || t.partyB === user.name).slice(0, 5),
+        lastLogin: '28 Aug 2025, 2:34 PM',
+      },
+      isLoading: false,
+    });
+  },
+
+  approveKycMock: async (userId) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      selectedUser: s.selectedUser?.id === userId
+        ? { ...s.selectedUser, kycStatus: 'verified', kycProgress: 100, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'verified' as const })) }
+        : s.selectedUser,
+      users: s.users.map((u) => u.id === userId ? { ...u, kycStatus: 'verified' as const } : u),
+      isActionLoading: false,
+    }));
+  },
+
+  rejectKycMock: async (userId) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      selectedUser: s.selectedUser?.id === userId
+        ? { ...s.selectedUser, kycStatus: 'unverified', kycProgress: 0, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'rejected' as const })) }
+        : s.selectedUser,
+      users: s.users.map((u) => u.id === userId ? { ...u, kycStatus: 'unverified' as const } : u),
+      isActionLoading: false,
+    }));
+  },
+
+  suspendUserMock: async (userId) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'suspended' } : s.selectedUser,
+      users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'suspended' as const } : u),
+      isActionLoading: false,
+    }));
+  },
+
+  reactivateUserMock: async (userId) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'active' } : s.selectedUser,
+      users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'active' as const } : u),
+      isActionLoading: false,
+    }));
+  },
+
+  // ── Properties ──────────────────────────────────────────────────────
+
+  fetchPropertiesMock: async () => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 500));
+    set({ properties: MOCK_PROPERTIES, isLoading: false });
+  },
+
+  approvePropertyMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Verified' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+
+  rejectPropertyMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Rejected' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+
+  flagPropertyMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Flagged' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+
+  // ── Transactions ────────────────────────────────────────────────────
+
+  fetchTransactionsMock: async () => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 500));
+    set({ transactions: MOCK_TRANSACTIONS, isLoading: false });
+  },
+
+  fetchTransactionByIdMock: async (id) => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 400));
+    const tx = MOCK_TRANSACTIONS.find((t) => t.id === id) ?? MOCK_TRANSACTIONS[0];
+    set({
+      selectedTransaction: {
+        ...tx,
+        escrowAmount: tx.amount,
+        netToParties: tx.amount - tx.irealtyFee,
+        partyAAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop',
+        partyBAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+        auditLog: [
+          { timestamp: '28 Aug 2025, 10:00 AM', action: 'Transaction created', by: 'System' },
+          { timestamp: '28 Aug 2025, 10:01 AM', action: 'Escrow funded', by: tx.partyA },
+          ...(tx.status !== 'Pending' ? [{ timestamp: '28 Aug 2025, 2:30 PM', action: `Status changed to ${tx.status}`, by: tx.partyB }] : []),
+        ],
+      },
+      isLoading: false,
+    });
+  },
+
+  // ── Finance ─────────────────────────────────────────────────────────
+
+  fetchFinanceMock: async () => {
+    set({ isLoading: true, error: null });
+    await new Promise((r) => setTimeout(r, 500));
+    set({
+      revenueBreakdown: [
+        { category: 'Inspection Fees', amount: 11250000, count: 450 },
+        { category: 'Sales Commission', amount: 85000000, count: 85 },
+        { category: 'Rental Commission', amount: 18375000, count: 210 },
+        { category: 'Developer Fees', amount: 24300000, count: 45 },
+        { category: 'Diaspora Services', amount: 18750000, count: 30 },
+      ],
+      escrowItems: MOCK_ESCROW,
+      payouts: MOCK_PAYOUTS,
+      isLoading: false,
+    });
+  },
+
+  approvePayoutMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Approved' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+
+  rejectPayoutMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Rejected' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+}));

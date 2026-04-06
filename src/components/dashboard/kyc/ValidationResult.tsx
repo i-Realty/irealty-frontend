@@ -1,6 +1,6 @@
 'use client';
 
-import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useKYCStore } from './useKYCStore';
 import { Check, X } from 'lucide-react';
 
 interface ValidationResultProps {
@@ -9,7 +9,7 @@ interface ValidationResultProps {
 }
 
 export default function ValidationResult({ success, onRetry }: ValidationResultProps) {
-  const { setKycModalOpen } = useAgentDashboardStore();
+  const { setKycModalOpen } = useKYCStore();
 
   if (success) {
     return (

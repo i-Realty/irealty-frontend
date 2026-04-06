@@ -1,15 +1,15 @@
 'use client';
 
-import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useKYCStore } from './useKYCStore';
 import { useState } from 'react';
 import { Camera, CheckCircle2, User, RefreshCw } from 'lucide-react';
 
 export default function StepFaceMatch() {
-  const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
+  const { setCurrentKycStep, updateKycProgress } = useKYCStore();
   const [hasCaptured, setHasCaptured] = useState(false);
 
   const handleNext = () => {
-    updateKycProgress(4, { hasSelfie: true });
+    updateKycProgress(4);
     setCurrentKycStep(5);
   };
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Home,
@@ -18,41 +18,40 @@ import {
   ChevronUp,
   ChevronDown,
   Check,
-  Plus
+  Plus,
 } from 'lucide-react';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { getNavItems, getRoleFromPath } from '@/config/nav';
+
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, close } = useSidebarStore();
-
+  const { user, logout } = useAuthStore();
   const {
     activeAccount,
     accounts,
     setActiveAccount,
-    setAddAccountModalOpen
+    setAddAccountModalOpen,
   } = useSettingsStore();
 
   const [isMobileAccountMenuOpen, setIsMobileAccountMenuOpen] = useState(false);
 
-  const navItems = [
-    { label: 'OVERVIEW', isHeader: true },
-    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/agent' },
-    { label: 'My Properties', icon: Home, href: '/dashboard/agent/properties' },
-    { label: 'Messages', icon: MessageSquare, href: '/dashboard/agent/messages' },
-    { label: 'Documents', icon: FileText, href: '/dashboard/agent/documents' },
+  // Derive nav from URL pathname — always correct regardless of auth store state
+  const navItems = getNavItems(getRoleFromPath(pathname ?? ''));
 
-    { label: 'FINANCIAL', isHeader: true },
-    { label: 'Wallet', icon: Wallet, href: '/dashboard/agent/wallet' },
-    { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/agent/transactions' },
+  const handleLogout = () => {
+    logout();
+    close();
+    router.push('/auth/login');
+  };
 
-    { label: 'TOOLS', isHeader: true },
-    { label: 'Calendar', icon: Calendar, href: '/dashboard/agent/calendar' },
-
-    { label: 'ACCOUNT', isHeader: true },
-    { label: 'Settings', icon: Settings, href: '/dashboard/agent/settings' }, // Fixed route
-  ];
+  const displayName = user?.displayName ?? activeAccount.name;
+  const avatarUrl = user?.avatarUrl ?? FALLBACK_AVATAR;
 
   return (
     <>
@@ -92,19 +91,23 @@ export default function Sidebar() {
                 );
               }
 
-              const isActive = pathname === item.href || (item.href !== '/dashboard/agent' && pathname.startsWith(item.href!));
+              const isActive =
+                pathname === item.href ||
+                (item.href !== '/dashboard/agent' && pathname.startsWith(item.href!));
               const Icon = item.icon!;
 
               return (
                 <Link
                   key={index}
                   href={item.href!}
-                  className={`flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${isActive
+                  onClick={close}
+                  className={`flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
+                    isActive
                       ? 'bg-blue-50/70 text-blue-600 border-r-4 border-blue-600'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-r-4 border-transparent'
-                    }`}
+                  }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 focus:fill-blue-100' : 'text-gray-400'}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className={isActive ? 'font-bold' : ''}>{item.label}</span>
                 </Link>
               );
@@ -112,7 +115,7 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        {/* Mobile Account Switcher (Anchors to Bottom) */}
+        {/* Mobile Account Switcher */}
         <div className="md:hidden w-full border-t border-gray-100 bg-gray-50/50 pb-8 pt-2 px-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Account</p>
 
@@ -123,26 +126,31 @@ export default function Sidebar() {
             >
               <div className="flex items-center gap-3">
                 <Image
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop"
-                  alt="User"
+                  src={avatarUrl}
+                  alt={displayName}
                   width={40}
                   height={40}
                   className="w-10 h-10 rounded-full border border-gray-200 object-cover shadow-sm"
                 />
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[14px] font-bold text-gray-900 leading-none tracking-tight">{activeAccount.name}</span>
+                  <span className="text-[14px] font-bold text-gray-900 leading-none tracking-tight">
+                    {displayName}
+                  </span>
                   <span className="text-[12px] font-medium text-gray-400 truncate max-w-[120px]">
-                    {activeAccount.role === 'Admin' ? 'Admin' : 'Einstein.Oyakhi@...'}
+                    {user?.email ?? 'Einstein.Oyakhi@...'}
                   </span>
                 </div>
               </div>
-              {isMobileAccountMenuOpen ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronUp className="w-5 h-5 text-gray-400" />}
+              {isMobileAccountMenuOpen ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              )}
             </button>
 
-            {/* Slide Up Dropup Inner */}
             {isMobileAccountMenuOpen && (
               <div className="w-full bg-white border-t border-gray-100 flex flex-col py-1 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                {accounts.map(acc => {
+                {accounts.map((acc) => {
                   const isActive = activeAccount.id === acc.id;
                   return (
                     <button
@@ -155,26 +163,28 @@ export default function Sidebar() {
                     >
                       <div className="flex items-center gap-3">
                         <Image
-                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop"
-                          alt="User"
+                          src={avatarUrl}
+                          alt={acc.name}
                           width={36}
                           height={36}
                           className="w-9 h-9 rounded-full border border-gray-200 object-cover opacity-90"
                         />
                         <div className="flex flex-col items-start gap-0">
-                          <span className={`text-[13px] leading-tight ${isActive ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>{acc.name}</span>
+                          <span className={`text-[13px] leading-tight ${isActive ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>
+                            {acc.name}
+                          </span>
                           <span className="text-[11px] font-medium text-gray-400 capitalize">{acc.role}</span>
                         </div>
                       </div>
                       {isActive && <Check className="w-4 h-4 text-blue-600" />}
                     </button>
-                  )
+                  );
                 })}
 
                 <button
                   onClick={() => {
                     setIsMobileAccountMenuOpen(false);
-                    close(); // Close sidebar too
+                    close();
                     setAddAccountModalOpen(true);
                   }}
                   className="w-full flex items-center gap-2 px-3 py-4 border-t border-gray-50 text-blue-600 font-bold text-[13px] hover:bg-gray-50 transition-colors mt-1"
@@ -185,7 +195,10 @@ export default function Sidebar() {
             )}
           </div>
 
-          <button className="flex items-center gap-3 px-4 py-3 mt-4 w-full text-sm font-bold tracking-tight text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 mt-4 w-full text-sm font-bold tracking-tight text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+          >
             <LogOut className="w-5 h-5" />
             Logout
           </button>
@@ -193,7 +206,10 @@ export default function Sidebar() {
 
         {/* Desktop Logout Button */}
         <div className="hidden md:block p-4 border-t border-gray-100">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+          >
             <LogOut className="w-5 h-5" />
             Logout
           </button>

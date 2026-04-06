@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { PropertyCategory, ListingType, PropertyStatus, AgentProperty } from './useAgentPropertiesStore';
-import { useAgentPropertiesStore } from './useAgentPropertiesStore';
 
 // Deep Partial helper for nested updates
 type DeepPartial<T> = T extends object ? {
@@ -72,7 +71,7 @@ interface CreatePropertyState {
   addMedia: (url: string) => void;
   removeMedia: (index: number) => void;
   toggleDocumentType: (docType: string) => void;
-  submitProperty: () => Promise<boolean>;
+  submitProperty: () => Promise<AgentProperty | null>;
   resetForm: () => void;
 }
 
@@ -189,7 +188,7 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
     // Validation Checks (Simple)
     if (!state.propertyType || !state.listingType || !state.title) {
        set({ isLoading: false, error: 'Please fill out all required fields.' });
-       return false;
+       return null;
     }
 
     // Build the payload mapping to AgentProperty
@@ -231,12 +230,10 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
       utilitiesIncluded: state.propertyType === 'PG/Hostel' ? state.pgUtilitiesIncluded : undefined,
     };
 
-    // Inject into the main store to show up in the My Properties list
-    useAgentPropertiesStore.getState().addPropertyLocally(newProperty);
-
     set({ isLoading: false });
     get().resetForm();
-    return true;
+    // Return the new property — the calling page injects it into useAgentPropertiesStore
+    return newProperty;
   },
 
   resetForm: () => {

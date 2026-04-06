@@ -1,11 +1,11 @@
 'use client';
 
-import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useKYCStore } from './useKYCStore';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function StepPersonalInformation() {
-  const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
+  const { setCurrentKycStep, updateKycProgress } = useKYCStore();
   const [bvnAccordionOpen, setBvnAccordionOpen] = useState(false);
   const [formData, setFormData] = useState({
     bvn: '',
@@ -20,7 +20,7 @@ export default function StepPersonalInformation() {
   });
 
   const handleNext = () => {
-    updateKycProgress(1, formData);
+    updateKycProgress(1);
     setCurrentKycStep(2);
   };
 

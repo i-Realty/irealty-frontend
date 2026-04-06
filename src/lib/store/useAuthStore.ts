@@ -1,33 +1,74 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface User {
+export type UserRole = 'Agent' | 'Property Seeker' | 'Developer' | 'Landlord' | 'Diaspora' | 'Admin';
+
+export interface AuthUser {
+  id: string;
   name: string;
   email: string;
+  role: UserRole;
+  displayName: string;
+  avatarUrl: string;
+  kycStatus: 'unverified' | 'in-progress' | 'verified';
 }
 
 interface AuthState {
   isLoggedIn: boolean;
-  user: User | null;
+  user: AuthUser | null;
   /**
-   * Set auth state after successful login / signup.
-   * In demo mode this is called with mock data.
-   * When a backend is connected, call this with the API response.
+   * Call after successful login/signup API response.
+   * Also sets the irealty-session cookie for middleware route protection.
    */
-  login: (user: User) => void;
-  /** Clear auth state. */
+  login: (user: AuthUser) => void;
+  /**
+   * Clears auth state and removes the session cookie.
+   */
   logout: () => void;
+  /** Update specific user fields (e.g. after profile save). */
+  updateUser: (data: Partial<AuthUser>) => void;
 }
 
-/**
- * Minimal auth state store.
- * Currently demo-only (in-memory). When a backend is added:
- *  - `login()` should be called after a successful /api/auth/login response
- *  - `logout()` should call /api/auth/logout and clear tokens/cookies
- *  - Consider persisting with zustand/middleware `persist` using cookies
- */
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: false,
-  user: null,
-  login: (user) => set({ isLoggedIn: true, user }),
-  logout: () => set({ isLoggedIn: false, user: null }),
-}));
+const SESSION_COOKIE = 'irealty-session';
+
+function setSessionCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${SESSION_COOKIE}=1; path=/; max-age=604800; SameSite=Lax`;
+}
+
+function clearSessionCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0`;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      isLoggedIn: false,
+      user: null,
+
+      login: (user) => {
+        setSessionCookie();
+        set({ isLoggedIn: true, user });
+      },
+
+      logout: () => {
+        clearSessionCookie();
+        set({ isLoggedIn: false, user: null });
+      },
+
+      updateUser: (data) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...data } : null,
+        })),
+    }),
+    {
+      name: 'irealty-auth',
+      storage: createJSONStorage(() => localStorage),
+      // Re-set cookie on store rehydration so middleware stays in sync
+      onRehydrateStorage: () => (state) => {
+        if (state?.isLoggedIn) setSessionCookie();
+      },
+    }
+  )
+);

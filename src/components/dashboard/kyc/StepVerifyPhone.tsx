@@ -1,11 +1,11 @@
 'use client';
 
-import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useKYCStore } from './useKYCStore';
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function StepVerifyPhone() {
-  const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
+  const { setCurrentKycStep, updateKycProgress } = useKYCStore();
   const [accordionOpen, setAccordionOpen] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [phone, setPhone] = useState('');
@@ -41,7 +41,7 @@ export default function StepVerifyPhone() {
   const handleOtpSubmit = () => {
     // Check if full
     if (otp.join('').length === 6) {
-      updateKycProgress(2, { phone });
+      updateKycProgress(2);
       setCurrentKycStep(3); // Go to next KYC step
     }
   };

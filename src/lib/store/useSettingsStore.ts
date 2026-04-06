@@ -38,7 +38,7 @@ export type CommissionPayload = {
 // --- Store State & Interfaces ---
 
 export type SettingsTab = 'Profile' | 'Payout' | 'Subscription Plans' | 'Commissions' | 'Account' | 'Help Center';
-export type AccountRole = 'Admin' | 'Agent' | 'Property Seeker';
+export type AccountRole = 'Admin' | 'Agent' | 'Property Seeker' | 'Developer' | 'Diaspora' | 'Landlord';
 
 export interface AccountInfo {
   id: string;

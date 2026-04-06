@@ -1,7 +1,0 @@
-FILE:C:\Users\USER\Desktop\i-Realty Frontend\src\components\dashboard\agent\calendar\SetupAvailabilityModal.tsx
-  L33: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
-FILE:C:\Users\USER\Desktop\i-Realty Frontend\src\components\dashboard\agent\wallet\TransactionHistory.tsx
-  L11: 'pageSize' is assigned a value but never used.
-  L12: 'currentPage' is assigned a value but never used.
-  L62: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
-  L62: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.

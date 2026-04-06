@@ -1,9 +1,25 @@
+import React, { useRef } from 'react';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import { Camera, Loader2, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
+
 export default function ProfileSettings() {
   const { profile, updateProfile, updateSocials, submitProfileMock, isSaving } = useSettingsStore();
+  const { user, updateUser } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const avatarSrc = user?.avatarUrl ?? FALLBACK_AVATAR;
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const localUrl = URL.createObjectURL(file);
+    updateUser({ avatarUrl: localUrl });
+    // When backend is integrated: upload file, then call updateUser({ avatarUrl: uploadedUrl })
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,12 +38,22 @@ export default function ProfileSettings() {
        <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-2xl md:rounded-[24px] p-6 flex flex-col shadow-sm">
            
            <div className="flex items-center gap-4 mb-8">
-               <div className="relative cursor-pointer group">
-                  <Image 
-                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop" 
-                     alt="Profile" 
-                     width={80} 
-                     height={80} 
+               <div
+                 className="relative cursor-pointer group"
+                 onClick={() => fileInputRef.current?.click()}
+               >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                  <Image
+                     src={avatarSrc}
+                     alt="Profile"
+                     width={80}
+                     height={80}
                      className="w-20 h-20 rounded-full border-4 border-white shadow-sm object-cover group-hover:opacity-90 transition-opacity"
                   />
                   <div className="absolute bottom-0 right-0 w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useKYCStore } from './useKYCStore';
 import { useState } from 'react';
 import { Briefcase, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface StepPaymentDetailsProps {
 }
 
 export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsProps) {
-  const { updateKycProgress, profile } = useAgentDashboardStore();
+  const { updateKycProgress, profile } = useKYCStore();
   
   const [bankOpen, setBankOpen] = useState(true);
   const [cryptoOpen, setCryptoOpen] = useState(true);
@@ -26,7 +26,7 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
   });
 
   const handleComplete = () => {
-    updateKycProgress(5, { bankData, cryptoData });
+    updateKycProgress(5);
     // Trigger submission
     onComplete();
   };

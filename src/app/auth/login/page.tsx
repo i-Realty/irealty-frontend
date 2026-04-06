@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
-import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useAuthStore, AuthUser } from '@/lib/store/useAuthStore';
 import { validateEmail, validateRequired } from '@/lib/utils/authValidation';
 
 export default function LoginPage() {
@@ -36,10 +36,22 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // Simulate network delay
+    // Simulate network delay — replace setTimeout body with real API call
     setTimeout(() => {
-      login({ name: 'Demo User', email });
-      router.push('/');
+      const mockUser: AuthUser = {
+        id: 'agent-123',
+        name: 'Waden Warren',
+        email,
+        role: 'Agent',
+        displayName: 'Waden Warren',
+        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
+        kycStatus: 'unverified',
+      };
+      login(mockUser);
+      // Honour redirect param if present, otherwise go to agent dashboard
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect') || '/dashboard/agent';
+      router.push(redirectTo);
     }, 500);
   }
 

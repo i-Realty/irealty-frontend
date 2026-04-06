@@ -14,7 +14,7 @@ export default function StepIDVerification() {
 
   const handleNext = () => {
     if (idNumber && idType && fileName) {
-      updateKycProgress(3, { idNumber, idType, fileName });
+      updateKycProgress(3);
       setCurrentKycStep(4);
     }
   };

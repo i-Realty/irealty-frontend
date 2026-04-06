@@ -3,7 +3,7 @@ import { useDocumentsStore, DocumentItem } from '@/lib/store/useDocumentsStore';
 import { Search, Plus, Eye, Edit3, Trash2, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 
 export default function DocumentsList() {
-  const { documents, isLoadingList, setWizardOpen } = useDocumentsStore();
+  const { documents, isLoadingList, setWizardOpen, deleteDocumentMock } = useDocumentsStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredData = documents.filter(doc => 
@@ -82,7 +82,9 @@ export default function DocumentsList() {
                                  <button className="text-gray-400 hover:text-gray-900 p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 transition-all shadow-sm">
                                     <Edit3 className="w-4 h-4" />
                                  </button>
-                                 <button className="text-gray-400 hover:text-red-600 p-1 rounded-md hover:bg-white border border-transparent hover:border-red-100 transition-all shadow-sm">
+                                 <button
+                                   onClick={() => { if (confirm('Delete this document?')) deleteDocumentMock(doc.id); }}
+                                   className="text-gray-400 hover:text-red-600 p-1 rounded-md hover:bg-white border border-transparent hover:border-red-100 transition-all shadow-sm">
                                     <Trash2 className="w-4 h-4" />
                                  </button>
                              </div>
@@ -140,7 +142,9 @@ export default function DocumentsList() {
                          <button className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100/50">
                             <Edit3 className="w-4 h-4" /> Edit
                          </button>
-                         <button className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100/50">
+                         <button
+                           onClick={() => { if (confirm('Delete this document?')) deleteDocumentMock(doc.id); }}
+                           className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-100/50">
                             <Trash2 className="w-4 h-4" /> Delete
                          </button>
                      </div>

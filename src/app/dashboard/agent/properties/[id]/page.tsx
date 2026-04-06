@@ -46,7 +46,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h1 className="text-xl font-bold text-gray-900 flex items-center">
-            Transactions <span className="text-sm font-normal text-gray-500 ml-3 bg-gray-100 px-2 py-0.5 rounded">Property Details</span>
+            My Properties <span className="text-sm font-normal text-gray-500 ml-3 bg-gray-100 px-2 py-0.5 rounded">Property Details</span>
           </h1>
         </div>
         

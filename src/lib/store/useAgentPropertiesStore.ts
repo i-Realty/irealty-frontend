@@ -52,8 +52,6 @@ export interface AgentProperty {
 }
 
 // --- Mock Data ---
-const mockImage1 = '/images/house1.jpg'; // We'll assume a placeholder exists or use an external URL
-
 export const mockAgentProperties: AgentProperty[] = [
   {
     id: 'prop-001',

@@ -69,6 +69,7 @@ interface DocumentsStore {
   // Mock Asynchronous Endpoints
   fetchDocumentsListMock: () => Promise<void>;
   createDocumentMock: () => Promise<void>;
+  deleteDocumentMock: (id: string) => Promise<void>;
 }
 
 const defaultFormData: Partial<DocumentPayload> = {
@@ -113,19 +114,15 @@ export const useDocumentsStore = create<DocumentsStore>((set, get) => ({
     set({ isLoadingList: true, error: null });
     await new Promise((resolve) => setTimeout(resolve, 600));
 
-    // Seed Mockup List explicitly identically to image #1
-    const mockList: DocumentItem[] = Array(7).fill({
-       id: Math.random().toString(),
+    const types = ['Standard Rental Agreement', 'Property Sale Agreement', 'Broker Commission Agreement', 'Property Management Agreement', 'Custom'];
+    const mockList: DocumentItem[] = Array.from({ length: 7 }, (_, i) => ({
+       id: `doc-${i}`,
        title: 'Victoria Island Apartment Rental Agreement',
        dateUpdated: '28 Aug 2025',
-       type: 'Standard Rental Agreement',
+       type: types[i] ?? 'Custom',
        propertyReference: '3-Bed Duplex, Lekki',
-       size: '4MB'
-    }).map((item, i) => {
-       // Vary the type slightly down the list to match the mockups visual noise where it switches to "Property Sale Agreement", "Broker Commission...", etc.
-       const types = ['Standard Rental Agreement', 'Property Sale Agreement', 'Broker Commission Agreement', 'Property Management Agreement', 'Custom'];
-       return { ...item, id: `doc-${i}`, type: types[i] || 'Custom' };
-    });
+       size: '4MB',
+    }));
 
     set({ documents: mockList, isLoadingList: false });
   },
@@ -160,5 +157,14 @@ export const useDocumentsStore = create<DocumentsStore>((set, get) => ({
     }));
 
     get().resetWizard();
-  }
+  },
+
+  deleteDocumentMock: async (id) => {
+    set({ isLoadingList: true, error: null });
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    set((state) => ({
+      documents: state.documents.filter((d) => d.id !== id),
+      isLoadingList: false,
+    }));
+  },
 }));

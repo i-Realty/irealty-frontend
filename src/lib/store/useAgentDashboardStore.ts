@@ -36,7 +36,7 @@ export interface Transaction {
   clientName: string;
   transactionType: string;
   amount: number;
-  status: 'Pending' | 'Completed' | 'Failed' | 'In-progress';
+  status: 'Pending' | 'Completed' | 'Declined' | 'In-progress';
 }
 
 interface AgentDashboardState {
@@ -55,7 +55,7 @@ interface AgentDashboardState {
 
   // Actions (Mock API calls)
   fetchDashboardData: () => Promise<void>;
-  updateKycProgress: (step: number, data: any) => Promise<void>;
+  updateKycProgress: (step: number) => Promise<void>;
   setKycModalOpen: (isOpen: boolean) => void;
   setCurrentKycStep: (step: number) => void;
   mockSubmitKycForVerification: () => Promise<boolean>;
@@ -63,12 +63,13 @@ interface AgentDashboardState {
   verifyProfileLocally: () => void; // For demo purposes to toggle state easily
 }
 
-// Mock Data
+// Mock Data — dashboard widget only shows 4 recent items.
+// The full transaction list lives in useTransactionsStore.
 export const mockTransactions: Transaction[] = [
-  { id: 'TXN-0932', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Pending' },
-  { id: 'TXN-0933', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Completed' },
-  { id: 'TXN-0934', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Failed' },
-  { id: 'TXN-0935', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'In-progress' },
+  { id: 'TRN-0932', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Pending' },
+  { id: 'TRN-0933', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Completed' },
+  { id: 'TRN-0934', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'Declined' },
+  { id: 'TRN-0935', date: '28 Aug 2025', propertyName: '3-Bed Duplex, Lekki', propertyType: 'Residential', clientName: 'John Doe', transactionType: 'Inspection Fee', amount: 25000, status: 'In-progress' },
 ];
 
 export const useAgentDashboardStore = create<AgentDashboardState>((set, get) => ({
@@ -127,8 +128,8 @@ export const useAgentDashboardStore = create<AgentDashboardState>((set, get) => 
     set({ stats, revenueData, escrowData, transactions, isLoading: false });
   },
 
-  updateKycProgress: async (step: number, data: any) => {
-    // In real app, this sends data to API and gets updated progress
+  updateKycProgress: async (step: number) => {
+    // In real app, this sends data to the API and gets updated progress
     const progressMap: Record<number, number> = { 1: 20, 2: 40, 3: 60, 4: 80, 5: 100 };
     
     set((state) => ({

@@ -3,10 +3,12 @@ import { create } from 'zustand';
 // ---------------------------------------------------------------------------
 // TYPES: Structured to explicitly mirror expected NestJS API Payloads
 // ---------------------------------------------------------------------------
+export type CalendarEventType = 'Inspection' | 'Viewing' | 'Meeting' | 'Other';
+
 export type CalendarEvent = {
   id: string;
-  type: string; // e.g. "Inspection"
-  clientName: string; // e.g. "John Doe"
+  type: CalendarEventType;
+  clientName: string;
   dateISO: string; // "YYYY-MM-DD"
   startTime: string; // "1am"
   endTime: string; // "4 pm"

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useTransactionsStore } from '@/lib/store/useTransactionsStore';
 import AgentStats from '@/components/dashboard/AgentStats';
 import RevenueCharts from '@/components/dashboard/RevenueCharts';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
@@ -12,11 +13,13 @@ import { ArrowRight, ShieldCheck, Cog, FileCheck } from 'lucide-react';
 
 export default function AgentDashboardPage() {
   const { profile, isLoading, fetchDashboardData, setKycModalOpen, verifyProfileLocally, resetDashboard } = useAgentDashboardStore();
+  const fetchTransactions = useTransactionsStore((s) => s.fetchTransactionsMock);
   const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+    fetchTransactions();
+  }, [fetchDashboardData, fetchTransactions]);
 
   if (isLoading && !profile) {
     return (
@@ -31,7 +34,8 @@ export default function AgentDashboardPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Dev Tool: Fast Demo Actions (Hidden in Production) */}
+      {/* Dev Tool: Fast Demo Actions — only rendered in development */}
+      {process.env.NODE_ENV === 'development' && (
       <div className="bg-gray-100 p-3 rounded-lg flex flex-wrap gap-2 text-sm justify-end border border-gray-200 shadow-sm">
          <span className="font-medium text-gray-500 flex items-center mr-auto">Demo Controls:</span>
          {!isVerified ? (
@@ -49,6 +53,7 @@ export default function AgentDashboardPage() {
            </button>
          )}
       </div>
+      )}
 
       {/* Onboarding & KYC Section */}
       {!isVerified && (

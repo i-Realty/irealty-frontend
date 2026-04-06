@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { useSignupStore } from '@/lib/store/useSignupStore';
-import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useAuthStore, AuthUser } from '@/lib/store/useAuthStore';
 
 export default function SignupSuccess() {
   const router = useRouter();
@@ -24,10 +24,16 @@ export default function SignupSuccess() {
     }
 
     // Persist to actual auth session
-    login({ 
+    const newUser: AuthUser = {
+      id: `user-${Date.now()}`,
       name: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
       email: signupStore.email,
-    });
+      role: 'Agent',
+      displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
+      kycStatus: 'unverified',
+    };
+    login(newUser);
 
   }, [signupStore.email, signupStore.firstName, signupStore.lastName, signupStore.username, login, router]);
 

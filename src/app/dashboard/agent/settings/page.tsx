@@ -1,7 +1,7 @@
 'use client';
 
 import { useSettingsStore, SettingsTab } from '@/lib/store/useSettingsStore';
-import { User, CreditCard, ShieldCheck, Map, HelpCircle, FileText } from 'lucide-react';
+import { User, CreditCard, ShieldCheck, Map, HelpCircle, FileText, type LucideIcon } from 'lucide-react';
 
 import ProfileSettings from '@/components/dashboard/agent/settings/forms/ProfileSettings';
 import PayoutSettings from '@/components/dashboard/agent/settings/forms/PayoutSettings';
@@ -15,7 +15,7 @@ import AddAccountModal from '@/components/dashboard/agent/settings/AddAccountMod
 export default function SettingsPage() {
   const { activeTab, setActiveTab } = useSettingsStore();
 
-  const TABS: { id: SettingsTab; icon: any; iconMobileHidden?: boolean }[] = [
+  const TABS: { id: SettingsTab; icon: LucideIcon; iconMobileHidden?: boolean }[] = [
     { id: 'Profile', icon: User },
     { id: 'Payout', icon: CreditCard },
     { id: 'Subscription Plans', icon: ShieldCheck },

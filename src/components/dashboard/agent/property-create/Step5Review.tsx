@@ -18,9 +18,12 @@ export default function Step5Review() {
     isLoading, submitProperty, prevStep, closeWizard
   } = store;
 
+  const { addPropertyLocally } = useAgentPropertiesStore();
+
   const handleSubmit = async () => {
-    const success = await submitProperty();
-    if (success) {
+    const newProperty = await submitProperty();
+    if (newProperty) {
+      addPropertyLocally(newProperty);
       router.push('/dashboard/agent/properties');
     }
   };

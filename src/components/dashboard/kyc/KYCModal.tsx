@@ -1,17 +1,48 @@
 'use client';
 
 import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useDeveloperDashboardStore } from '@/lib/store/useDeveloperDashboardStore';
+import { usePathname } from 'next/navigation';
+import { getRoleFromPath } from '@/config/nav';
 import { X } from 'lucide-react';
 import StepPersonalInformation from './StepPersonalInformation';
 import StepVerifyPhone from './StepVerifyPhone';
 import StepIDVerification from './StepIDVerification';
+import StepIDVerificationDeveloper from './StepIDVerificationDeveloper';
 import StepFaceMatch from './StepFaceMatch';
 import StepPaymentDetails from './StepPaymentDetails';
 import ValidationResult from './ValidationResult';
 import { useState } from 'react';
 
+/**
+ * Role-aware hook that returns KYC actions from the correct dashboard store.
+ */
+function useKYCActions() {
+  const pathname = usePathname();
+  const role = getRoleFromPath(pathname ?? '');
+  const agentStore = useAgentDashboardStore();
+  const devStore = useDeveloperDashboardStore();
+
+  if (role === 'Developer') {
+    return {
+      isKycModalOpen: devStore.isKycModalOpen,
+      setKycModalOpen: devStore.setKycModalOpen,
+      currentKycStep: devStore.currentKycStep,
+      mockSubmitKycForVerification: devStore.mockSubmitKycForVerification,
+      role,
+    };
+  }
+  return {
+    isKycModalOpen: agentStore.isKycModalOpen,
+    setKycModalOpen: agentStore.setKycModalOpen,
+    currentKycStep: agentStore.currentKycStep,
+    mockSubmitKycForVerification: agentStore.mockSubmitKycForVerification,
+    role,
+  };
+}
+
 export default function KYCModal() {
-  const { isKycModalOpen, setKycModalOpen, currentKycStep } = useAgentDashboardStore();
+  const { isKycModalOpen, setKycModalOpen, currentKycStep, role } = useKYCActions();
   const [validationResult, setValidationResult] = useState<'none' | 'success' | 'failed'>('none');
 
   if (!isKycModalOpen) return null;
@@ -32,7 +63,7 @@ export default function KYCModal() {
       case 2:
         return <StepVerifyPhone />;
       case 3:
-        return <StepIDVerification />;
+        return role === 'Developer' ? <StepIDVerificationDeveloper /> : <StepIDVerification />;
       case 4:
         return <StepFaceMatch />;
       case 5:
@@ -43,8 +74,10 @@ export default function KYCModal() {
   };
 
   const handleVerificationSubmit = async () => {
-    const { mockSubmitKycForVerification } = useAgentDashboardStore.getState();
-    const result = await mockSubmitKycForVerification();
+    const submitFn = role === 'Developer'
+      ? useDeveloperDashboardStore.getState().mockSubmitKycForVerification
+      : useAgentDashboardStore.getState().mockSubmitKycForVerification;
+    const result = await submitFn();
     if (result) {
       setValidationResult('success');
     } else {
