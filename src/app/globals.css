@@ -116,7 +116,7 @@
    Activated by adding class="dark" to <html>. The useThemeStore handles
    toggling this class based on user preference or system setting.        */
 .dark {
-  --background: #0f172a;
+  --background: #0a0a0a;
   --foreground: #e2e8f0;
 }
 
@@ -134,18 +134,18 @@ body {
    the vast majority of existing components adapt automatically.           */
 
 /* ─── Backgrounds: standard Tailwind grays ────────────────────────────── */
-.dark .bg-white        { background-color: #1e293b !important; }
-.dark .bg-gray-50      { background-color: #162033 !important; }
-.dark .bg-gray-100     { background-color: #1e293b !important; }
-.dark .bg-gray-200     { background-color: #334155 !important; }
-.dark .bg-gray-50\/20  { background-color: rgba(22, 32, 51, 0.2) !important; }
-.dark .bg-gray-50\/30  { background-color: rgba(22, 32, 51, 0.3) !important; }
-.dark .bg-gray-50\/50  { background-color: rgba(22, 32, 51, 0.5) !important; }
+.dark .bg-white        { background-color: #171717 !important; }
+.dark .bg-gray-50      { background-color: #111111 !important; }
+.dark .bg-gray-100     { background-color: #171717 !important; }
+.dark .bg-gray-200     { background-color: #2a2a2a !important; }
+.dark .bg-gray-50\/20  { background-color: rgba(17, 17, 17, 0.2) !important; }
+.dark .bg-gray-50\/30  { background-color: rgba(17, 17, 17, 0.3) !important; }
+.dark .bg-gray-50\/50  { background-color: rgba(17, 17, 17, 0.5) !important; }
 
 /* ─── Backgrounds: custom hex values used across the project ──────────── */
-.dark .bg-\[\#F8FAFC\]  { background-color: #0f172a !important; }
-.dark .bg-\[\#F8FAFB\]  { background-color: #0f172a !important; }
-.dark .bg-\[\#FFFFFF\]   { background-color: #1e293b !important; }
+.dark .bg-\[\#F8FAFC\]  { background-color: #0a0a0a !important; }
+.dark .bg-\[\#F8FAFB\]  { background-color: #0a0a0a !important; }
+.dark .bg-\[\#FFFFFF\]   { background-color: #171717 !important; }
 /* Calendar event chips */
 .dark .bg-\[\#D3E0FF\]  { background-color: rgba(37, 99, 235, 0.25) !important; }
 .dark .hover\:bg-\[\#c2d3fa\]:hover { background-color: rgba(37, 99, 235, 0.35) !important; }
@@ -187,13 +187,13 @@ body {
 .dark .text-\[\#171717\] { color: #e2e8f0 !important; }
 
 /* ─── Borders ─────────────────────────────────────────────────────────── */
-.dark .border-gray-50  { border-color: #1e293b !important; }
-.dark .border-gray-100 { border-color: #334155 !important; }
-.dark .border-gray-200 { border-color: #475569 !important; }
-.dark .border-gray-300 { border-color: #475569 !important; }
-.dark .border-\[\#F1F1F1\]     { border-color: #334155 !important; }
-.dark .border-gray-100\/60     { border-color: rgba(51, 65, 85, 0.6) !important; }
-.dark .border-gray-100\/50     { border-color: rgba(51, 65, 85, 0.5) !important; }
+.dark .border-gray-50  { border-color: #171717 !important; }
+.dark .border-gray-100 { border-color: #2a2a2a !important; }
+.dark .border-gray-200 { border-color: #404040 !important; }
+.dark .border-gray-300 { border-color: #404040 !important; }
+.dark .border-\[\#F1F1F1\]     { border-color: #2a2a2a !important; }
+.dark .border-gray-100\/60     { border-color: rgba(42, 42, 42, 0.6) !important; }
+.dark .border-gray-100\/50     { border-color: rgba(42, 42, 42, 0.5) !important; }
 /* Status-badge borders */
 .dark .border-green-100 { border-color: rgba(22, 163, 74, 0.3) !important; }
 .dark .border-amber-100 { border-color: rgba(217, 119, 6, 0.3) !important; }
@@ -201,18 +201,18 @@ body {
 .dark .border-orange-100 { border-color: rgba(234, 88, 12, 0.3) !important; }
 
 /* ─── Hover states ────────────────────────────────────────────────────── */
-.dark .hover\:bg-gray-50:hover       { background-color: #334155 !important; }
-.dark .hover\:bg-gray-100:hover      { background-color: #334155 !important; }
-.dark .hover\:bg-gray-50\/50:hover   { background-color: rgba(51, 65, 85, 0.5) !important; }
+.dark .hover\:bg-gray-50:hover       { background-color: #2a2a2a !important; }
+.dark .hover\:bg-gray-100:hover      { background-color: #2a2a2a !important; }
+.dark .hover\:bg-gray-50\/50:hover   { background-color: rgba(42, 42, 42, 0.5) !important; }
 .dark .hover\:bg-red-50:hover        { background-color: rgba(220, 38, 38, 0.12) !important; }
-.dark .hover\:border-gray-200:hover  { border-color: #64748b !important; }
-.dark .hover\:border-gray-300:hover  { border-color: #64748b !important; }
+.dark .hover\:border-gray-200:hover  { border-color: #525252 !important; }
+.dark .hover\:border-gray-300:hover  { border-color: #525252 !important; }
 
 /* ─── Forms & Inputs ──────────────────────────────────────────────────── */
 .dark input, .dark textarea, .dark select {
-  background-color: #1e293b !important;
+  background-color: #171717 !important;
   color: #e2e8f0 !important;
-  border-color: #475569 !important;
+  border-color: #404040 !important;
 }
 .dark input::placeholder, .dark textarea::placeholder {
   color: #64748b !important;
@@ -227,20 +227,20 @@ body {
 .dark .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important; }
 
 /* ─── Signup / Auth pages ─────────────────────────────────────────────── */
-.dark .signup-outer { background: #0f172a; }
-.dark .signup-card  { background: #1e293b; }
-.dark .signup-full  { background: #1e293b !important; }
+.dark .signup-outer { background: #0a0a0a; }
+.dark .signup-card  { background: #171717; }
+.dark .signup-full  { background: #171717 !important; }
 
 /* ─── Mapbox controls ─────────────────────────────────────────────────── */
-.dark .mapboxgl-ctrl-group { background: #1e293b !important; }
-.dark .mapboxgl-ctrl-group button { background-color: #1e293b !important; border-color: #334155 !important; }
-.dark .mapboxgl-ctrl-group button:hover { background-color: #334155 !important; }
-.dark .mapboxgl-popup-content { background: #1e293b !important; color: #e2e8f0 !important; }
+.dark .mapboxgl-ctrl-group { background: #171717 !important; }
+.dark .mapboxgl-ctrl-group button { background-color: #171717 !important; border-color: #2a2a2a !important; }
+.dark .mapboxgl-ctrl-group button:hover { background-color: #2a2a2a !important; }
+.dark .mapboxgl-popup-content { background: #171717 !important; color: #e2e8f0 !important; }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────── */
 .dark ::-webkit-scrollbar       { width: 6px; height: 6px; }
-.dark ::-webkit-scrollbar-track { background: #1e293b; }
-.dark ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+.dark ::-webkit-scrollbar-track { background: #171717; }
+.dark ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
 .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
 /* ─── Price range slider ──────────────────────────────────────────────── */
@@ -248,12 +248,12 @@ body {
 .dark input[type=range]::-moz-range-thumb     { background: #3b82f6; }
 
 /* ─── Dividers / separators using divide-* ────────────────────────────── */
-.dark .divide-gray-50 > :not(:last-child)  { border-color: #1e293b !important; }
-.dark .divide-gray-100 > :not(:last-child) { border-color: #334155 !important; }
-.dark .divide-gray-200 > :not(:last-child) { border-color: #475569 !important; }
+.dark .divide-gray-50 > :not(:last-child)  { border-color: #171717 !important; }
+.dark .divide-gray-100 > :not(:last-child) { border-color: #2a2a2a !important; }
+.dark .divide-gray-200 > :not(:last-child) { border-color: #404040 !important; }
 
 /* ─── Table header rows ───────────────────────────────────────────────── */
-.dark thead { background-color: #162033 !important; }
+.dark thead { background-color: #111111 !important; }
 .dark th    { color: #94a3b8 !important; }
 
 /* Mobile-only adjustments (<= 640px) to ensure signup and listing UIs fit the viewport

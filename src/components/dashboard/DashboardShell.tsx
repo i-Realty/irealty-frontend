@@ -13,12 +13,12 @@ import TopNavBar from '@/components/dashboard/TopNavBar';
  */
 export default function DashboardShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0f172a]">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0a0a0a]">
       <Sidebar />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <TopNavBar />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#F8FAFC] dark:bg-[#0f172a] p-4 md:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#F8FAFC] dark:bg-[#0a0a0a] p-4 md:p-8">
           {children}
         </main>
       </div>

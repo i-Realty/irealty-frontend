@@ -71,7 +71,7 @@ export default function TopNavBar() {
 
   return (
     <header
-      className={`h-16 bg-white dark:bg-[#1e293b] border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-4 md:px-6 z-[60] relative ${
+      className={`h-16 bg-white dark:bg-[#171717] border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-4 md:px-6 z-[60] relative ${
         isMessagesActive ? 'hidden md:flex' : ''
       }`}
     >

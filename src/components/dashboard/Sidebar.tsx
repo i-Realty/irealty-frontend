@@ -62,7 +62,7 @@ export default function Sidebar() {
       />
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-white dark:bg-[#171717] border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col transition-transform duration-300 ease-in-out
         md:relative md:translate-x-0 shadow-xl md:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -91,9 +91,11 @@ export default function Sidebar() {
                 );
               }
 
+              const dashboardRoots = ['/dashboard/agent', '/dashboard/admin', '/dashboard/seeker', '/dashboard/developer', '/dashboard/diaspora', '/dashboard/landlord'];
+              const isDashboardRoot = dashboardRoots.includes(item.href!);
               const isActive =
                 pathname === item.href ||
-                (item.href !== '/dashboard/agent' && pathname.startsWith(item.href!));
+                (!isDashboardRoot && pathname.startsWith(item.href!));
               const Icon = item.icon!;
 
               return (
@@ -116,7 +118,7 @@ export default function Sidebar() {
         </div>
 
         {/* Mobile Account Switcher */}
-        <div className="md:hidden w-full border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-[#162033] pb-8 pt-2 px-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden w-full border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-[#111111] pb-8 pt-2 px-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Account</p>
 
           <div className="relative bg-white border border-gray-100 rounded-2xl p-1 shadow-sm">
