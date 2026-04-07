@@ -69,7 +69,7 @@ interface MessagesStore {
   
   // Media Upload Flow States
   uploadModalState: UploadModalState;
-  stagedFiles: any[]; // In-memory JS files before API upload
+  stagedFiles: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any -- mixed FilePayload + File + media objects; typed when upload modals are refactored
 
   // Actions
   fetchThreadsMock: () => Promise<void>;
@@ -80,7 +80,7 @@ interface MessagesStore {
   toggleMobileContext: (isOpen: boolean) => void;
   
   setUploadModalState: (state: UploadModalState) => void;
-  setStagedFiles: (files: any[]) => void;
+  setStagedFiles: (files: any[]) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   clearUploadState: () => void;
 }
 

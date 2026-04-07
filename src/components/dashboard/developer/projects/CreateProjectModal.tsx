@@ -11,7 +11,7 @@ import Step5Review from './Step5Review';
 const STEP_TITLES = ['Property Type', 'Property Details', 'Milestones', 'Media Upload', 'Review & Submit'];
 
 export default function CreateProjectModal() {
-  const { isOpen, closeWizard, currentStep } = useCreateProjectStore();
+  const { isOpen, closeWizard, currentStep, isEditMode } = useCreateProjectStore();
 
   if (!isOpen) return null;
 
@@ -46,7 +46,7 @@ export default function CreateProjectModal() {
         <div className="flex-1 overflow-y-auto w-full">
           {/* Step Progress */}
           <div className="bg-white px-6 py-4">
-            <h3 className="text-lg font-bold text-gray-900">Create New Project</h3>
+            <h3 className="text-lg font-bold text-gray-900">{isEditMode ? 'Edit Project' : 'Create New Project'}</h3>
             <div className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400 font-medium">Step {currentStep}/5</span>

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
@@ -15,6 +16,7 @@ type Props = {
 export default function MapModal({ lat = 6.45, lng = 3.42, onClose }: Props) {
   const router = useRouter();
   const params = useParams();
+  useEscapeKey(() => (onClose ? onClose() : router.back()));
   const id = params?.id ?? '';
   
   const mapContainerRef = React.useRef<HTMLDivElement>(null);

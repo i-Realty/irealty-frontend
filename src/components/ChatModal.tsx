@@ -2,12 +2,14 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 type Props = {
   onClose: () => void;
 };
 
 export default function ChatModal({ onClose }: Props) {
+  useEscapeKey(onClose);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />

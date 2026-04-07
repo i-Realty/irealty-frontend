@@ -1,6 +1,7 @@
 'use client';
 
 import { useKYCStore } from './useKYCStore';
+import { kycStep1Schema, extractErrors } from '@/lib/validations/kyc';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -18,8 +19,25 @@ export default function StepPersonalInformation() {
     postCode: '',
     city: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleNext = () => {
+    const result = kycStep1Schema.safeParse({
+      bvn: formData.bvn,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      dobDay: formData.dobDay,
+      dobMonth: formData.dobMonth,
+      dobYear: formData.dobYear,
+      address: formData.address,
+      postalCode: formData.postCode,
+      city: formData.city,
+    });
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
     updateKycProgress(1);
     setCurrentKycStep(2);
   };
@@ -35,7 +53,8 @@ export default function StepPersonalInformation() {
           value={formData.bvn}
           onChange={(e) => setFormData({...formData, bvn: e.target.value})}
         />
-        
+        {errors.bvn && <p className="text-red-500 text-xs mt-1">{errors.bvn}</p>}
+
         {/* Accordion */}
         <div className="mt-2 border border-gray-100 rounded-lg bg-gray-50 overflow-hidden">
           <button 
@@ -63,16 +82,18 @@ export default function StepPersonalInformation() {
             value={formData.firstName}
             onChange={(e) => setFormData({...formData, firstName: e.target.value})}
           />
+          {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-          <input 
-            type="text" 
-            placeholder="Last Name" 
+          <input
+            type="text"
+            placeholder="Last Name"
             className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             value={formData.lastName}
             onChange={(e) => setFormData({...formData, lastName: e.target.value})}
           />
+          {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
         </div>
       </div>
 
@@ -115,6 +136,9 @@ export default function StepPersonalInformation() {
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
+        {errors.dobDay && <p className="text-red-500 text-xs mt-1">{errors.dobDay}</p>}
+        {errors.dobMonth && <p className="text-red-500 text-xs mt-1">{errors.dobMonth}</p>}
+        {errors.dobYear && <p className="text-red-500 text-xs mt-1">{errors.dobYear}</p>}
       </div>
 
       <div>
@@ -126,28 +150,31 @@ export default function StepPersonalInformation() {
           value={formData.address}
           onChange={(e) => setFormData({...formData, address: e.target.value})}
         />
+        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-          <input 
-            type="text" 
-            placeholder="Post code" 
+          <input
+            type="text"
+            placeholder="Post code"
             className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             value={formData.postCode}
             onChange={(e) => setFormData({...formData, postCode: e.target.value})}
           />
+          {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-          <input 
-            type="text" 
-            placeholder="City" 
+          <input
+            type="text"
+            placeholder="City"
             className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             value={formData.city}
             onChange={(e) => setFormData({...formData, city: e.target.value})}
           />
+          {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
         </div>
       </div>
 

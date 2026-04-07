@@ -62,7 +62,7 @@ export default function Sidebar() {
       />
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-white border-r border-gray-200 h-screen flex flex-col transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col transition-transform duration-300 ease-in-out
         md:relative md:translate-x-0 shadow-xl md:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -103,8 +103,8 @@ export default function Sidebar() {
                   onClick={close}
                   className={`flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-blue-50/70 text-blue-600 border-r-4 border-blue-600'
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-r-4 border-transparent'
+                      ? 'bg-blue-50/70 dark:bg-blue-900/30 text-blue-600 border-r-4 border-blue-600'
+                      : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 border-r-4 border-transparent'
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
@@ -116,7 +116,7 @@ export default function Sidebar() {
         </div>
 
         {/* Mobile Account Switcher */}
-        <div className="md:hidden w-full border-t border-gray-100 bg-gray-50/50 pb-8 pt-2 px-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden w-full border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-[#162033] pb-8 pt-2 px-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Account</p>
 
           <div className="relative bg-white border border-gray-100 rounded-2xl p-1 shadow-sm">
@@ -205,10 +205,10 @@ export default function Sidebar() {
         </div>
 
         {/* Desktop Logout Button */}
-        <div className="hidden md:block p-4 border-t border-gray-100">
+        <div className="hidden md:block p-4 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
           >
             <LogOut className="w-5 h-5" />
             Logout

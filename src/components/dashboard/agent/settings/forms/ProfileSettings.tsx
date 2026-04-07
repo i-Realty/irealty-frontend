@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { Camera, Loader2, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
+import { profileSchema, extractErrors } from '@/lib/validations/settings';
 
 const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
 
@@ -10,6 +11,7 @@ export default function ProfileSettings() {
   const { profile, updateProfile, updateSocials, submitProfileMock, isSaving } = useSettingsStore();
   const { user, updateUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const avatarSrc = user?.avatarUrl ?? FALLBACK_AVATAR;
 
@@ -23,6 +25,12 @@ export default function ProfileSettings() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = profileSchema.safeParse(profile);
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
     await submitProfileMock();
   };
 
@@ -72,18 +80,20 @@ export default function ProfileSettings() {
                  <input 
                     type="text"
                     value={profile.firstName}
-                    onChange={(e) => updateProfile({ firstName: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors"
+                    onChange={(e) => { updateProfile({ firstName: e.target.value }); setErrors((prev) => { const { firstName, ...rest } = prev; return rest; }); }}
+                    className={`w-full border rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors ${errors.firstName ? 'border-red-300' : 'border-gray-200'}`}
                  />
+                 {errors.firstName && <p className="text-red-500 text-xs ml-1">{errors.firstName}</p>}
               </div>
               <div className="flex flex-col gap-2">
                  <label className="text-[12px] font-bold text-gray-900 ml-1">Last name</label>
-                 <input 
+                 <input
                     type="text"
                     value={profile.lastName}
-                    onChange={(e) => updateProfile({ lastName: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors"
+                    onChange={(e) => { updateProfile({ lastName: e.target.value }); setErrors((prev) => { const { lastName, ...rest } = prev; return rest; }); }}
+                    className={`w-full border rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors ${errors.lastName ? 'border-red-300' : 'border-gray-200'}`}
                  />
+                 {errors.lastName && <p className="text-red-500 text-xs ml-1">{errors.lastName}</p>}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -91,9 +101,10 @@ export default function ProfileSettings() {
                  <input 
                     type="text"
                     value={profile.displayName}
-                    onChange={(e) => updateProfile({ displayName: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors"
+                    onChange={(e) => { updateProfile({ displayName: e.target.value }); setErrors((prev) => { const { displayName, ...rest } = prev; return rest; }); }}
+                    className={`w-full border rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors ${errors.displayName ? 'border-red-300' : 'border-gray-200'}`}
                  />
+                 {errors.displayName && <p className="text-red-500 text-xs ml-1">{errors.displayName}</p>}
               </div>
               <div className="flex flex-col gap-2">
                  <label className="text-[12px] font-bold text-gray-900 ml-1">Phone number</label>
@@ -109,10 +120,11 @@ export default function ProfileSettings() {
                      <input 
                         type="tel"
                         value={profile.phone}
-                        onChange={(e) => updateProfile({ phone: e.target.value })}
-                        className="flex-1 border border-gray-200 rounded-r-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors w-full"
+                        onChange={(e) => { updateProfile({ phone: e.target.value }); setErrors((prev) => { const { phone, ...rest } = prev; return rest; }); }}
+                        className={`flex-1 border rounded-r-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors w-full ${errors.phone ? 'border-red-300' : 'border-gray-200'}`}
                      />
                  </div>
+                 {errors.phone && <p className="text-red-500 text-xs ml-1">{errors.phone}</p>}
               </div>
 
               <div className="flex flex-col gap-2 md:col-span-2">

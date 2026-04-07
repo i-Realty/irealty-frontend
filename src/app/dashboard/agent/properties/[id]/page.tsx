@@ -1,11 +1,31 @@
 'use client';
 
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useAgentPropertiesStore } from '@/lib/store/useAgentPropertiesStore';
-import { ArrowLeft, Trash2, Edit3, MapPin, Play, Map } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit3, MapPin, Play, Map, CheckCircle2, FileText, Download, MapPinned } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+
+const DEFAULT_AMENITIES = [
+  'Swimming Pool', 'Gym', 'Parking', '24/7 Security',
+  'Generator', 'CCTV', 'Air Conditioning', 'Garden',
+  'Elevator', 'Children Playground', 'Laundry Room', 'Wi-Fi',
+];
+
+const MOCK_DOCUMENTS = [
+  { name: 'Title Deed', size: '2.4 MB', format: 'PDF' },
+  { name: 'Survey Plan', size: '1.8 MB', format: 'PDF' },
+  { name: 'Building Permit', size: '3.1 MB', format: 'PDF' },
+];
+
+const MOCK_LANDMARKS = [
+  { name: 'Lekki Toll Gate', distance: '2.5 km' },
+  { name: 'Victoria Island Mall', distance: '1.2 km' },
+  { name: 'Third Mainland Bridge', distance: '4.0 km' },
+  { name: 'Murtala Muhammed Airport', distance: '8.3 km' },
+  { name: 'Lagos University Teaching Hospital', distance: '5.7 km' },
+];
 
 export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -16,6 +36,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     if (properties.length === 0) fetchProperties();
   }, [properties.length, fetchProperties]);
 
+  const [activeTab, setActiveTab] = useState('Description');
   const property = properties.find(p => p.id === id);
 
   if (!property) return <div className="p-8">Loading property details...</div>;
@@ -29,6 +50,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   };
 
   const isSale = property.listingType === 'For Sale';
+  const amenities = (property as unknown as Record<string, unknown>).amenities as string[] | undefined ?? DEFAULT_AMENITIES;
 
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this property?')) {
@@ -137,16 +159,91 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       {/* Detail Tabs Area */}
       <div className="border border-gray-100 rounded-xl bg-white overflow-hidden shadow-sm">
          <div className="flex w-full border-b border-gray-100">
-           {['Description', 'Amenities', 'Documents', 'Landmarks'].map((tab, idx) => (
-             <button key={tab} className={`flex-1 py-4 text-sm font-medium transition-colors ${idx === 0 ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+           {['Description', 'Amenities', 'Documents', 'Landmarks'].map((tab) => (
+             <button
+               key={tab}
+               onClick={() => setActiveTab(tab)}
+               className={`flex-1 py-4 text-sm font-medium transition-colors ${activeTab === tab ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+             >
                {tab}
              </button>
            ))}
          </div>
          <div className="p-6">
-            <p className="text-sm text-gray-600 leading-relaxed max-w-4xl">
-              {property.description}
-            </p>
+            {/* Description Tab */}
+            {activeTab === 'Description' && (
+              <p className="text-sm text-gray-600 leading-relaxed max-w-4xl">
+                {property.description}
+              </p>
+            )}
+
+            {/* Amenities Tab */}
+            {activeTab === 'Amenities' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {amenities.map((amenity) => (
+                  <div
+                    key={amenity}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{amenity}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Documents Tab */}
+            {activeTab === 'Documents' && (
+              <div className="space-y-3">
+                {MOCK_DOCUMENTS.map((doc) => (
+                  <div
+                    key={doc.name}
+                    className="flex items-center justify-between px-4 py-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                        <p className="text-xs text-gray-400">{doc.size}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        {doc.format}
+                      </span>
+                      <button className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                        <Download className="w-4 h-4" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Landmarks Tab */}
+            {activeTab === 'Landmarks' && (
+              <div className="space-y-3">
+                {MOCK_LANDMARKS.map((landmark) => (
+                  <div
+                    key={landmark.name}
+                    className="flex items-center justify-between px-4 py-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                        <MapPinned className="w-5 h-5 text-green-600" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{landmark.name}</span>
+                    </div>
+                    <span className="text-sm text-gray-500 font-medium">{landmark.distance}</span>
+                  </div>
+                ))}
+              </div>
+            )}
          </div>
       </div>
       

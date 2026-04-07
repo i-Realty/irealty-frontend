@@ -10,20 +10,25 @@ export default function Step5Review() {
   const router = useRouter();
   const store = useCreatePropertyStore();
   
-  const { 
+  const {
     title, address, media,
     listingType, propertyType,
     salePrice, rentPrice, rentPriceType,
     bedrooms, bathrooms, sizeSqm, landSizeSqm,
-    isLoading, submitProperty, prevStep, closeWizard
+    isLoading, isEditMode, editingPropertyId,
+    submitProperty, prevStep, closeWizard
   } = store;
 
-  const { addPropertyLocally } = useAgentPropertiesStore();
+  const { addPropertyLocally, updatePropertyLocally } = useAgentPropertiesStore();
 
   const handleSubmit = async () => {
-    const newProperty = await submitProperty();
-    if (newProperty) {
-      addPropertyLocally(newProperty);
+    const property = await submitProperty();
+    if (property) {
+      if (isEditMode) {
+        updatePropertyLocally(property);
+      } else {
+        addPropertyLocally(property);
+      }
       router.push('/dashboard/agent/properties');
     }
   };
@@ -114,10 +119,10 @@ export default function Step5Review() {
           {isLoading ? (
              <span className="flex items-center gap-2">
                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-               Publishing...
+               {isEditMode ? 'Saving...' : 'Publishing...'}
              </span>
           ) : (
-             'Proceed to Publish'
+             isEditMode ? 'Save Changes' : 'Proceed to Publish'
           )}
         </button>
       </div>

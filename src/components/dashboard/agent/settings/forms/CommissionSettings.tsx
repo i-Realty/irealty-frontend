@@ -1,11 +1,20 @@
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { commissionSchema, extractErrors } from '@/lib/validations/settings';
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function CommissionSettings() {
   const { commission, updateCommission, submitCommissionMock, isSaving } = useSettingsStore();
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = commissionSchema.safeParse({ feeType: commission.feeType, value: Number(commission.value) || 0 });
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
     await submitCommissionMock();
   };
 
@@ -88,6 +97,7 @@ export default function CommissionSettings() {
                     <span className="absolute right-4 text-gray-400 font-medium">%</span>
                  )}
               </div>
+              {errors.value && <p className="text-red-500 text-xs mt-1">{errors.value}</p>}
            </div>
 
            <div className="w-full flex justify-end">

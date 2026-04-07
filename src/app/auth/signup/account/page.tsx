@@ -8,7 +8,7 @@ import ProgressPill from '@/components/auth/ProgressPill';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
-import { validateEmail, validatePassword, validatePhone, validateRequired } from '@/lib/utils/authValidation';
+import { validateEmail, validatePassword, validatePhone, validateRequired, validateUsername } from '@/lib/utils/authValidation';
 
 export default function SignupAccount() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function SignupAccount() {
 
     // Validate fields
     const newErrors: Record<string, string> = {};
-    if (validateRequired(username, 'Username')) newErrors.username = validateRequired(username, 'Username');
+    if (validateUsername(username)) newErrors.username = validateUsername(username);
     if (validateRequired(firstName, 'First Name')) newErrors.firstName = validateRequired(firstName, 'First Name');
     if (validateRequired(lastName, 'Last Name')) newErrors.lastName = validateRequired(lastName, 'Last Name');
     if (validateEmail(email) || validateRequired(email, 'Email')) newErrors.email = validateEmail(email) || validateRequired(email, 'Email');

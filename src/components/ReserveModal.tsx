@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function ReserveModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
+  useEscapeKey(() => (onClose ? onClose() : router.back()));
   const params = useParams();
   const id = params?.id ?? '';
   const [addVerify, setAddVerify] = useState(false);

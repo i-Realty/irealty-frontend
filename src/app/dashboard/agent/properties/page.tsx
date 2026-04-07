@@ -19,12 +19,13 @@ const FILTERS: { label: string; value: 'All' | PropertyCategory }[] = [
 ];
 
 export default function MyPropertiesPage() {
-  const { 
-    properties, isLoading, fetchProperties, activeTab, setActiveTab, 
-    activeFilter, setActiveFilter, searchQuery, setSearchQuery, deleteProperty
+  const {
+    properties, isLoading, fetchProperties, activeTab, setActiveTab,
+    activeFilter, setActiveFilter, searchQuery, setSearchQuery, deleteProperty,
+    getPropertyById
   } = useAgentPropertiesStore();
-  
-  const { openWizard } = useCreatePropertyStore();
+
+  const { openWizard, loadPropertyForEdit } = useCreatePropertyStore();
   
   const [localSearch, setLocalSearch] = useState('');
 
@@ -114,8 +115,15 @@ export default function MyPropertiesPage() {
 
       {/* Grid / Empty State */}
       {isLoading ? (
-         <div className="flex h-64 items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           {Array.from({ length: 6 }).map((_, i) => (
+             <div key={i} className="animate-pulse">
+               <div className="bg-gray-200 rounded-xl h-40 w-full mb-3" />
+               <div className="bg-gray-200 rounded h-4 w-3/4 mb-2" />
+               <div className="bg-gray-200 rounded h-3 w-1/2 mb-2" />
+               <div className="bg-gray-200 rounded h-3 w-1/3" />
+             </div>
+           ))}
          </div>
       ) : filteredProperties.length === 0 ? (
         <EmptyState />
@@ -126,7 +134,12 @@ export default function MyPropertiesPage() {
               <AgentPropertyCard 
                 key={property.id} 
                 property={property} 
-                onEdit={() => { /* Wait for edit flow implementation */ }} 
+                onEdit={(id) => {
+                  const prop = getPropertyById(id);
+                  if (prop) {
+                    loadPropertyForEdit(prop);
+                  }
+                }}
                 onDelete={(id) => {
                    if (confirm('Are you sure you want to delete this listing?')) {
                       deleteProperty(id);

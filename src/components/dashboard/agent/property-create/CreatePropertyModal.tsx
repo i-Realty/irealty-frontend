@@ -1,6 +1,7 @@
 'use client';
 
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 import { X } from 'lucide-react';
 import Step1PropertyType from './Step1PropertyType';
 import Step2PropertyDetails from './Step2PropertyDetails';
@@ -9,12 +10,14 @@ import Step4Pricing from './Step4Pricing';
 import Step5Review from './Step5Review';
 
 export default function CreatePropertyModal() {
-  const { isOpen, currentStep, closeWizard } = useCreatePropertyStore();
+  const { isOpen, currentStep, closeWizard, isEditMode } = useCreatePropertyStore();
+
+  useEscapeKey(closeWizard);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center overflow-y-auto p-4 sm:p-6 pb-20">
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center overflow-y-auto p-4 sm:p-6 pb-20" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit property' : 'Create new property'}>
       {/* Main Container */}
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl flex flex-col relative my-auto">
         
@@ -28,7 +31,7 @@ export default function CreatePropertyModal() {
 
         <div className="w-full flex flex-col max-h-[85vh] overflow-y-auto px-6 py-8 md:p-10">        {/* Universal Header */}
         <div className="mb-8">
-           <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Property</h2>
+           <h2 className="text-2xl font-bold text-gray-900 mb-6">{isEditMode ? 'Edit Property' : 'Create New Property'}</h2>
            
            {/* Stepper Dummy Wrapper (we'll replace with real Stepper Component next) */}
            <div className="w-full bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">

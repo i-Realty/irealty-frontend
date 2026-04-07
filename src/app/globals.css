@@ -2,6 +2,11 @@
 @import "mapbox-gl/dist/mapbox-gl.css";
 @import "tailwindcss";
 
+/* Override Tailwind v4's default dark mode from media-query to class-based.
+   Without this, dark: utilities activate via prefers-color-scheme (OS setting)
+   instead of the .dark class that our ThemeProvider toggles on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Mapbox GL JS control visibility fixes ─────────────────────────────────
    Tailwind's CSS reset and our font-family !important rule can clash with
    Mapbox control styles. These overrides restore correct rendering.       */
@@ -107,6 +112,14 @@
   }
 }
 
+/* ── Dark Mode Theme ─────────────────────────────────────────────────────
+   Activated by adding class="dark" to <html>. The useThemeStore handles
+   toggling this class based on user preference or system setting.        */
+.dark {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -114,6 +127,134 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Dark mode global overrides ──────────────────────────────────────────
+   All rules scoped under .dark — zero impact on light mode.
+   Remap common Tailwind utility patterns + custom hex backgrounds so
+   the vast majority of existing components adapt automatically.           */
+
+/* ─── Backgrounds: standard Tailwind grays ────────────────────────────── */
+.dark .bg-white        { background-color: #1e293b !important; }
+.dark .bg-gray-50      { background-color: #162033 !important; }
+.dark .bg-gray-100     { background-color: #1e293b !important; }
+.dark .bg-gray-200     { background-color: #334155 !important; }
+.dark .bg-gray-50\/20  { background-color: rgba(22, 32, 51, 0.2) !important; }
+.dark .bg-gray-50\/30  { background-color: rgba(22, 32, 51, 0.3) !important; }
+.dark .bg-gray-50\/50  { background-color: rgba(22, 32, 51, 0.5) !important; }
+
+/* ─── Backgrounds: custom hex values used across the project ──────────── */
+.dark .bg-\[\#F8FAFC\]  { background-color: #0f172a !important; }
+.dark .bg-\[\#F8FAFB\]  { background-color: #0f172a !important; }
+.dark .bg-\[\#FFFFFF\]   { background-color: #1e293b !important; }
+/* Calendar event chips */
+.dark .bg-\[\#D3E0FF\]  { background-color: rgba(37, 99, 235, 0.25) !important; }
+.dark .hover\:bg-\[\#c2d3fa\]:hover { background-color: rgba(37, 99, 235, 0.35) !important; }
+/* Mobile calendar events */
+.dark .bg-\[\#EDF3FF\]  { background-color: rgba(37, 99, 235, 0.15) !important; }
+.dark .border-\[\#E5ECFF\] { border-color: rgba(37, 99, 235, 0.25) !important; }
+/* Message bubbles */
+.dark .bg-\[\#E5ECFF\]  { background-color: rgba(37, 99, 235, 0.2) !important; }
+/* Transaction pending badge */
+.dark .bg-\[\#FFF4eb\]  { background-color: rgba(234, 88, 12, 0.15) !important; }
+.dark .border-\[\#fceddf\] { border-color: rgba(234, 88, 12, 0.25) !important; }
+/* Subscription warning banner */
+.dark .bg-\[\#FFF9E6\]  { background-color: rgba(217, 119, 6, 0.15) !important; }
+.dark .border-\[\#FFEAB8\] { border-color: rgba(217, 119, 6, 0.25) !important; }
+
+/* ─── Backgrounds: status-badge -50 tints ─────────────────────────────── */
+.dark .bg-green-50    { background-color: rgba(22, 163, 74, 0.15) !important; }
+.dark .bg-emerald-50  { background-color: rgba(16, 185, 129, 0.15) !important; }
+.dark .bg-amber-50    { background-color: rgba(217, 119, 6, 0.15) !important; }
+.dark .bg-red-50      { background-color: rgba(220, 38, 38, 0.15) !important; }
+.dark .bg-orange-50   { background-color: rgba(234, 88, 12, 0.15) !important; }
+.dark .bg-blue-50     { background-color: rgba(37, 99, 235, 0.15) !important; }
+.dark .bg-blue-50\/50 { background-color: rgba(37, 99, 235, 0.1) !important; }
+.dark .bg-blue-50\/70 { background-color: rgba(37, 99, 235, 0.12) !important; }
+.dark .bg-blue-50\/20 { background-color: rgba(37, 99, 235, 0.08) !important; }
+/* -100 tints used in some badges */
+.dark .bg-green-100\/50 { background-color: rgba(22, 163, 74, 0.18) !important; }
+.dark .bg-blue-100\/50  { background-color: rgba(37, 99, 235, 0.18) !important; }
+
+/* ─── Text ────────────────────────────────────────────────────────────── */
+.dark .text-gray-900  { color: #f1f5f9 !important; }
+.dark .text-gray-800  { color: #e2e8f0 !important; }
+.dark .text-gray-700  { color: #cbd5e1 !important; }
+.dark .text-gray-600  { color: #94a3b8 !important; }
+.dark .text-gray-500  { color: #64748b !important; }
+.dark .text-gray-400  { color: #64748b !important; }
+.dark .text-gray-300  { color: #94a3b8 !important; }
+.dark .text-\[\#090202\] { color: #f1f5f9 !important; }
+.dark .text-\[\#171717\] { color: #e2e8f0 !important; }
+
+/* ─── Borders ─────────────────────────────────────────────────────────── */
+.dark .border-gray-50  { border-color: #1e293b !important; }
+.dark .border-gray-100 { border-color: #334155 !important; }
+.dark .border-gray-200 { border-color: #475569 !important; }
+.dark .border-gray-300 { border-color: #475569 !important; }
+.dark .border-\[\#F1F1F1\]     { border-color: #334155 !important; }
+.dark .border-gray-100\/60     { border-color: rgba(51, 65, 85, 0.6) !important; }
+.dark .border-gray-100\/50     { border-color: rgba(51, 65, 85, 0.5) !important; }
+/* Status-badge borders */
+.dark .border-green-100 { border-color: rgba(22, 163, 74, 0.3) !important; }
+.dark .border-amber-100 { border-color: rgba(217, 119, 6, 0.3) !important; }
+.dark .border-red-100   { border-color: rgba(220, 38, 38, 0.3) !important; }
+.dark .border-orange-100 { border-color: rgba(234, 88, 12, 0.3) !important; }
+
+/* ─── Hover states ────────────────────────────────────────────────────── */
+.dark .hover\:bg-gray-50:hover       { background-color: #334155 !important; }
+.dark .hover\:bg-gray-100:hover      { background-color: #334155 !important; }
+.dark .hover\:bg-gray-50\/50:hover   { background-color: rgba(51, 65, 85, 0.5) !important; }
+.dark .hover\:bg-red-50:hover        { background-color: rgba(220, 38, 38, 0.12) !important; }
+.dark .hover\:border-gray-200:hover  { border-color: #64748b !important; }
+.dark .hover\:border-gray-300:hover  { border-color: #64748b !important; }
+
+/* ─── Forms & Inputs ──────────────────────────────────────────────────── */
+.dark input, .dark textarea, .dark select {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #64748b !important;
+}
+.dark input:focus, .dark textarea:focus, .dark select:focus {
+  border-color: #3b82f6 !important;
+}
+
+/* ─── Shadows ─────────────────────────────────────────────────────────── */
+.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important; }
+.dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important; }
+.dark .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important; }
+
+/* ─── Signup / Auth pages ─────────────────────────────────────────────── */
+.dark .signup-outer { background: #0f172a; }
+.dark .signup-card  { background: #1e293b; }
+.dark .signup-full  { background: #1e293b !important; }
+
+/* ─── Mapbox controls ─────────────────────────────────────────────────── */
+.dark .mapboxgl-ctrl-group { background: #1e293b !important; }
+.dark .mapboxgl-ctrl-group button { background-color: #1e293b !important; border-color: #334155 !important; }
+.dark .mapboxgl-ctrl-group button:hover { background-color: #334155 !important; }
+.dark .mapboxgl-popup-content { background: #1e293b !important; color: #e2e8f0 !important; }
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar       { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* ─── Price range slider ──────────────────────────────────────────────── */
+.dark input[type=range]::-webkit-slider-thumb { background: #3b82f6; }
+.dark input[type=range]::-moz-range-thumb     { background: #3b82f6; }
+
+/* ─── Dividers / separators using divide-* ────────────────────────────── */
+.dark .divide-gray-50 > :not(:last-child)  { border-color: #1e293b !important; }
+.dark .divide-gray-100 > :not(:last-child) { border-color: #334155 !important; }
+.dark .divide-gray-200 > :not(:last-child) { border-color: #475569 !important; }
+
+/* ─── Table header rows ───────────────────────────────────────────────── */
+.dark thead { background-color: #162033 !important; }
+.dark th    { color: #94a3b8 !important; }
 
 /* Mobile-only adjustments (<= 640px) to ensure signup and listing UIs fit the viewport
    without altering desktop appearance. These rules are intentionally conservative

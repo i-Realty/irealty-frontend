@@ -20,7 +20,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 1, title: '1 Bed Residential Flat · Lekki Phase 1',
     location: 'Lekki Phase 1, Lagos', neighbourhood: 'Lekki Phase 1',
-    price: '₦ 8,000,000', priceLabel: '₦8M', priceReduced: false,
+    price: '₦ 8,000,000', priceValue: 8000000, priceLabel: '₦8M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 1, baths: 1, area: '55 sqm', sizeSqm: 55,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -29,7 +29,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 2, title: '2 Bed Residential Apartment · Victoria Island',
     location: 'Victoria Island, Lagos', neighbourhood: 'Victoria Island',
-    price: '₦ 15,000,000', priceLabel: '₦15M', priceReduced: false,
+    price: '₦ 15,000,000', priceValue: 15000000, priceLabel: '₦15M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 2, area: '100 sqm', sizeSqm: 100,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: true,
@@ -38,7 +38,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 3, title: '3 Bed Residential Duplex · Ikoyi',
     location: 'Ikoyi, Lagos', neighbourhood: 'Ikoyi',
-    price: '₦ 1,200,000 /mo', priceLabel: '₦1.2M', priceReduced: false,
+    price: '₦ 1,200,000 /mo', priceValue: 1200000, priceLabel: '₦1.2M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 3, baths: 2, area: '140 sqm', sizeSqm: 140,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: true,
@@ -47,7 +47,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 4, title: '4 Bed Residential Terrace · Surulere',
     location: 'Surulere, Lagos', neighbourhood: 'Surulere',
-    price: '₦ 2,000,000 /mo', priceLabel: '₦2M', priceReduced: false,
+    price: '₦ 2,000,000 /mo', priceValue: 2000000, priceLabel: '₦2M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 4, baths: 3, area: '180 sqm', sizeSqm: 180,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -56,7 +56,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 5, title: '5 Bed Residential Mansion · Banana Island',
     location: 'Banana Island, Ikoyi', neighbourhood: 'Banana Island',
-    price: '₦ 80,000,000', priceLabel: '₦80M', priceReduced: true,
+    price: '₦ 80,000,000', priceValue: 80000000, priceLabel: '₦80M', priceReduced: true,
     originalPrice: '₦ 95,000,000', category: 'sale', tag: 'For Sale',
     beds: 5, baths: 5, area: '500 sqm', sizeSqm: 500,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
@@ -66,7 +66,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 6, title: '6 Bed Residential Estate · Magodo',
     location: 'Magodo, Lagos', neighbourhood: 'Magodo',
-    price: '₦ 4,500,000 /mo', priceLabel: '₦4.5M', priceReduced: false,
+    price: '₦ 4,500,000 /mo', priceValue: 4500000, priceLabel: '₦4.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 6, baths: 5, area: '420 sqm', sizeSqm: 420,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -75,7 +75,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 7, title: '5 Bed Residential Villa · Ajah',
     location: 'Ajah, Lagos', neighbourhood: 'Ajah',
-    price: '₦ 3,500,000 /mo', priceLabel: '₦3.5M', priceReduced: false,
+    price: '₦ 3,500,000 /mo', priceValue: 3500000, priceLabel: '₦3.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 5, baths: 4, area: '350 sqm', sizeSqm: 350,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: true, hasVirtualTour: true,
@@ -84,7 +84,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 8, title: '2 Bed Residential Studio · Yaba',
     location: 'Yaba, Lagos', neighbourhood: 'Yaba',
-    price: '₦ 45,000 /night', priceLabel: '₦45K', priceReduced: false,
+    price: '₦ 45,000 /night', priceValue: 45000, priceLabel: '₦45K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 2, baths: 1, area: '65 sqm', sizeSqm: 65,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'QuickStay NG', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -95,7 +95,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 9, title: 'Commercial Office · Victoria Island',
     location: 'Victoria Island, Lagos', neighbourhood: 'Victoria Island',
-    price: '₦ 15,000,000', priceLabel: '₦15M', priceReduced: false,
+    price: '₦ 15,000,000', priceValue: 15000000, priceLabel: '₦15M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 1, baths: 1, area: '80 sqm', sizeSqm: 80,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -104,7 +104,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 10, title: 'Commercial Retail Space · Ikeja',
     location: 'Ikeja, Lagos', neighbourhood: 'Ikeja',
-    price: '₦ 28,000,000', priceLabel: '₦28M', priceReduced: false,
+    price: '₦ 28,000,000', priceValue: 28000000, priceLabel: '₦28M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 1, area: '200 sqm', sizeSqm: 200,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: false,
@@ -113,7 +113,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 11, title: 'Commercial Plaza · Lekki Phase 1',
     location: 'Lekki Phase 1, Lagos', neighbourhood: 'Lekki Phase 1',
-    price: '₦ 2,500,000 /mo', priceLabel: '₦2.5M', priceReduced: false,
+    price: '₦ 2,500,000 /mo', priceValue: 2500000, priceLabel: '₦2.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 3, baths: 2, area: '250 sqm', sizeSqm: 250,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: true,
@@ -122,7 +122,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 12, title: 'Commercial Warehouse · Maryland',
     location: 'Maryland, Lagos', neighbourhood: 'Maryland',
-    price: '₦ 4,000,000 /mo', priceLabel: '₦4M', priceReduced: false,
+    price: '₦ 4,000,000 /mo', priceValue: 4000000, priceLabel: '₦4M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 4, baths: 2, area: '400 sqm', sizeSqm: 400,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Elite Properties', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -131,7 +131,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 13, title: 'Commercial Complex · Ajah',
     location: 'Ajah, Lagos', neighbourhood: 'Ajah',
-    price: '₦ 55,000,000', priceLabel: '₦55M', priceReduced: true,
+    price: '₦ 55,000,000', priceValue: 55000000, priceLabel: '₦55M', priceReduced: true,
     originalPrice: '₦ 65,000,000', category: 'sale', tag: 'For Sale',
     beds: 5, baths: 3, area: '600 sqm', sizeSqm: 600,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
@@ -141,7 +141,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 14, title: 'Commercial Hub · Surulere',
     location: 'Surulere, Lagos', neighbourhood: 'Surulere',
-    price: '₦ 5,500,000 /mo', priceLabel: '₦5.5M', priceReduced: false,
+    price: '₦ 5,500,000 /mo', priceValue: 5500000, priceLabel: '₦5.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 6, baths: 4, area: '500 sqm', sizeSqm: 500,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: false, hasVirtualTour: false,
@@ -150,7 +150,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 15, title: 'Commercial Serviced Space · Ikoyi',
     location: 'Ikoyi, Lagos', neighbourhood: 'Ikoyi',
-    price: '₦ 80,000 /night', priceLabel: '₦80K', priceReduced: false,
+    price: '₦ 80,000 /night', priceValue: 80000, priceLabel: '₦80K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 1, baths: 1, area: '60 sqm', sizeSqm: 60,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: true,
@@ -161,7 +161,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 16, title: 'Plots/Land · 500 sqm · Ajah',
     location: 'Ajah, Lagos', neighbourhood: 'Ajah',
-    price: '₦ 5,000,000', priceLabel: '₦5M', priceReduced: false,
+    price: '₦ 5,000,000', priceValue: 5000000, priceLabel: '₦5M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 1, baths: 1, area: '500 sqm', sizeSqm: 500,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: true, hasVirtualTour: false,
@@ -170,7 +170,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 17, title: 'Plots/Land · 1000 sqm · Ibeju-Lekki',
     location: 'Ibeju-Lekki, Lagos', neighbourhood: 'Ibeju-Lekki',
-    price: '₦ 12,000,000', priceLabel: '₦12M', priceReduced: false,
+    price: '₦ 12,000,000', priceValue: 12000000, priceLabel: '₦12M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 1, area: '1000 sqm', sizeSqm: 1000,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Elite Properties', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -179,7 +179,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 18, title: 'Plots/Land · 300 sqm · Magodo',
     location: 'Magodo, Lagos', neighbourhood: 'Magodo',
-    price: '₦ 18,000,000', priceLabel: '₦18M', priceReduced: false,
+    price: '₦ 18,000,000', priceValue: 18000000, priceLabel: '₦18M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 3, baths: 1, area: '300 sqm', sizeSqm: 300,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: false, hasVirtualTour: false,
@@ -188,7 +188,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 19, title: 'Plots/Land · 800 sqm · Epe',
     location: 'Epe, Lagos', neighbourhood: 'Epe',
-    price: '₦ 8,000,000', priceLabel: '₦8M', priceReduced: false,
+    price: '₦ 8,000,000', priceValue: 8000000, priceLabel: '₦8M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 4, baths: 1, area: '800 sqm', sizeSqm: 800,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -197,7 +197,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 20, title: 'Plots/Land · 2000 sqm · Banana Island',
     location: 'Banana Island, Ikoyi', neighbourhood: 'Banana Island',
-    price: '₦ 75,000,000', priceLabel: '₦75M', priceReduced: false,
+    price: '₦ 75,000,000', priceValue: 75000000, priceLabel: '₦75M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 5, baths: 1, area: '2000 sqm', sizeSqm: 2000,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Elite Properties', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -206,7 +206,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 21, title: 'Plots/Land · 600 sqm · Yaba',
     location: 'Yaba, Lagos', neighbourhood: 'Yaba',
-    price: '₦ 500,000 /mo', priceLabel: '₦500K', priceReduced: false,
+    price: '₦ 500,000 /mo', priceValue: 500000, priceLabel: '₦500K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 6, baths: 1, area: '600 sqm', sizeSqm: 600,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: false,
@@ -215,7 +215,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 22, title: 'Plots/Land · 450 sqm · Ikeja',
     location: 'Ikeja, Lagos', neighbourhood: 'Ikeja',
-    price: '₦ 300,000 /mo', priceLabel: '₦300K', priceReduced: false,
+    price: '₦ 300,000 /mo', priceValue: 300000, priceLabel: '₦300K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 1, baths: 1, area: '450 sqm', sizeSqm: 450,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -226,7 +226,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 23, title: '1 Bed Service Apartment · Victoria Island',
     location: 'Victoria Island, Lagos', neighbourhood: 'Victoria Island',
-    price: '₦ 350,000 /mo', priceLabel: '₦350K', priceReduced: false,
+    price: '₦ 350,000 /mo', priceValue: 350000, priceLabel: '₦350K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 1, baths: 1, area: '50 sqm', sizeSqm: 50,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'QuickStay NG', agentId: 1, isVerified: true, hasVirtualTour: true,
@@ -235,7 +235,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 24, title: '2 Bed Service Apartment · Ikoyi',
     location: 'Ikoyi, Lagos', neighbourhood: 'Ikoyi',
-    price: '₦ 45,000 /night', priceLabel: '₦45K', priceReduced: false,
+    price: '₦ 45,000 /night', priceValue: 45000, priceLabel: '₦45K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 2, baths: 2, area: '80 sqm', sizeSqm: 80,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'QuickStay NG', agentId: 1, isVerified: true, hasVirtualTour: true,
@@ -244,7 +244,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 25, title: '3 Bed Serviced Flat · Lekki Phase 1',
     location: 'Lekki Phase 1, Lagos', neighbourhood: 'Lekki Phase 1',
-    price: '₦ 75,000 /night', priceLabel: '₦75K', priceReduced: false,
+    price: '₦ 75,000 /night', priceValue: 75000, priceLabel: '₦75K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 3, baths: 2, area: '120 sqm', sizeSqm: 120,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -253,7 +253,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 26, title: '4 Bed Service Suite · Surulere',
     location: 'Surulere, Lagos', neighbourhood: 'Surulere',
-    price: '₦ 3,000,000 /mo', priceLabel: '₦3M', priceReduced: false,
+    price: '₦ 3,000,000 /mo', priceValue: 3000000, priceLabel: '₦3M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 4, baths: 3, area: '160 sqm', sizeSqm: 160,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -262,7 +262,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 27, title: '5 Bed Service Penthouse · Banana Island',
     location: 'Banana Island, Ikoyi', neighbourhood: 'Banana Island',
-    price: '₦ 40,000,000', priceLabel: '₦40M', priceReduced: false,
+    price: '₦ 40,000,000', priceValue: 40000000, priceLabel: '₦40M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 5, baths: 4, area: '300 sqm', sizeSqm: 300,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Elite Properties', agentId: 2, isVerified: true, hasVirtualTour: true,
@@ -271,7 +271,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 28, title: '6 Bed Service Compound · Magodo',
     location: 'Magodo, Lagos', neighbourhood: 'Magodo',
-    price: '₦ 55,000,000', priceLabel: '₦55M', priceReduced: false,
+    price: '₦ 55,000,000', priceValue: 55000000, priceLabel: '₦55M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 6, baths: 5, area: '450 sqm', sizeSqm: 450,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: false,
@@ -280,7 +280,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 29, title: '1 Bed Service Studio · Yaba',
     location: 'Yaba, Lagos', neighbourhood: 'Yaba',
-    price: '₦ 30,000 /night', priceLabel: '₦30K', priceReduced: false,
+    price: '₦ 30,000 /night', priceValue: 30000, priceLabel: '₦30K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 1, baths: 1, area: '35 sqm', sizeSqm: 35,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'QuickStay NG', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -289,7 +289,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 30, title: '3 Bed Service Terrace · Ajah',
     location: 'Ajah, Lagos', neighbourhood: 'Ajah',
-    price: '₦ 25,000,000', priceLabel: '₦25M', priceReduced: false,
+    price: '₦ 25,000,000', priceValue: 25000000, priceLabel: '₦25M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 3, baths: 2, area: '150 sqm', sizeSqm: 150,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: true,
@@ -300,7 +300,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 31, title: 'PG/Hostel Room · Yaba',
     location: 'Yaba, Lagos', neighbourhood: 'Yaba',
-    price: '₦ 150,000 /mo', priceLabel: '₦150K', priceReduced: false,
+    price: '₦ 150,000 /mo', priceValue: 150000, priceLabel: '₦150K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 1, baths: 1, area: '20 sqm', sizeSqm: 20,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: false,
@@ -309,7 +309,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 32, title: 'PG/Hostel Suite · Surulere',
     location: 'Surulere, Lagos', neighbourhood: 'Surulere',
-    price: '₦ 250,000 /mo', priceLabel: '₦250K', priceReduced: false,
+    price: '₦ 250,000 /mo', priceValue: 250000, priceLabel: '₦250K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 2, baths: 1, area: '35 sqm', sizeSqm: 35,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -318,7 +318,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 33, title: 'PG/Hostel Flat · Ikeja',
     location: 'Ikeja, Lagos', neighbourhood: 'Ikeja',
-    price: '₦ 400,000 /mo', priceLabel: '₦400K', priceReduced: false,
+    price: '₦ 400,000 /mo', priceValue: 400000, priceLabel: '₦400K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 3, baths: 2, area: '55 sqm', sizeSqm: 55,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Prime Realty', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -327,7 +327,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 34, title: 'PG/Hostel Block · Maryland',
     location: 'Maryland, Lagos', neighbourhood: 'Maryland',
-    price: '₦ 600,000 /mo', priceLabel: '₦600K', priceReduced: false,
+    price: '₦ 600,000 /mo', priceValue: 600000, priceLabel: '₦600K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 4, baths: 2, area: '70 sqm', sizeSqm: 70,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Lagos Homes', agentId: 3, isVerified: false, hasVirtualTour: false,
@@ -336,7 +336,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 35, title: 'PG/Hostel Building · Ajah',
     location: 'Ajah, Lagos', neighbourhood: 'Ajah',
-    price: '₦ 15,000,000', priceLabel: '₦15M', priceReduced: false,
+    price: '₦ 15,000,000', priceValue: 15000000, priceLabel: '₦15M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 5, baths: 3, area: '300 sqm', sizeSqm: 300,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Elite Properties', agentId: 2, isVerified: true, hasVirtualTour: false,
@@ -345,7 +345,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 36, title: 'PG/Hostel Complex · Magodo',
     location: 'Magodo, Lagos', neighbourhood: 'Magodo',
-    price: '₦ 22,000,000', priceLabel: '₦22M', priceReduced: false,
+    price: '₦ 22,000,000', priceValue: 22000000, priceLabel: '₦22M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 6, baths: 4, area: '350 sqm', sizeSqm: 350,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Sarah Homes', agentId: 1, isVerified: true, hasVirtualTour: false,
@@ -354,7 +354,7 @@ export const standardProperties: PropertyWithCoords[] = [
   {
     id: 37, title: 'PG/Hostel Short Stay · Lekki Phase 1',
     location: 'Lekki Phase 1, Lagos', neighbourhood: 'Lekki Phase 1',
-    price: '₦ 25,000 /night', priceLabel: '₦25K', priceReduced: false,
+    price: '₦ 25,000 /night', priceValue: 25000, priceLabel: '₦25K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 2, baths: 1, area: '30 sqm', sizeSqm: 30,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'QuickStay NG', agentId: 1, isVerified: true, hasVirtualTour: true,

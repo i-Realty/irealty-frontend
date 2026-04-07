@@ -13,11 +13,33 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
+  const ogImage = prop.image || '/images/og-default.png';
+  const ogDescription = `${prop.location} · ${prop.price}${prop.beds ? ` · ${prop.beds} bed` : ''}${prop.baths ? ` · ${prop.baths} bath` : ''}`;
+  const canonicalUrl = `https://www.irealty.ng/listings/${id}`;
+
   return {
-    title: prop.title,
+    title: `${prop.title} — i-Realty`,
     description: `View details for ${prop.title} located in ${prop.location}. Listed at ${prop.price}.`,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
-      images: [prop.image || '/images/og-default.png'],
+      title: prop.title,
+      description: ogDescription,
+      url: canonicalUrl,
+      siteName: 'i-Realty',
+      locale: 'en_NG',
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: prop.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@irealty_ng',
+      title: prop.title,
+      description: ogDescription,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: prop.title }],
+    },
+    other: {
+      'og:price:amount': String(prop.priceValue ?? ''),
+      'og:price:currency': 'NGN',
     },
   };
 }

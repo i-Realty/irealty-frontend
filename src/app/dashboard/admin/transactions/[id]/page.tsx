@@ -9,7 +9,7 @@ import { ArrowLeft, MessageCircle, Flag, Clock } from 'lucide-react';
 export default function AdminTransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { selectedTransaction: tx, isLoading, fetchTransactionByIdMock } = useAdminDashboardStore();
+  const { selectedTransaction: tx, isLoading, isActionLoading, fetchTransactionByIdMock, flagTransactionMock, refundTransactionMock } = useAdminDashboardStore();
 
   useEffect(() => {
     fetchTransactionByIdMock(id);
@@ -121,12 +121,12 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
           {/* Admin Actions */}
           <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-3">
             <h4 className="text-sm font-bold text-gray-900">Admin Actions</h4>
-            <button className="w-full flex items-center justify-center gap-2 border border-orange-200 text-orange-600 rounded-lg py-2.5 text-sm font-medium hover:bg-orange-50 transition-colors">
-              <Flag className="w-4 h-4" /> Flag for Review
+            <button onClick={() => flagTransactionMock(tx.id)} disabled={isActionLoading} className="w-full flex items-center justify-center gap-2 border border-orange-200 text-orange-600 rounded-lg py-2.5 text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50">
+              <Flag className="w-4 h-4" /> {isActionLoading ? 'Flagging...' : 'Flag for Review'}
             </button>
             {tx.status === 'Pending' && (
-              <button className="w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-red-700 transition-colors">
-                Initiate Refund
+              <button onClick={() => refundTransactionMock(tx.id)} disabled={isActionLoading} className="w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50">
+                {isActionLoading ? 'Processing...' : 'Initiate Refund'}
               </button>
             )}
           </div>

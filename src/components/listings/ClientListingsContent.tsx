@@ -7,9 +7,12 @@ import { defaultAmenities, amenitiesByType } from "@/lib/data/amenities";
 import type { PropertyWithCoords } from "@/lib/types";
 
 import PropertyCard from "@/components/shared/PropertyCard";
-import MapMarkers from "@/components/map/MapMarkers";
+import dynamic from "next/dynamic";
+const MapMarkers = dynamic(() => import("@/components/map/MapMarkers"), { ssr: false });
 import ClusterPanel from "@/components/map/ClusterPanel";
 import FilterSidebar from "@/components/listings/FilterSidebar";
+import ComparisonBar from "@/components/listings/ComparisonBar";
+import ComparisonModal from "@/components/listings/ComparisonModal";
 import type { ListingsState } from "@/lib/store/useListingsStore";
 import Image from 'next/image';
 
@@ -116,7 +119,7 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
         if (!selectedStatuses.has(s)) return false;
       }
 
-      const numPrice = parseInt(p.price.replace(/[^\d]/g, ''), 10);
+      const numPrice = p.priceValue ?? parseInt(p.price.replace(/[^\d]/g, ''), 10);
       if (!isNaN(numPrice) && (numPrice < priceMin || numPrice > priceMax)) return false;
 
       // Amenities filter omitted since sample data lacks amenities
@@ -180,6 +183,8 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
 
   return (
     <>
+      <ComparisonBar />
+      <ComparisonModal />
       <div className="flex gap-6">
         {/* Desktop sidebar */}
         <aside className="hidden lg:block w-72 shrink-0">

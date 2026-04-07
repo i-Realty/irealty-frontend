@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
 import { ChevronDown, X, Plus } from 'lucide-react';
 import AmenitiesModal from './AmenitiesModal';
+import { propertyStep2Schema, extractErrors } from '@/lib/validations/wizard';
 
 export default function Step2PropertyDetails() {
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const [landmarkInput, setLandmarkInput] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { 
     propertyType, 
@@ -49,13 +51,14 @@ export default function Step2PropertyDetails() {
   const renderInput = (label: string, fieldKey: string, value: string, placeholder: string = '') => (
     <div className="flex flex-col flex-1">
       <label className="text-sm font-semibold text-gray-800 mb-2">{label}</label>
-      <input 
-        type="text" 
+      <input
+        type="text"
         value={value}
-        onChange={(e) => setField(fieldKey as any, e.target.value)}
+        onChange={(e) => { setField(fieldKey as any, e.target.value); setErrors((prev) => { const next = { ...prev }; delete next[fieldKey]; return next; }); }}
         placeholder={placeholder}
-        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-blue-500"
+        className={`w-full px-4 py-3 bg-white border rounded-lg text-sm text-gray-700 outline-none focus:border-blue-500 ${errors[fieldKey] ? 'border-red-300' : 'border-gray-200'}`}
       />
+      {errors[fieldKey] && <p className="text-red-500 text-xs mt-1">{errors[fieldKey]}</p>}
     </div>
   );
 
@@ -187,10 +190,14 @@ export default function Step2PropertyDetails() {
         >
           Back
         </button>
-        <button 
-          onClick={nextStep}
-          disabled={!title} // Basic validation
-          className="px-8 py-2.5 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition-all disabled:opacity-50"
+        <button
+          onClick={() => {
+            const result = propertyStep2Schema.safeParse({ title, stateGeo, city, address });
+            if (!result.success) { setErrors(extractErrors(result.error)); return; }
+            setErrors({});
+            nextStep();
+          }}
+          className="px-8 py-2.5 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition-all"
         >
           Proceed
         </button>

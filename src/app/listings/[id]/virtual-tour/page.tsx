@@ -1,154 +1,102 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
 import Image from 'next/image';
+import VirtualTourViewer from '@/components/listings/VirtualTourViewer';
 
-function VirtualTourModalContent() {
+// Mock scenes data — in production, these would come from the property API
+const MOCK_SCENES = [
+  {
+    id: 'living-room',
+    label: 'Living Room',
+    image: '/images/property1.png',
+    hotspots: [
+      { id: 'h1', label: 'Go to Kitchen', yaw: 120, pitch: 0, targetScene: 1 },
+      { id: 'h2', label: 'Go to Bedroom', yaw: 240, pitch: 0, targetScene: 2 },
+    ],
+  },
+  {
+    id: 'kitchen',
+    label: 'Kitchen',
+    image: '/images/property2.png',
+    hotspots: [
+      { id: 'h3', label: 'Back to Living Room', yaw: 180, pitch: 0, targetScene: 0 },
+      { id: 'h4', label: 'Go to Dining Area', yaw: 60, pitch: -10, targetScene: 3 },
+    ],
+  },
+  {
+    id: 'bedroom',
+    label: 'Master Bedroom',
+    image: '/images/property1.png',
+    hotspots: [
+      { id: 'h5', label: 'Back to Living Room', yaw: 180, pitch: 0, targetScene: 0 },
+      { id: 'h6', label: 'Go to Bathroom', yaw: 90, pitch: 0, targetScene: 4 },
+    ],
+  },
+  {
+    id: 'dining',
+    label: 'Dining Area',
+    image: '/images/property2.png',
+    hotspots: [
+      { id: 'h7', label: 'Back to Kitchen', yaw: 200, pitch: 0, targetScene: 1 },
+    ],
+  },
+  {
+    id: 'bathroom',
+    label: 'Bathroom',
+    image: '/images/property1.png',
+    hotspots: [
+      { id: 'h8', label: 'Back to Bedroom', yaw: 180, pitch: 0, targetScene: 2 },
+    ],
+  },
+];
+
+function VirtualTourContent() {
   const router = useRouter();
-  const search = useSearchParams();
-  const start = Number(search?.get('start') || 0);
-  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const pid = Number(typeof window !== 'undefined' ? window.location.pathname.split('/')[2] : 0);
-
-  const images = Array.from({ length: 9 }).map((_, i) => `/images/property${(i % 2) + 1}.png`);
-
-  const [index, setIndex] = useState(Math.max(0, Math.min(start, images.length - 1)));
+  const pid = typeof window !== 'undefined' ? Number(window.location.pathname.split('/')[2]) : 0;
   const { likedIds, toggleLike } = useFavouritesStore();
   const fav = likedIds.has(pid);
-  const prevIndexRef = useRef(index);
 
-  // animation state drives an initial offset -> to-zero transition
-  const [anim, setAnim] = useState<{ active: boolean; dir: number; initial: boolean }>({ active: false, dir: 0, initial: false });
-  const animTimerRef = useRef<number | null>(null);
-  const wheelThrottleRef = useRef(0);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') router.back();
-      if (e.key === 'ArrowRight') setIndex((i) => Math.min(images.length - 1, i + 1));
-      if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
-    }
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [router, images.length, pid]);
-
-  // trigger animation when index changes
-  useEffect(() => {
-    const prev = prevIndexRef.current;
-    const dir = index > prev ? 1 : index < prev ? -1 : 0;
-    if (dir !== 0) {
-      // start animation with initial offset
-      if (animTimerRef.current) window.clearTimeout(animTimerRef.current);
-      setAnim({ active: true, dir, initial: true });
-      // drop the initial offset on the next frame so CSS transition animates to center
-      requestAnimationFrame(() => requestAnimationFrame(() => setAnim((s) => ({ ...s, initial: false }))));
-      // clear animation after transition duration (shorter, seamless feel)
-      animTimerRef.current = window.setTimeout(() => setAnim({ active: false, dir: 0, initial: false }), 360);
-    }
-    prevIndexRef.current = index;
-  }, [index]);
-
-  function close() { try { router.back(); } catch { router.push('/listings'); } }
-  function next() { setIndex((i) => Math.min(images.length - 1, i + 1)); }
-  function prev() { setIndex((i) => Math.max(0, i - 1)); }
-  function toggleFav() { toggleLike(pid); }
-
-  // wheel handler: vertical scroll to switch slides (throttled)
-  const onWheel = useCallback((e: React.WheelEvent) => {
-    const now = Date.now();
-    if (now - wheelThrottleRef.current < 300) return; // responsiveness
-    if (Math.abs(e.deltaY) < 12) return;
-    wheelThrottleRef.current = now;
-    if (e.deltaY > 0) {
-      setIndex((i) => Math.min(images.length - 1, i + 1));
-    } else {
-      setIndex((i) => Math.max(0, i - 1));
-    }
-  }, [images.length]);
-
-  const progressPercent = Math.round(((index + 1) / images.length) * 100);
+  function close() {
+    try { router.back(); } catch { router.push('/listings'); }
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
-        {/* left: title + location + small action icons */}
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col">
-            <div className="text-sm tracking-tight text-white font-semibold">Residential Plot - GRA Enugu</div>
-            <div className="text-xs text-gray-400 mt-1">Independence Layout, Enugu</div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><Image src="/icons/share.svg" width={24} height={24} alt="share"/></button>
-            <button onClick={toggleFav} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center"><Image src={fav ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} width={16} height={16} alt="fav"/></button>
-          </div>
-        </div>
-
-        {/* right: progress indicator, chat pill, close */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-300">{index + 1}/{images.length}</div>
-            <div className="w-28 h-2 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-2 bg-blue-500 rounded-full" style={{ width: `${progressPercent}%` }} />
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/70 to-transparent">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <div className="text-sm tracking-tight text-white font-semibold">Virtual Tour</div>
+              <div className="text-xs text-gray-400 mt-0.5">Interactive 360 Experience</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                <Image src="/icons/share.svg" width={24} height={24} alt="share" />
+              </button>
+              <button onClick={() => toggleLike(pid)} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                <Image src={fav ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} width={16} height={16} alt="fav" />
+              </button>
             </div>
           </div>
 
-          <button className="bg-blue-600 text-white text-[13px] px-3 py-1 rounded-md flex items-center gap-2">
-            <Image src="/icons/messages2.svg" width={16} height={16} alt="messages" />
-            Chat Agent
-          </button>
-
-          <button onClick={close} aria-label="close" className="w-8 h-8 rounded-full bg-black/0 border border-white/20 flex items-center justify-center text-sm">✕</button>
-        </div>
-      </div>
-
-      <div onWheel={onWheel} className="h-full w-full flex items-center justify-center">
-        <div className="w-full  flex items-center gap-6">
-            <button onClick={prev} aria-label="previous" className="bg-black/30 w-10 h-10 z-60 ml-10 rounded-full flex items-center justify-center"><Image src="/icons/scrollback.svg" width={20} height={20} alt="prev"/></button>
-
-          <div className="flex-1 grid grid-cols-[1fr_3fr_1fr] gap-6 items-center w-full">
-            {/* left panel */}
-            <div
-              className={`rounded-lg h-[220px] bg-cover bg-center opacity-40`}
-              style={{
-                backgroundImage: `url('${images[(index - 1 + images.length) % images.length]}')`,
-                transform: 'translateX(0px) scale(1)'
-              }}
-            />
-
-            {/* center panel */}
-            <div
-              className={`rounded-lg h-[460px] bg-cover bg-center relative shadow-lg`}
-              style={{
-                backgroundImage: `url('${images[index]}')`,
-                transform: 'translateX(0px) scale(1)',
-                opacity: 1
-              }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                  <button className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                    <Image src="/icons/play.svg" width={24} height={24} alt="play" />
-                  </button>
-              </div>
-            </div>
-
-            {/* right panel */}
-            <div
-              className={`rounded-lg h-[220px] bg-cover bg-center opacity-40`}
-              style={{
-                backgroundImage: `url('${images[(index + 1) % images.length]}')`,
-                transform: 'translateX(0px) scale(1)'
-              }}
-            />
+          <div className="flex items-center gap-4">
+            <button className="bg-blue-600 text-white text-[13px] px-3 py-1 rounded-md flex items-center gap-2">
+              <Image src="/icons/messages2.svg" width={16} height={16} alt="messages" />
+              Chat Agent
+            </button>
+            <button onClick={close} aria-label="close" className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-sm hover:bg-white/10 transition-colors">
+              ✕
+            </button>
           </div>
-
-            <button onClick={next} aria-label="next" className="bg-black/30 w-10 h-10 mr-10 z-60 rounded-full flex items-center justify-center"><Image src="/icons/scrollforward.svg" width={20} height={20} alt="next"/></button>
         </div>
       </div>
+
+      {/* Virtual Tour Viewer */}
+      <VirtualTourViewer scenes={MOCK_SCENES} onClose={close} />
     </div>
   );
 }
@@ -156,7 +104,7 @@ function VirtualTourModalContent() {
 export default function VirtualTourModal() {
   return (
     <Suspense fallback={<div className="fixed inset-0 bg-black" />}>
-      <VirtualTourModalContent />
+      <VirtualTourContent />
     </Suspense>
   );
 }

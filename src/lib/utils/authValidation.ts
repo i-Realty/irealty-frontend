@@ -16,13 +16,32 @@ export function validateEmail(value: string): string {
 export function validatePassword(value: string): string {
   if (!value) return 'Password is required';
   if (value.length < 8) return 'Password must be at least 8 characters';
+  if (!/[A-Z]/.test(value)) return 'Must contain at least one uppercase letter';
+  if (!/[a-z]/.test(value)) return 'Must contain at least one lowercase letter';
+  if (!/[0-9]/.test(value)) return 'Must contain at least one number';
   return '';
 }
 
 export function validatePhone(value: string): string {
   const digits = value.replace(/\D/g, '');
   if (!digits) return 'Phone number is required';
-  if (digits.length < 10) return 'Enter a valid phone number';
+  if (digits.length < 10) return 'Phone must be at least 10 digits';
+  if (digits.length > 11) return 'Phone must be at most 11 digits';
+  return '';
+}
+
+export function validateUsername(value: string): string {
+  const v = value.trim();
+  if (!v) return 'Username is required';
+  if (v.length < 3) return 'Username must be at least 3 characters';
+  if (v.length > 30) return 'Username must be under 30 characters';
+  return '';
+}
+
+export function validateOtp(value: string): string {
+  if (!value) return 'Verification code is required';
+  if (value.length !== 6) return 'Code must be exactly 6 digits';
+  if (!/^\d+$/.test(value)) return 'Code must contain only numbers';
   return '';
 }
 

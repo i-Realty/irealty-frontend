@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCreateProjectStore } from '@/lib/store/useCreateProjectStore';
 import { ChevronDown, X, Plus } from 'lucide-react';
+import { projectStep2Schema, extractErrors } from '@/lib/validations/wizard';
 
 const DOCUMENT_TYPES = [
   'Deed Of Transfer', 'C Of O', 'Survey Plan', 'Purchase Receipt',
@@ -17,6 +18,7 @@ const AMENITIES_LIST = [
 export default function Step2ProjectDetails() {
   const store = useCreateProjectStore();
   const [showAmenities, setShowAmenities] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   return (
     <div className="space-y-5">
@@ -242,14 +244,19 @@ export default function Step2ProjectDetails() {
           Back
         </button>
         <button
-          onClick={store.nextStep}
-          disabled={!store.projectName}
-          className={`font-medium py-3 px-8 rounded-lg transition-colors ${
-            store.projectName ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-300 text-white cursor-not-allowed'
-          }`}
+          onClick={() => {
+            const result = projectStep2Schema.safeParse({ projectName: store.projectName, stateGeo: store.stateGeo, city: store.city, fullAddress: store.fullAddress });
+            if (!result.success) { setErrors(extractErrors(result.error)); return; }
+            setErrors({});
+            store.nextStep();
+          }}
+          className="font-medium py-3 px-8 rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700"
         >
           Proceed
         </button>
+        {Object.keys(errors).length > 0 && (
+          <p className="text-red-500 text-xs mt-2 text-right">{Object.values(errors)[0]}</p>
+        )}
       </div>
     </div>
   );

@@ -3,8 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { GitCompareArrows } from "lucide-react";
 import type { Property } from "@/lib/types";
 import { useFavouritesStore } from "@/lib/store/useFavouritesStore";
+import { useComparisonStore } from "@/lib/store/useComparisonStore";
 
 type Props = {
   property: Property;
@@ -23,7 +25,9 @@ type Props = {
  */
 export default function PropertyCard({ property: p, href }: Props) {
   const { likedIds, toggleLike } = useFavouritesStore();
+  const { hasItem, toggleItem } = useComparisonStore();
   const isLiked = likedIds.has(p.id);
+  const isComparing = hasItem(p.id);
   const isForSale = p.tag?.toLowerCase().includes("sale");
   const linkHref = href ?? `/listings/${p.id}`;
 
@@ -57,6 +61,16 @@ export default function PropertyCard({ property: p, href }: Props) {
             width={20}
             height={20}
           />
+        </button>
+        <button
+          onClick={(e) => { e.preventDefault(); toggleItem(p); }}
+          className={`absolute right-4 top-14 w-8 h-8 flex items-center justify-center rounded-full p-1 z-30 transition-colors ${
+            isComparing ? "bg-blue-600" : "bg-[#160B0B]/80 hover:bg-blue-600"
+          }`}
+          aria-label={isComparing ? "Remove from comparison" : "Add to comparison"}
+          title={isComparing ? "Remove from comparison" : "Compare"}
+        >
+          <GitCompareArrows className="w-4 h-4 text-white" />
         </button>
       </div>
 

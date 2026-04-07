@@ -1,14 +1,43 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import BulkActionBar from '@/components/dashboard/admin/BulkActionBar';
+import AuditTrailExport from '@/components/dashboard/admin/AuditTrailExport';
 
 const PAGE_SIZE = 10;
 
 export default function AdminUsersPage() {
-  const { users, isLoading, fetchUsersMock, userFilters, setUserFilters } = useAdminDashboardStore();
+  const { users, isLoading, isActionLoading, fetchUsersMock, userFilters, setUserFilters, suspendUserMock, reactivateUserMock, approveKycMock } = useAdminDashboardStore();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback((ids: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = ids.every((id) => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(ids);
+    });
+  }, []);
+
+  const handleBulkAction = useCallback(async (action: 'suspend' | 'reactivate' | 'approve') => {
+    const ids = Array.from(selectedIds);
+    for (const id of ids) {
+      if (action === 'suspend') await suspendUserMock(id);
+      else if (action === 'reactivate') await reactivateUserMock(id);
+      else if (action === 'approve') await approveKycMock(id);
+    }
+    setSelectedIds(new Set());
+  }, [selectedIds, suspendUserMock, reactivateUserMock, approveKycMock]);
 
   useEffect(() => {
     fetchUsersMock();
@@ -41,15 +70,63 @@ export default function AdminUsersPage() {
     status === 'active' ? 'text-green-600' : 'text-red-500';
 
   if (isLoading && users.length === 0) {
-    return <div className="flex h-64 items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>;
+    return (
+      <div className="space-y-5 pb-12">
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="animate-pulse bg-gray-200 rounded h-6 w-32 mb-4" />
+            <div className="animate-pulse bg-gray-200 rounded-lg h-10 w-full" />
+          </div>
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex items-center gap-4 py-4 px-6">
+                <div className="bg-gray-200 rounded-md h-4 w-28" />
+                <div className="bg-gray-200 rounded-md h-4 w-40" />
+                <div className="bg-gray-200 rounded-md h-4 w-24" />
+                <div className="bg-gray-200 rounded-full h-5 w-16" />
+                <div className="bg-gray-200 rounded-md h-4 w-20" />
+                <div className="bg-gray-200 rounded-md h-4 w-14" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-5 pb-12">
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClearSelection={() => setSelectedIds(new Set())}
+        isLoading={isActionLoading}
+        actions={[
+          { type: 'approve', label: 'Approve KYC', onAction: () => handleBulkAction('approve') },
+          { type: 'suspend', label: 'Suspend', onAction: () => handleBulkAction('suspend') },
+          { type: 'reactivate', label: 'Reactivate', onAction: () => handleBulkAction('reactivate') },
+        ]}
+      />
       <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
         {/* Filters */}
         <div className="p-6 border-b border-gray-100 space-y-4">
-          <h3 className="text-xl font-bold text-gray-900">All Users</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-900">All Users</h3>
+            <AuditTrailExport
+              type="users"
+              data={filtered as unknown as Record<string, unknown>[]}
+              columns={[
+                { key: 'id', label: 'User ID' },
+                { key: 'name', label: 'Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'role', label: 'Role' },
+                { key: 'kycStatus', label: 'KYC Status' },
+                { key: 'joinDate', label: 'Join Date' },
+                { key: 'accountStatus', label: 'Account Status' },
+                { key: 'totalListings', label: 'Total Listings' },
+                { key: 'totalTransactions', label: 'Total Transactions' },
+              ]}
+            />
+          </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -91,6 +168,14 @@ export default function AdminUsersPage() {
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-gray-500 font-medium">
+                <th className="py-3.5 px-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={paginated.length > 0 && paginated.every((u) => selectedIds.has(u.id))}
+                    onChange={() => toggleSelectAll(paginated.map((u) => u.id))}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3.5 px-6 font-medium">Name</th>
                 <th className="py-3.5 px-6 font-medium">Email</th>
                 <th className="py-3.5 px-6 font-medium">Role</th>
@@ -102,9 +187,17 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {paginated.length === 0 ? (
-                <tr><td colSpan={7} className="py-16 text-center text-gray-400">No users found</td></tr>
+                <tr><td colSpan={8} className="py-16 text-center text-gray-400">No users found</td></tr>
               ) : paginated.map((u) => (
-                <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <tr key={u.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${selectedIds.has(u.id) ? 'bg-blue-50/50' : ''}`}>
+                  <td className="py-4 px-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(u.id)}
+                      onChange={() => toggleSelect(u.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                    />
+                  </td>
                   <td className="py-4 px-6 text-gray-900 font-medium">{u.name}</td>
                   <td className="py-4 px-6 text-gray-500">{u.email}</td>
                   <td className="py-4 px-6 text-gray-600">{u.role}</td>

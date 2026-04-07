@@ -1,6 +1,7 @@
 'use client';
 
 import { useKYCStore } from './useKYCStore';
+import { kycPaymentDetailsSchema, extractErrors } from '@/lib/validations/kyc';
 import { useState } from 'react';
 import { Briefcase, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -25,7 +26,15 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
     address: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleComplete = () => {
+    const result = kycPaymentDetailsSchema.safeParse(bankData);
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
     updateKycProgress(5);
     // Trigger submission
     onComplete();
@@ -79,18 +88,21 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
                 </select>
                 <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
+              {errors.bankName && <p className="text-red-500 text-xs mt-1">{errors.bankName}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
-              <input 
-                type="text" 
-                placeholder="Enter Account Number" 
+              <input
+                type="text"
+                placeholder="Enter Account Number"
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 value={bankData.accountNumber}
                 onChange={(e) => setBankData({...bankData, accountNumber: e.target.value})}
               />
+              {errors.accountNumber && <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>}
             </div>
+            {errors.accountName && <p className="text-red-500 text-xs mt-1">{errors.accountName}</p>}
           </div>
         )}
       </div>

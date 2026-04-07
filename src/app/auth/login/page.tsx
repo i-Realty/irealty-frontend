@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { useAuthStore, AuthUser } from '@/lib/store/useAuthStore';
-import { validateEmail, validateRequired } from '@/lib/utils/authValidation';
+import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
     // Validate
     const emailErr = validateEmail(email) || validateRequired(email, 'Email');
-    const pwdErr = validateRequired(password, 'Password');
+    const pwdErr = validatePassword(password);
 
     if (emailErr || pwdErr) {
       setErrors({ email: emailErr, password: pwdErr });

@@ -43,6 +43,7 @@ const MOCK_PROJECTS: DeveloperProject[] = Array.from({ length: 8 }, (_, i) => ({
 
 export default function DeveloperProjectsPage() {
   const openWizard = useCreateProjectStore((s) => s.openWizard);
+  const loadProjectForEdit = useCreateProjectStore((s) => s.loadProjectForEdit);
   const [activeTab, setActiveTab] = useState<TabKey>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [projects] = useState<DeveloperProject[]>(MOCK_PROJECTS);
@@ -111,7 +112,10 @@ export default function DeveloperProjectsPage() {
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((project) => (
-              <DeveloperProjectCard key={project.id} project={project} />
+              <DeveloperProjectCard key={project.id} project={project} onEdit={(id) => {
+                const proj = MOCK_PROJECTS.find((p) => p.id === id);
+                if (proj) loadProjectForEdit(proj);
+              }} />
             ))}
           </div>
 

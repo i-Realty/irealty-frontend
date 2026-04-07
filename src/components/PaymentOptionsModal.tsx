@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 type Props = {
   onClose?: () => void;
@@ -11,6 +12,7 @@ type Props = {
 
 export default function PaymentOptionsModal({ onClose, onSelect }: Props) {
   const router = useRouter();
+  useEscapeKey(() => (onClose ? onClose() : router.back()));
 
   const params = useParams();
   const listingId = params?.id ?? '';

@@ -1,11 +1,58 @@
 'use client';
 
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
-import { ArrowLeft, CheckCircle2, XCircle, ShieldCheck, ShieldOff, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, ShieldCheck, ShieldOff, Clock, X, AlertTriangle } from 'lucide-react';
+
+function KycRejectModal({ userId, userName, onClose }: { userId: string; userName: string; onClose: () => void }) {
+  const { rejectKycMock, isActionLoading } = useAdminDashboardStore();
+  const [reason, setReason] = useState('');
+
+  const handleReject = async () => {
+    await rejectKycMock(userId);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl w-full max-w-md mx-4 p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+        <button onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+          </div>
+          <div>
+            <h3 className="text-[16px] font-bold text-gray-900">Reject KYC</h3>
+            <p className="text-[12px] text-gray-400">{userName}</p>
+          </div>
+        </div>
+        <div className="mb-5">
+          <label className="text-[12px] font-bold text-gray-900 block mb-2">Reason for rejection</label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Explain why this KYC application is being rejected..."
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-gray-900 focus:outline-none focus:border-red-400 min-h-[100px] resize-y placeholder:text-gray-300"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-700 font-medium text-sm py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button onClick={handleReject} disabled={isActionLoading || !reason.trim()} className="flex-1 bg-red-600 text-white font-medium text-sm py-2.5 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors">
+            {isActionLoading ? 'Rejecting...' : 'Reject KYC'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -14,6 +61,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     selectedUser: user, isLoading, isActionLoading,
     fetchUserByIdMock, approveKycMock, rejectKycMock, suspendUserMock, reactivateUserMock,
   } = useAdminDashboardStore();
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
     fetchUserByIdMock(id);
@@ -112,7 +160,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                 <button onClick={() => approveKycMock(user.id)} disabled={isActionLoading} className="flex-1 bg-green-600 text-white font-medium py-2.5 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm">
                   Approve KYC
                 </button>
-                <button onClick={() => rejectKycMock(user.id)} disabled={isActionLoading} className="flex-1 border border-red-200 text-red-600 font-medium py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 text-sm">
+                <button onClick={() => setShowRejectModal(true)} disabled={isActionLoading} className="flex-1 border border-red-200 text-red-600 font-medium py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 text-sm">
                   Reject KYC
                 </button>
               </div>
@@ -151,6 +199,14 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
       </div>
+
+      {showRejectModal && (
+        <KycRejectModal
+          userId={user.id}
+          userName={user.name}
+          onClose={() => setShowRejectModal(false)}
+        />
+      )}
     </div>
   );
 }

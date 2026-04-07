@@ -4,6 +4,7 @@ import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
+import { validateOtp } from '@/lib/utils/authValidation';
 
 function ResetVerifyContent() {
   const router = useRouter();
@@ -12,14 +13,16 @@ function ResetVerifyContent() {
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   function handleVerify() {
-    if (code.length < 6) return;
+    const otpErr = validateOtp(code);
+    if (otpErr) { setError(otpErr); return; }
+    setError('');
     setLoading(true);
 
     // Simulate validation
     setTimeout(() => {
-      // Pass the email & code to the success step for creating the new password
       router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
     }, 600);
   }
@@ -42,8 +45,9 @@ function ResetVerifyContent() {
           Please enter it below to rest your password.
         </p>
 
-        <div className="flex justify-center mb-8">
-          <OtpInput length={6} value={code} onChange={setCode} />
+        <div className="flex flex-col items-center mb-8">
+          <OtpInput length={6} value={code} onChange={(val) => { setCode(val); if (error) setError(''); }} />
+          {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
         </div>
 
         <div className="text-sm text-gray-500 mb-8">

@@ -72,7 +72,7 @@ export default function Step5Review() {
           className="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {store.isLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
-          Submit
+          {store.isEditMode ? (store.isLoading ? 'Saving...' : 'Save Changes') : (store.isLoading ? 'Submitting...' : 'Submit')}
         </button>
       </div>
     </div>

@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import { useCalendarStore } from '@/lib/store/useCalendarStore';
-import DesktopCalendarGrid from '@/components/dashboard/agent/calendar/DesktopCalendarGrid';
-import MobileCalendarView from '@/components/dashboard/agent/calendar/MobileCalendarView';
+import dynamic from 'next/dynamic';
+const DesktopCalendarGrid = dynamic(() => import('@/components/dashboard/agent/calendar/DesktopCalendarGrid'), { ssr: false });
+const MobileCalendarView = dynamic(() => import('@/components/dashboard/agent/calendar/MobileCalendarView'), { ssr: false });
 import SetupAvailabilityModal from '@/components/dashboard/agent/calendar/SetupAvailabilityModal';
 
 export default function DeveloperCalendarPage() {

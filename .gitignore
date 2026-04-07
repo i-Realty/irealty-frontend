@@ -93,3 +93,10 @@ wire_chat.js
 
 # cursor
 .cursor/
+
+# claude code
+.claude/
+.mcp.json
+
+# review docs
+agentdashboardreview.md

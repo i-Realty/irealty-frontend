@@ -1,6 +1,7 @@
 'use client';
 
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { passwordSchema, pinSchema, extractErrors } from '@/lib/validations/settings';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,13 +16,28 @@ export default function AdminAccountSettings() {
   const [showNewPin, setShowNewPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
 
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const [pinErrors, setPinErrors] = useState<Record<string, string>>({});
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = passwordSchema.safeParse(security.passwordForm);
+    if (!result.success) {
+      setPasswordErrors(extractErrors(result.error));
+      return;
+    }
+    setPasswordErrors({});
     await submitSecurityMock('password');
   };
 
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = pinSchema.safeParse(security.pinForm);
+    if (!result.success) {
+      setPinErrors(extractErrors(result.error));
+      return;
+    }
+    setPinErrors({});
     await submitSecurityMock('pin');
   };
 
@@ -90,12 +106,15 @@ export default function AdminAccountSettings() {
                              {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                        </div>
+                       {passwordErrors.confirm && <p className="text-red-500 text-xs mt-1">{passwordErrors.confirm}</p>}
                     </div>
                  </div>
+                 {passwordErrors.current && <p className="text-red-500 text-xs mt-1">{passwordErrors.current}</p>}
+                 {passwordErrors.new && <p className="text-red-500 text-xs mt-1">{passwordErrors.new}</p>}
               </div>
 
               <div className="w-full flex justify-end">
-                 <button 
+                 <button
                    type="submit"
                    disabled={isSaving || !security.passwordForm.current || !security.passwordForm.new}
                    className="w-full md:w-auto min-w-[200px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-4 md:py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
@@ -166,12 +185,15 @@ export default function AdminAccountSettings() {
                              {showConfirmPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                        </div>
+                       {pinErrors.confirm && <p className="text-red-500 text-xs mt-1">{pinErrors.confirm}</p>}
                     </div>
                  </div>
+                 {pinErrors.current && <p className="text-red-500 text-xs mt-1">{pinErrors.current}</p>}
+                 {pinErrors.new && <p className="text-red-500 text-xs mt-1">{pinErrors.new}</p>}
               </div>
 
               <div className="w-full flex justify-end">
-                 <button 
+                 <button
                    type="submit"
                    disabled={isSaving || !security.pinForm.current || !security.pinForm.new}
                    className="w-full md:w-auto min-w-[200px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-4 md:py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"

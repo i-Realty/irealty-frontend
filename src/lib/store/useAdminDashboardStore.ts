@@ -217,6 +217,8 @@ interface AdminDashboardState {
   fetchFinanceMock: () => Promise<void>;
   approvePayoutMock: (id: string) => Promise<void>;
   rejectPayoutMock: (id: string) => Promise<void>;
+  flagTransactionMock: (id: string) => Promise<void>;
+  refundTransactionMock: (id: string) => Promise<void>;
 }
 
 // ── Mock Data ─────────────────────────────────────────────────────────
@@ -534,6 +536,37 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     await new Promise((r) => setTimeout(r, 600));
     set((s) => ({
       payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Rejected' as const } : p),
+      isActionLoading: false,
+    }));
+  },
+
+  flagTransactionMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 600));
+    set((s) => ({
+      selectedTransaction: s.selectedTransaction?.id === id
+        ? {
+            ...s.selectedTransaction,
+            auditLog: [...s.selectedTransaction.auditLog, { timestamp: new Date().toLocaleString('en-NG'), action: 'Flagged for review', by: 'Admin' }],
+          }
+        : s.selectedTransaction,
+      transactions: s.transactions.map((t) => t.id === id ? { ...t, status: 'Pending' as const } : t),
+      isActionLoading: false,
+    }));
+  },
+
+  refundTransactionMock: async (id) => {
+    set({ isActionLoading: true });
+    await new Promise((r) => setTimeout(r, 800));
+    set((s) => ({
+      selectedTransaction: s.selectedTransaction?.id === id
+        ? {
+            ...s.selectedTransaction,
+            status: 'Declined' as const,
+            auditLog: [...s.selectedTransaction.auditLog, { timestamp: new Date().toLocaleString('en-NG'), action: 'Refund initiated', by: 'Admin' }],
+          }
+        : s.selectedTransaction,
+      transactions: s.transactions.map((t) => t.id === id ? { ...t, status: 'Declined' as const } : t),
       isActionLoading: false,
     }));
   },

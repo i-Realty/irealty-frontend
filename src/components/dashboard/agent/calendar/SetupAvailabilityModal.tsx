@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useCalendarStore } from '@/lib/store/useCalendarStore';
+import { calendarAvailabilitySchema, extractErrors } from '@/lib/validations/kyc';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 type FormRow = { id: string; date: string; time: string };
 
 export default function SetupAvailabilityModal() {
   const { setAvailabilityModalOpen, saveAvailabilityMock, isSavingAvailability } = useCalendarStore();
   const [rows, setRows] = useState<FormRow[]>([{ id: 'r1', date: '', time: '' }]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  useEscapeKey(() => setAvailabilityModalOpen(false));
 
   const addRow = () => {
     setRows(prev => [...prev, { id: Math.random().toString(), date: '', time: '' }]);
@@ -17,6 +21,21 @@ export default function SetupAvailabilityModal() {
 
   const handleSave = async () => {
     if (isSavingAvailability) return;
+    const rowErrors: Record<string, string> = {};
+    rows.forEach((row, idx) => {
+      const result = calendarAvailabilitySchema.safeParse({ date: row.date, time: row.time });
+      if (!result.success) {
+        const errs = extractErrors(result.error);
+        Object.entries(errs).forEach(([key, msg]) => {
+          rowErrors[`${idx}.${key}`] = msg;
+        });
+      }
+    });
+    if (Object.keys(rowErrors).length > 0) {
+      setErrors(rowErrors);
+      return;
+    }
+    setErrors({});
     await saveAvailabilityMock(rows);
   };
 
@@ -39,11 +58,11 @@ export default function SetupAvailabilityModal() {
               {rows.map((row, idx) => (
                  <div key={row.id} className="border border-gray-200 rounded-xl p-5 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
                     <h4 className="font-bold text-[15px] text-gray-900 mb-4">Day {idx + 1}</h4>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        <div className="flex flex-col gap-1.5">
                           <label className="text-[14px] font-medium text-gray-900">Date</label>
-                          <select 
+                          <select
                             value={row.date}
                             onChange={(e) => updateRow(row.id, 'date', e.target.value)}
                             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[15px] text-gray-500 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
@@ -53,11 +72,12 @@ export default function SetupAvailabilityModal() {
                              <option value="2024-08-16">August 16, 2024</option>
                              <option value="2024-08-21">August 21, 2024</option>
                           </select>
+                          {errors[`${idx}.date`] && <p className="text-red-500 text-xs mt-1">{errors[`${idx}.date`]}</p>}
                        </div>
 
                        <div className="flex flex-col gap-1.5">
                           <label className="text-[14px] font-medium text-gray-900">Time</label>
-                          <select 
+                          <select
                             value={row.time}
                             onChange={(e) => updateRow(row.id, 'time', e.target.value)}
                             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[15px] text-gray-500 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
@@ -67,6 +87,7 @@ export default function SetupAvailabilityModal() {
                              <option value="9am - 12 pm">9am - 12 pm</option>
                              <option value="2pm - 5 pm">2pm - 5 pm</option>
                           </select>
+                          {errors[`${idx}.time`] && <p className="text-red-500 text-xs mt-1">{errors[`${idx}.time`]}</p>}
                        </div>
                     </div>
                  </div>

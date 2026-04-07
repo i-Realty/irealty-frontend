@@ -3,9 +3,11 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function ReservePaymentModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
+  useEscapeKey(() => (onClose ? onClose() : router.back()));
   const params = useParams();
   const id = params?.id ?? '';
 

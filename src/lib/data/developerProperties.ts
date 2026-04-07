@@ -17,7 +17,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 101, title: 'Residential Tower · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 15,000,000', priceLabel: '₦15M', priceReduced: false,
+    price: '₦ 15,000,000', priceValue: 15000000, priceLabel: '₦15M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 1, baths: 1, area: '60 sqm', sizeSqm: 60,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: true,
@@ -26,7 +26,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 102, title: 'Residential Estate · Ibeju-Lekki',
     location: 'Ibeju-Lekki, Lagos', neighbourhood: 'Ibeju-Lekki',
-    price: '₦ 25,000,000', priceLabel: '₦25M', priceReduced: false,
+    price: '₦ 25,000,000', priceValue: 25000000, priceLabel: '₦25M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 2, area: '110 sqm', sizeSqm: 110,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: false,
@@ -35,7 +35,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 103, title: 'Residential Complex · Sangotedo',
     location: 'Sangotedo, Lagos', neighbourhood: 'Sangotedo',
-    price: '₦ 1,500,000 /mo', priceLabel: '₦1.5M', priceReduced: false,
+    price: '₦ 1,500,000 /mo', priceValue: 1500000, priceLabel: '₦1.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 3, baths: 2, area: '140 sqm', sizeSqm: 140,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: true,
@@ -44,7 +44,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 104, title: 'Residential Court · Chevron',
     location: 'Chevron, Lagos', neighbourhood: 'Chevron',
-    price: '₦ 2,500,000 /mo', priceLabel: '₦2.5M', priceReduced: false,
+    price: '₦ 2,500,000 /mo', priceValue: 2500000, priceLabel: '₦2.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 4, baths: 3, area: '180 sqm', sizeSqm: 180,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: false,
@@ -53,7 +53,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 105, title: 'Residential Mansion · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 85,000,000', priceLabel: '₦85M', priceReduced: true,
+    price: '₦ 85,000,000', priceValue: 85000000, priceLabel: '₦85M', priceReduced: true,
     originalPrice: '₦ 95,000,000', category: 'sale', tag: 'For Sale',
     beds: 5, baths: 5, area: '550 sqm', sizeSqm: 550,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
@@ -63,7 +63,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 106, title: 'Residential Enclave · Epe',
     location: 'Epe, Lagos', neighbourhood: 'Epe',
-    price: '₦ 70,000,000', priceLabel: '₦70M', priceReduced: false,
+    price: '₦ 70,000,000', priceValue: 70000000, priceLabel: '₦70M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 6, baths: 5, area: '480 sqm', sizeSqm: 480,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: false,
@@ -72,7 +72,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 107, title: 'Residential Home · Mowe',
     location: 'Mowe, Ogun', neighbourhood: 'Mowe',
-    price: '₦ 3,000,000 /mo', priceLabel: '₦3M', priceReduced: false,
+    price: '₦ 3,000,000 /mo', priceValue: 3000000, priceLabel: '₦3M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 5, baths: 4, area: '320 sqm', sizeSqm: 320,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: false,
@@ -81,7 +81,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 108, title: 'Residential Loft · Sangotedo',
     location: 'Sangotedo, Lagos', neighbourhood: 'Sangotedo',
-    price: '₦ 55,000 /night', priceLabel: '₦55K', priceReduced: false,
+    price: '₦ 55,000 /night', priceValue: 55000, priceLabel: '₦55K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 2, baths: 1, area: '70 sqm', sizeSqm: 70,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: true,
@@ -92,7 +92,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 109, title: 'Commercial Office Tower · Ibeju-Lekki',
     location: 'Ibeju-Lekki, Lagos', neighbourhood: 'Ibeju-Lekki',
-    price: '₦ 18,000,000', priceLabel: '₦18M', priceReduced: false,
+    price: '₦ 18,000,000', priceValue: 18000000, priceLabel: '₦18M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 1, baths: 1, area: '90 sqm', sizeSqm: 90,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: false,
@@ -101,7 +101,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 110, title: 'Commercial Mall · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 40,000,000', priceLabel: '₦40M', priceReduced: false,
+    price: '₦ 40,000,000', priceValue: 40000000, priceLabel: '₦40M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 3, baths: 2, area: '350 sqm', sizeSqm: 350,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: true,
@@ -110,7 +110,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 111, title: 'Commercial Hub · Chevron',
     location: 'Chevron, Lagos', neighbourhood: 'Chevron',
-    price: '₦ 3,000,000 /mo', priceLabel: '₦3M', priceReduced: false,
+    price: '₦ 3,000,000 /mo', priceValue: 3000000, priceLabel: '₦3M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 2, baths: 1, area: '150 sqm', sizeSqm: 150,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: false,
@@ -119,7 +119,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 112, title: 'Commercial Park · Sangotedo',
     location: 'Sangotedo, Lagos', neighbourhood: 'Sangotedo',
-    price: '₦ 6,000,000 /mo', priceLabel: '₦6M', priceReduced: false,
+    price: '₦ 6,000,000 /mo', priceValue: 6000000, priceLabel: '₦6M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 5, baths: 3, area: '500 sqm', sizeSqm: 500,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: false,
@@ -128,7 +128,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 113, title: 'Commercial Plaza · Ogba',
     location: 'Ogba, Lagos', neighbourhood: 'Ogba',
-    price: '₦ 32,000,000', priceLabel: '₦32M', priceReduced: true,
+    price: '₦ 32,000,000', priceValue: 32000000, priceLabel: '₦32M', priceReduced: true,
     originalPrice: '₦ 38,000,000', category: 'sale', tag: 'For Sale',
     beds: 4, baths: 2, area: '280 sqm', sizeSqm: 280,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
@@ -138,7 +138,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 114, title: 'Commercial Centre · Epe',
     location: 'Epe, Lagos', neighbourhood: 'Epe',
-    price: '₦ 7,000,000 /mo', priceLabel: '₦7M', priceReduced: false,
+    price: '₦ 7,000,000 /mo', priceValue: 7000000, priceLabel: '₦7M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 6, baths: 4, area: '600 sqm', sizeSqm: 600,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: false, hasVirtualTour: false,
@@ -147,7 +147,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 115, title: 'Commercial Serviced Space · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 90,000 /night', priceLabel: '₦90K', priceReduced: false,
+    price: '₦ 90,000 /night', priceValue: 90000, priceLabel: '₦90K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 1, baths: 1, area: '55 sqm', sizeSqm: 55,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: true,
@@ -156,7 +156,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 116, title: 'Commercial Retail Block · Mowe',
     location: 'Mowe, Ogun', neighbourhood: 'Mowe',
-    price: '₦ 22,000,000', priceLabel: '₦22M', priceReduced: false,
+    price: '₦ 22,000,000', priceValue: 22000000, priceLabel: '₦22M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 1, area: '180 sqm', sizeSqm: 180,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: false,
@@ -167,7 +167,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 117, title: 'Off-Plan Luxury Villa · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 30,000,000', priceLabel: '₦30M', priceReduced: false,
+    price: '₦ 30,000,000', priceValue: 30000000, priceLabel: '₦30M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 3, baths: 2, area: '200 sqm', sizeSqm: 200,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: true,
@@ -176,7 +176,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 118, title: 'Off-Plan Smart Home · Ibeju-Lekki',
     location: 'Ibeju-Lekki, Lagos', neighbourhood: 'Ibeju-Lekki',
-    price: '₦ 55,000,000', priceLabel: '₦55M', priceReduced: false,
+    price: '₦ 55,000,000', priceValue: 55000000, priceLabel: '₦55M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 4, baths: 3, area: '280 sqm', sizeSqm: 280,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: false,
@@ -185,7 +185,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 119, title: 'Off-Plan Apartment Block · Epe',
     location: 'Epe, Lagos', neighbourhood: 'Epe',
-    price: '₦ 20,000,000', priceLabel: '₦20M', priceReduced: false,
+    price: '₦ 20,000,000', priceValue: 20000000, priceLabel: '₦20M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 2, baths: 2, area: '120 sqm', sizeSqm: 120,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Landmark Developments', agentId: 4, isVerified: true, hasVirtualTour: false,
@@ -194,7 +194,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 120, title: 'Off-Plan Studio · Sangotedo',
     location: 'Sangotedo, Lagos', neighbourhood: 'Sangotedo',
-    price: '₦ 800,000 /mo', priceLabel: '₦800K', priceReduced: false,
+    price: '₦ 800,000 /mo', priceValue: 800000, priceLabel: '₦800K', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 1, baths: 1, area: '45 sqm', sizeSqm: 45,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: true,
@@ -203,7 +203,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 121, title: 'Off-Plan Penthouse · Chevron',
     location: 'Chevron, Lagos', neighbourhood: 'Chevron',
-    price: '₦ 75,000,000', priceLabel: '₦75M', priceReduced: false,
+    price: '₦ 75,000,000', priceValue: 75000000, priceLabel: '₦75M', priceReduced: false,
     category: 'sale', tag: 'For Sale', beds: 5, baths: 4, area: '400 sqm', sizeSqm: 400,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: true,
@@ -212,7 +212,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 122, title: 'Off-Plan Mega Complex · Eko Atlantic',
     location: 'Eko Atlantic, Lagos', neighbourhood: 'Eko Atlantic',
-    price: '₦ 90,000,000', priceLabel: '₦90M', priceReduced: true,
+    price: '₦ 90,000,000', priceValue: 90000000, priceLabel: '₦90M', priceReduced: true,
     originalPrice: '₦ 100,000,000', category: 'sale', tag: 'For Sale',
     beds: 6, baths: 6, area: '650 sqm', sizeSqm: 650,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
@@ -222,7 +222,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 123, title: 'Off-Plan Terrace · Ogba',
     location: 'Ogba, Lagos', neighbourhood: 'Ogba',
-    price: '₦ 2,500,000 /mo', priceLabel: '₦2.5M', priceReduced: false,
+    price: '₦ 2,500,000 /mo', priceValue: 2500000, priceLabel: '₦2.5M', priceReduced: false,
     category: 'rent', tag: 'For Rent', beds: 3, baths: 2, area: '160 sqm', sizeSqm: 160,
     image: '/images/property1.png', thumbnail: '/images/property1.png',
     agent: 'Mixta Africa', agentId: 5, isVerified: true, hasVirtualTour: false,
@@ -231,7 +231,7 @@ export const developerProperties: PropertyWithCoords[] = [
   {
     id: 124, title: 'Off-Plan Short Stay Loft · Mowe',
     location: 'Mowe, Ogun', neighbourhood: 'Mowe',
-    price: '₦ 60,000 /night', priceLabel: '₦60K', priceReduced: false,
+    price: '₦ 60,000 /night', priceValue: 60000, priceLabel: '₦60K', priceReduced: false,
     category: 'shortlet', tag: 'For Rent', beds: 2, baths: 1, area: '55 sqm', sizeSqm: 55,
     image: '/images/property2.png', thumbnail: '/images/property2.png',
     agent: 'RevolutionPlus', agentId: 6, isVerified: true, hasVirtualTour: false,

@@ -3,14 +3,16 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function ReserveConfirmationModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
+  useEscapeKey(() => (onClose ? onClose() : router.back()));
   const params = useParams();
   const id = params?.id ?? '';
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center">
+    <div className="fixed inset-0 z-60 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Reservation confirmed">
       <div className="absolute inset-0 bg-black/40" aria-hidden onClick={() => (onClose ? onClose() : router.back())} />
 
       <div className="relative bg-white rounded-2xl w-full max-w-md mx-4 p-8 shadow-xl text-center">
@@ -40,7 +42,14 @@ export default function ReserveConfirmationModal({ onClose }: { onClose?: () => 
           </div>
 
           <div className="mt-6 w-full flex gap-3">
-            <button onClick={() => { /* TODO: add calendar logic */ }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
+            <button onClick={() => {
+              const now = new Date();
+              const start = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const end = new Date(start.getTime() + 60 * 60 * 1000);
+              const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+              const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Property Reservation – i-Realty')}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent('Property reservation via i-Realty. Check your messages for next steps.')}`;
+              window.open(url, '_blank');
+            }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
               <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
               <span>Add To Calendar</span>
             </button>

@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, ChevronDown, Check, Plus } from 'lucide-react';
+import { Menu, Bell, ChevronDown, Check, Plus, Sun, Moon } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { useMessagesStore } from '@/lib/store/useMessagesStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useNotificationStore } from '@/lib/store/useNotificationStore';
+import { useThemeStore } from '@/lib/store/useThemeStore';
 import { getPageTitle, getDashboardRoot } from '@/config/nav';
+import NotificationDropdown from '@/components/dashboard/NotificationDropdown';
 
 const FALLBACK_AVATAR =
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
@@ -29,6 +32,16 @@ export default function TopNavBar() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { notifications, isOpen: isNotifOpen, toggleDropdown: toggleNotif, fetchNotificationsMock } = useNotificationStore();
+  const unreadNotifCount = notifications.filter((n) => !n.read).length;
+
+  const { theme, setTheme, resolvedTheme } = useThemeStore();
+  const isDark = resolvedTheme() === 'dark';
+
+  useEffect(() => {
+    fetchNotificationsMock();
+  }, [fetchNotificationsMock]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -58,7 +71,7 @@ export default function TopNavBar() {
 
   return (
     <header
-      className={`h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6 z-[60] relative ${
+      className={`h-16 bg-white dark:bg-[#1e293b] border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-4 md:px-6 z-[60] relative ${
         isMessagesActive ? 'hidden md:flex' : ''
       }`}
     >
@@ -76,10 +89,29 @@ export default function TopNavBar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="relative p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
-          <Bell className="w-6 h-6" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+        {/* Dark/Light mode toggle */}
+        <button
+          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          className="p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
+
+        <div className="relative">
+          <button
+            onClick={toggleNotif}
+            className={`relative p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors ${isNotifOpen ? 'bg-gray-100' : ''}`}
+          >
+            <Bell className="w-6 h-6" />
+            {unreadNotifCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                {unreadNotifCount}
+              </span>
+            )}
+          </button>
+          <NotificationDropdown />
+        </div>
 
         {/* Mobile hamburger */}
         <button

@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useDeveloperDashboardStore } from '@/lib/store/useDeveloperDashboardStore';
 import DeveloperStats from '@/components/dashboard/developer/DeveloperStats';
-import DeveloperRevenueCharts from '@/components/dashboard/developer/DeveloperRevenueCharts';
+import dynamic from 'next/dynamic';
+const DeveloperRevenueCharts = dynamic(() => import('@/components/dashboard/developer/DeveloperRevenueCharts'), { ssr: false });
 import DeveloperRecentTransactions from '@/components/dashboard/developer/DeveloperRecentTransactions';
 import KYCModal from '@/components/dashboard/kyc/KYCModal';
 import { ArrowRight, ShieldCheck, FileCheck } from 'lucide-react';

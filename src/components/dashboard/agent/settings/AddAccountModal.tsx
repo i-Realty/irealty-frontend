@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { User, Home, Users, Globe, Building2, X } from 'lucide-react';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function AddAccountModal() {
   const { isAddAccountModalOpen, setAddAccountModalOpen } = useSettingsStore();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  useEscapeKey(() => setAddAccountModalOpen(false));
 
   if (!isAddAccountModalOpen) return null;
 

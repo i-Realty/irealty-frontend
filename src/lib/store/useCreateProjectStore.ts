@@ -43,6 +43,10 @@ interface CreateProjectState {
   isLoading: boolean;
   error: string | null;
 
+  // Edit mode
+  isEditMode: boolean;
+  editingProjectId: string | null;
+
   // Step 1
   projectType: DeveloperProjectType | null;
 
@@ -89,6 +93,8 @@ interface CreateProjectState {
   removeAmenity: (amenity: string) => void;
   submitProject: () => Promise<DeveloperProject | null>;
   resetForm: () => void;
+  loadProjectForEdit: (project: DeveloperProject) => void;
+  resetAndClose: () => void;
 }
 
 const DEFAULT_MILESTONES: ProjectMilestone[] = [
@@ -127,6 +133,8 @@ export const useCreateProjectStore = create<CreateProjectState>((set, get) => ({
   currentStep: 1,
   isLoading: false,
   error: null,
+  isEditMode: false,
+  editingProjectId: null,
   ...initialFormState,
 
   openWizard: () => set({ isOpen: true, currentStep: 1 }),
@@ -179,7 +187,7 @@ export const useCreateProjectStore = create<CreateProjectState>((set, get) => ({
     }
 
     const project: DeveloperProject = {
-      id: `proj-${Date.now()}`,
+      id: s.isEditMode && s.editingProjectId ? s.editingProjectId : `proj-${Date.now()}`,
       createdAt: new Date().toISOString(),
       projectType: s.projectType,
       projectName: s.projectName,
@@ -212,5 +220,39 @@ export const useCreateProjectStore = create<CreateProjectState>((set, get) => ({
     return project;
   },
 
-  resetForm: () => set({ currentStep: 1, error: null, ...initialFormState, milestones: [...DEFAULT_MILESTONES] }),
+  resetForm: () => set({ currentStep: 1, error: null, isEditMode: false, editingProjectId: null, ...initialFormState, milestones: [...DEFAULT_MILESTONES] }),
+
+  loadProjectForEdit: (project) => {
+    set({
+      isOpen: true,
+      currentStep: 1,
+      isEditMode: true,
+      editingProjectId: project.id,
+      projectType: project.projectType,
+      projectName: project.projectName,
+      description: project.description,
+      propertyTypeDropdown: project.propertyTypeDropdown,
+      totalUnits: project.totalUnits,
+      bathrooms: project.bathrooms,
+      bedrooms: project.bedrooms,
+      toilets: project.toilets,
+      plotSizeSqm: project.plotSizeSqm,
+      builtUpAreaSqm: project.builtUpAreaSqm,
+      expectedStartDate: project.expectedStartDate,
+      expectedCompletionDate: project.expectedCompletionDate,
+      stateGeo: project.stateGeo,
+      city: project.city,
+      fullAddress: project.fullAddress,
+      documentTypes: project.documentTypes,
+      amenities: project.amenities,
+      landmark: project.landmark,
+      milestones: project.milestones.length > 0 ? project.milestones : [...DEFAULT_MILESTONES],
+      media: project.media,
+      virtualTourUrl: project.virtualTourUrl,
+    });
+  },
+
+  resetAndClose: () => {
+    set({ isOpen: false, isEditMode: false, editingProjectId: null, currentStep: 1, error: null, ...initialFormState, milestones: [...DEFAULT_MILESTONES] });
+  },
 }));

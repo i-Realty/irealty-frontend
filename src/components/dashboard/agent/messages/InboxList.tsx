@@ -36,8 +36,16 @@ export default function InboxList({ isLoading }: { isLoading?: boolean }) {
       {/* Threads List */}
       <div className="flex-1 overflow-y-auto no-scrollbar pb-4 divide-y divide-gray-50">
         {isLoading ? (
-           <div className="p-8 text-center text-sm text-gray-500 animate-pulse">
-             Loading chats...
+           <div className="divide-y divide-gray-50">
+             {Array.from({ length: 5 }).map((_, i) => (
+               <div key={i} className="animate-pulse flex items-start gap-4 p-4">
+                 <div className="bg-gray-200 rounded-full h-12 w-12 flex-shrink-0" />
+                 <div className="flex-1 space-y-2 pt-1">
+                   <div className="bg-gray-200 rounded h-4 w-1/3" />
+                   <div className="bg-gray-200 rounded h-3 w-2/3" />
+                 </div>
+               </div>
+             ))}
            </div>
         ) : filteredThreads.length === 0 ? (
            <div className="p-8 pb-0 text-center text-sm text-gray-500">

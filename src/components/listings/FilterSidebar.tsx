@@ -1,6 +1,9 @@
 import React from "react";
 import { PRICE_MIN, PRICE_MAX } from "@/lib/constants";
 import type { ListingsPageConfig } from "./ClientListingsContent";
+import SaveSearchButton from "@/components/listings/SaveSearchButton";
+import SavedSearchesList from "@/components/listings/SavedSearchesList";
+import type { SavedSearch } from "@/lib/store/useSavedSearchesStore";
 
 function formatCurrency(v: number): string {
   try {
@@ -97,12 +100,34 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     </div>
   );
 
+  const currentFilters: SavedSearch['filters'] = {
+    query: config.useStore().query,
+    activeTab: config.useStore().activeTab,
+    selectedPropertyTypes: Array.from(selectedPropertyTypes),
+    selectedAmenities: Array.from(selectedAmenities),
+    selectedBedrooms: Array.from(selectedBedrooms),
+    priceMin,
+    priceMax,
+  };
+
+  const handleApplySavedSearch = (filters: SavedSearch['filters']) => {
+    resetFilters();
+    if (filters.query) config.useStore().setQuery(filters.query);
+    if (filters.activeTab !== 'all') config.useStore().setActiveTab(filters.activeTab);
+    filters.selectedPropertyTypes.forEach((t) => togglePropertyType(t));
+    filters.selectedAmenities.forEach((a) => toggleAmenity(a));
+    filters.selectedBedrooms.forEach((b) => toggleBedroom(b));
+    setPriceMin(filters.priceMin);
+    setPriceMax(filters.priceMax);
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold">Filters</h3>
         <button className="text-sm text-blue-600" onClick={resetFilters}>Reset Filters</button>
       </div>
+      <SavedSearchesList onApply={handleApplySavedSearch} />
       <FilterSection id="price" label="Price Range">{priceFilterContent}</FilterSection>
       <FilterSection id="type" label="Property Type">
         <div className="mt-3 text-sm text-gray-700 space-y-2">
@@ -144,6 +169,9 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
           ))}
         </div>
       </FilterSection>
+      <div className="border-t border-gray-100 pt-2">
+        <SaveSearchButton currentFilters={currentFilters} />
+      </div>
     </div>
   );
 }

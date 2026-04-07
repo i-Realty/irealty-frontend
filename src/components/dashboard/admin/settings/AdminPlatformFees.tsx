@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
+import { platformFeeSchema, extractErrors } from '@/lib/validations/settings';
 import { Loader2, Percent, Info } from 'lucide-react';
 
 const FEE_DESCRIPTIONS: Record<string, { label: string; description: string; unit: string }> = {
@@ -35,9 +36,16 @@ const FEE_DESCRIPTIONS: Record<string, { label: string; description: string; uni
 export default function AdminPlatformFees() {
   const { platformFees, updatePlatformFees } = useAdminDashboardStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = platformFeeSchema.safeParse(platformFees);
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
     setIsSaving(true);
     await new Promise((r) => setTimeout(r, 1200));
     setIsSaving(false);
@@ -91,23 +99,26 @@ export default function AdminPlatformFees() {
               </div>
 
               {/* Right: Input */}
-              <div className="flex items-center gap-2 md:w-40 flex-shrink-0">
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={value}
-                    onChange={(e) =>
-                      updatePlatformFees({ [key]: e.target.value ? Number(e.target.value) : 0 })
-                    }
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-[15px] font-bold text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors text-right"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[14px]">
-                    {meta.unit}
-                  </span>
+              <div className="flex flex-col gap-1 md:w-40 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={value}
+                      onChange={(e) =>
+                        updatePlatformFees({ [key]: e.target.value ? Number(e.target.value) : 0 })
+                      }
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-[15px] font-bold text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors text-right"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[14px]">
+                      {meta.unit}
+                    </span>
+                  </div>
                 </div>
+                {errors[key] && <p className="text-red-500 text-xs mt-1">{errors[key]}</p>}
               </div>
             </div>
           );

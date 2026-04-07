@@ -6,13 +6,15 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import ProgressPill from '@/components/auth/ProgressPill';
 import OtpInput from '@/components/auth/OtpInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
+import { validateOtp } from '@/lib/utils/authValidation';
 
 export default function VerifyCode() {
   const router = useRouter();
   const { email } = useSignupStore();
-  
+
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Guard: if no email in store, they skipped steps
   useEffect(() => {
@@ -22,9 +24,11 @@ export default function VerifyCode() {
   }, [email, router]);
 
   function verifyBase() {
-    if (code.length < 6) return;
+    const otpErr = validateOtp(code);
+    if (otpErr) { setError(otpErr); return; }
+    setError('');
     setLoading(true);
-    
+
     // Simulate API validation
     setTimeout(() => {
       router.push('/auth/signup/success');
@@ -46,18 +50,16 @@ export default function VerifyCode() {
           Please enter it below.
         </p>
 
-        <div className="flex justify-center mb-8">
-          <OtpInput 
-            length={6} 
-            value={code} 
+        <div className="flex flex-col items-center mb-8">
+          <OtpInput
+            length={6}
+            value={code}
             onChange={(val) => {
               setCode(val);
-              if (val.length === 6 && !loading) {
-                // Auto-submit when completely filled
-                // Note: The button is still available but auto-submit is good UX
-              }
-            }} 
+              if (error) setError('');
+            }}
           />
+          {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
         </div>
 
         <div className="text-sm text-gray-500 mb-8">

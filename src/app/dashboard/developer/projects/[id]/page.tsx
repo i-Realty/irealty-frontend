@@ -1,9 +1,29 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Play, MapPin, BedDouble, Bath, Maximize2, Calendar } from 'lucide-react';
+import { ArrowLeft, Play, MapPin, BedDouble, Bath, Maximize2, Calendar, CheckCircle2, FileText, Download, MapPinned } from 'lucide-react';
+
+const DEFAULT_AMENITIES = [
+  'Swimming Pool', 'Gym', 'Parking', '24/7 Security',
+  'Generator', 'CCTV', 'Air Conditioning', 'Garden',
+  'Elevator', 'Children Playground', 'Laundry Room', 'Wi-Fi',
+];
+
+const MOCK_DOCUMENTS = [
+  { name: 'Title Deed', size: '2.4 MB', format: 'PDF' },
+  { name: 'Survey Plan', size: '1.8 MB', format: 'PDF' },
+  { name: 'Building Permit', size: '3.1 MB', format: 'PDF' },
+];
+
+const MOCK_LANDMARKS = [
+  { name: 'Lekki Toll Gate', distance: '2.5 km' },
+  { name: 'Victoria Island Mall', distance: '1.2 km' },
+  { name: 'Third Mainland Bridge', distance: '4.0 km' },
+  { name: 'Murtala Muhammed Airport', distance: '8.3 km' },
+  { name: 'Lagos University Teaching Hospital', distance: '5.7 km' },
+];
 
 const MOCK_PROJECT = {
   id: 'proj-1',
@@ -35,7 +55,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const project = MOCK_PROJECT;
 
   const tabs = ['Description', 'Amenities', 'Documents', 'Landmarks'];
-  const activeTab = 'Description';
+  const [activeTab, setActiveTab] = useState('Description');
 
   return (
     <div className="space-y-6 pb-12">
@@ -111,6 +131,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         {tabs.map((tab) => (
           <button
             key={tab}
+            onClick={() => setActiveTab(tab)}
             className={`pb-3 text-sm font-medium transition-colors relative ${
               tab === activeTab ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
             }`}
@@ -121,8 +142,79 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         ))}
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-600 leading-relaxed">{project.description}</p>
+      {/* Tab Content */}
+      {/* Description Tab */}
+      {activeTab === 'Description' && (
+        <p className="text-sm text-gray-600 leading-relaxed">{project.description}</p>
+      )}
+
+      {/* Amenities Tab */}
+      {activeTab === 'Amenities' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {DEFAULT_AMENITIES.map((amenity) => (
+            <div
+              key={amenity}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-900">{amenity}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Documents Tab */}
+      {activeTab === 'Documents' && (
+        <div className="space-y-3">
+          {MOCK_DOCUMENTS.map((doc) => (
+            <div
+              key={doc.name}
+              className="flex items-center justify-between px-4 py-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                  <p className="text-xs text-gray-400">{doc.size}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                  {doc.format}
+                </span>
+                <button className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Landmarks Tab */}
+      {activeTab === 'Landmarks' && (
+        <div className="space-y-3">
+          {MOCK_LANDMARKS.map((landmark) => (
+            <div
+              key={landmark.name}
+              className="flex items-center justify-between px-4 py-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                  <MapPinned className="w-5 h-5 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">{landmark.name}</span>
+              </div>
+              <span className="text-sm text-gray-500 font-medium">{landmark.distance}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Payment Milestone Plan */}
       <div>

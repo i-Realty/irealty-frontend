@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { StoreApi, UseBoundStore } from 'zustand';
 import { PRICE_MIN, PRICE_MAX } from '@/lib/constants';
 
 export interface ListingsState {
@@ -34,66 +35,13 @@ export interface ListingsState {
   resetFilters: () => void;
 }
 
-export const useListingsStore = create<ListingsState>((set) => ({
-  query: '',
-  activeTab: 'all',
-  page: 1,
-  selectedPropertyTypes: new Set(),
-  selectedAmenities: new Set(),
-  selectedBedrooms: new Set(),
-  selectedStatuses: new Set(),
-  priceMin: PRICE_MIN,
-  priceMax: PRICE_MAX,
-  activeThumb: null,
-  mapMode: false,
-  mapStyle: 'light',
-  activePropertyId: null,
-  filtersOpen: false,
-
-  setQuery: (q) => set({ query: q }),
-  setActiveTab: (tab) => set({ activeTab: tab }),
-  setPage: (page) => set({ page }),
-
-  togglePropertyType: (type) =>
-    set((s) => {
-      const next = new Set(s.selectedPropertyTypes);
-      if (next.has(type)) next.delete(type); else next.add(type);
-      return { selectedPropertyTypes: next };
-    }),
-
-  toggleAmenity: (a) =>
-    set((s) => {
-      const next = new Set(s.selectedAmenities);
-      if (next.has(a)) next.delete(a); else next.add(a);
-      return { selectedAmenities: next };
-    }),
-
-  toggleBedroom: (b) =>
-    set((s) => {
-      const next = new Set(s.selectedBedrooms);
-      if (next.has(b)) next.delete(b); else next.add(b);
-      return { selectedBedrooms: next };
-    }),
-
-  toggleStatus: (st) =>
-    set((s) => {
-      const next = new Set(s.selectedStatuses);
-      if (next.has(st)) next.delete(st); else next.add(st);
-      return { selectedStatuses: next };
-    }),
-
-  setPriceMin: (v) => set({ priceMin: v }),
-  setPriceMax: (v) => set({ priceMax: v }),
-  setActiveThumb: (t) => set({ activeThumb: t }),
-
-  setMapMode: (v) =>
-    set((s) => ({ mapMode: typeof v === 'function' ? v(s.mapMode) : v })),
-
-  setMapStyle: (s) => set({ mapStyle: s }),
-  setActivePropertyId: (id) => set({ activePropertyId: id }),
-  setFiltersOpen: (v) => set({ filtersOpen: v }),
-
-  resetFilters: () => set({
+/**
+ * Factory that creates a listings store.
+ * Both standard and developer listings share the same shape — only
+ * the data source and property-type options differ (handled at the UI layer).
+ */
+export function createListingsStore(): UseBoundStore<StoreApi<ListingsState>> {
+  return create<ListingsState>((set) => ({
     query: '',
     activeTab: 'all',
     page: 1,
@@ -103,5 +51,68 @@ export const useListingsStore = create<ListingsState>((set) => ({
     selectedStatuses: new Set(),
     priceMin: PRICE_MIN,
     priceMax: PRICE_MAX,
-  }),
-}));
+    activeThumb: null,
+    mapMode: false,
+    mapStyle: 'light',
+    activePropertyId: null,
+    filtersOpen: false,
+
+    setQuery: (q) => set({ query: q }),
+    setActiveTab: (tab) => set({ activeTab: tab }),
+    setPage: (page) => set({ page }),
+
+    togglePropertyType: (type) =>
+      set((s) => {
+        const next = new Set(s.selectedPropertyTypes);
+        if (next.has(type)) next.delete(type); else next.add(type);
+        return { selectedPropertyTypes: next };
+      }),
+
+    toggleAmenity: (a) =>
+      set((s) => {
+        const next = new Set(s.selectedAmenities);
+        if (next.has(a)) next.delete(a); else next.add(a);
+        return { selectedAmenities: next };
+      }),
+
+    toggleBedroom: (b) =>
+      set((s) => {
+        const next = new Set(s.selectedBedrooms);
+        if (next.has(b)) next.delete(b); else next.add(b);
+        return { selectedBedrooms: next };
+      }),
+
+    toggleStatus: (st) =>
+      set((s) => {
+        const next = new Set(s.selectedStatuses);
+        if (next.has(st)) next.delete(st); else next.add(st);
+        return { selectedStatuses: next };
+      }),
+
+    setPriceMin: (v) => set({ priceMin: v }),
+    setPriceMax: (v) => set({ priceMax: v }),
+    setActiveThumb: (t) => set({ activeThumb: t }),
+
+    setMapMode: (v) =>
+      set((s) => ({ mapMode: typeof v === 'function' ? v(s.mapMode) : v })),
+
+    setMapStyle: (s) => set({ mapStyle: s }),
+    setActivePropertyId: (id) => set({ activePropertyId: id }),
+    setFiltersOpen: (v) => set({ filtersOpen: v }),
+
+    resetFilters: () => set({
+      query: '',
+      activeTab: 'all',
+      page: 1,
+      selectedPropertyTypes: new Set(),
+      selectedAmenities: new Set(),
+      selectedBedrooms: new Set(),
+      selectedStatuses: new Set(),
+      priceMin: PRICE_MIN,
+      priceMax: PRICE_MAX,
+    }),
+  }));
+}
+
+/** Standard listings store (for /listings) */
+export const useListingsStore = createListingsStore();

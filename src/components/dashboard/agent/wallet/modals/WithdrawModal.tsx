@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
+import { withdrawAmountSchema, extractErrors } from '@/lib/validations/settings';
 import { X, Edit3, Loader2 } from 'lucide-react';
 
 export default function WithdrawModal() {
@@ -14,6 +15,7 @@ export default function WithdrawModal() {
   } = useWalletStore();
 
   const [amount, setAmount] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const formatCurrency = (val: number) => {
     return `₦${val.toLocaleString('en-US')}`;
@@ -21,6 +23,12 @@ export default function WithdrawModal() {
 
   const handleWithdraw = async () => {
      if (!amount) return;
+     const result = withdrawAmountSchema.safeParse({ amount: Number(amount), balance: walletBalance });
+     if (!result.success) {
+       setErrors(extractErrors(result.error));
+       return;
+     }
+     setErrors({});
      await processWithdrawalMock(Number(amount));
   };
 
@@ -47,13 +55,15 @@ export default function WithdrawModal() {
                  <h3 className="text-[24px] font-bold text-gray-900 tracking-tight">{formatCurrency(walletBalance)}</h3>
               </div>
 
-              <input 
+              <input
                  type="number"
                  placeholder="Enter amount"
                  value={amount}
                  onChange={(e) => setAmount(e.target.value)}
-                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all mb-6 placeholder:text-gray-400"
+                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400"
               />
+              {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
+              <div className="mb-6" />
 
               <div className="w-full bg-gray-50/60 border border-gray-100 rounded-2xl p-5 mb-4 shadow-sm">
                   <div className="flex items-center justify-between mb-4">

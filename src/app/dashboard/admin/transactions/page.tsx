@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAdminDashboardStore, TransactionStatus } from '@/lib/store/useAdminDashboardStore';
 import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import BulkActionBar from '@/components/dashboard/admin/BulkActionBar';
+import AuditTrailExport from '@/components/dashboard/admin/AuditTrailExport';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -18,7 +20,33 @@ const STATUS_FILTERS: ('all' | TransactionStatus)[] = ['all', 'Pending', 'In-pro
 const PAGE_SIZE = 10;
 
 export default function AdminTransactionsPage() {
-  const { transactions, isLoading, fetchTransactionsMock, transactionFilters, setTransactionFilters } = useAdminDashboardStore();
+  const { transactions, isLoading, isActionLoading, fetchTransactionsMock, transactionFilters, setTransactionFilters, flagTransactionMock, refundTransactionMock } = useAdminDashboardStore();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback((ids: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = ids.every((id) => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(ids);
+    });
+  }, []);
+
+  const handleBulkAction = useCallback(async (action: 'flag' | 'reject') => {
+    const ids = Array.from(selectedIds);
+    for (const id of ids) {
+      if (action === 'flag') await flagTransactionMock(id);
+      else if (action === 'reject') await refundTransactionMock(id);
+    }
+    setSelectedIds(new Set());
+  }, [selectedIds, flagTransactionMock, refundTransactionMock]);
 
   useEffect(() => {
     fetchTransactionsMock();
@@ -57,6 +85,16 @@ export default function AdminTransactionsPage() {
         ))}
       </div>
 
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClearSelection={() => setSelectedIds(new Set())}
+        isLoading={isActionLoading}
+        actions={[
+          { type: 'flag', label: 'Flag for Review', onAction: () => handleBulkAction('flag') },
+          { type: 'reject', label: 'Initiate Refund', onAction: () => handleBulkAction('reject') },
+        ]}
+      />
+
       {/* Status Pills */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         {STATUS_FILTERS.map((sf) => (
@@ -67,13 +105,27 @@ export default function AdminTransactionsPage() {
       </div>
 
       <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-        {/* Search */}
+        {/* Search + Export */}
         <div className="p-6 border-b border-gray-100">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input type="text" placeholder="Search by ID or party name" value={transactionFilters.search} onChange={(e) => setTransactionFilters({ search: e.target.value })} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
             </div>
+            <AuditTrailExport
+              type="transactions"
+              data={filtered as unknown as Record<string, unknown>[]}
+              columns={[
+                { key: 'id', label: 'Transaction ID' },
+                { key: 'date', label: 'Date' },
+                { key: 'type', label: 'Type' },
+                { key: 'partyA', label: 'Party A' },
+                { key: 'partyB', label: 'Party B' },
+                { key: 'amount', label: 'Amount (NGN)' },
+                { key: 'irealtyFee', label: 'i-Realty Fee (NGN)' },
+                { key: 'status', label: 'Status' },
+              ]}
+            />
           </div>
         </div>
 
@@ -82,6 +134,14 @@ export default function AdminTransactionsPage() {
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-gray-500 font-medium">
+                <th className="py-3.5 px-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={paginated.length > 0 && paginated.every((tx) => selectedIds.has(tx.id))}
+                    onChange={() => toggleSelectAll(paginated.map((tx) => tx.id))}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3.5 px-6 font-medium">Transaction ID</th>
                 <th className="py-3.5 px-6 font-medium">Date</th>
                 <th className="py-3.5 px-6 font-medium">Type</th>
@@ -94,9 +154,17 @@ export default function AdminTransactionsPage() {
             </thead>
             <tbody>
               {paginated.length === 0 ? (
-                <tr><td colSpan={8} className="py-16 text-center text-gray-400">No transactions found</td></tr>
+                <tr><td colSpan={9} className="py-16 text-center text-gray-400">No transactions found</td></tr>
               ) : paginated.map((tx) => (
-                <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <tr key={tx.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${selectedIds.has(tx.id) ? 'bg-blue-50/50' : ''}`}>
+                  <td className="py-4 px-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(tx.id)}
+                      onChange={() => toggleSelect(tx.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                    />
+                  </td>
                   <td className="py-4 px-6 text-gray-900 font-medium">{tx.id}</td>
                   <td className="py-4 px-6 text-gray-500">{tx.date}</td>
                   <td className="py-4 px-6 text-gray-600">{tx.type}</td>

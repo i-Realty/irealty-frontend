@@ -12,6 +12,10 @@ interface CreatePropertyState {
   isLoading: boolean;
   error: string | null;
 
+  // Edit mode
+  isEditMode: boolean;
+  editingPropertyId: string | null;
+
   // Step 1
   propertyType: PropertyCategory | null;
   listingType: ListingType | null;
@@ -23,13 +27,13 @@ interface CreatePropertyState {
   stateGeo: string;
   city: string;
   address: string;
-  
+
   // Polymorphic Details
   bedrooms: string;
   bathrooms: string;
   sizeSqm: string;
   landmarks: string[];
-  
+
   // Specifics
   unitsFloors: string;
   parkingCapacity: string;
@@ -73,6 +77,8 @@ interface CreatePropertyState {
   toggleDocumentType: (docType: string) => void;
   submitProperty: () => Promise<AgentProperty | null>;
   resetForm: () => void;
+  loadPropertyForEdit: (property: AgentProperty) => void;
+  resetAndClose: () => void;
 }
 
 const initialState = {
@@ -80,6 +86,9 @@ const initialState = {
   currentStep: 1,
   isLoading: false,
   error: null,
+
+  isEditMode: false,
+  editingPropertyId: null,
 
   propertyType: null,
   listingType: null,
@@ -179,12 +188,12 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
 
   submitProperty: async () => {
     set({ isLoading: true, error: null });
-    
+
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     const state = get();
-    
+
     // Validation Checks (Simple)
     if (!state.propertyType || !state.listingType || !state.title) {
        set({ isLoading: false, error: 'Please fill out all required fields.' });
@@ -192,22 +201,22 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
     }
 
     // Build the payload mapping to AgentProperty
-    const newProperty: AgentProperty = {
-      id: `prop-new-${Date.now()}`,
+    const property: AgentProperty = {
+      id: state.isEditMode && state.editingPropertyId ? state.editingPropertyId : `prop-new-${Date.now()}`,
       createdAt: new Date().toISOString(),
       propertyCategory: state.propertyType as PropertyCategory,
       listingType: state.listingType as ListingType,
       propertyStatus: state.propertyStatus as PropertyStatus,
-      
+
       title: state.title,
       description: state.description,
       state: state.stateGeo,
       city: state.city,
       address: state.address,
       landmarks: state.landmarks,
-      
+
       price: state.listingType === 'For Sale' ? Number(state.salePrice) : Number(state.rentPrice),
-      priceType: state.listingType === 'For Rent' ? (state.rentPriceType as any) : undefined,
+      priceType: state.listingType === 'For Rent' && state.rentPriceType ? (state.rentPriceType as AgentProperty['priceType']) : undefined,
       securityDeposit: state.securityDeposit ? Number(state.securityDeposit) : undefined,
       agencyFee: state.agencyFee ? Number(state.agencyFee) : undefined,
       legalFee: state.legalFee ? Number(state.legalFee) : undefined,
@@ -216,7 +225,7 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
       bedrooms: state.propertyType === 'Plots/Lands' ? undefined : state.bedrooms,
       bathrooms: state.propertyType === 'Plots/Lands' ? undefined : state.bathrooms,
       sizeSqm: state.propertyType === 'Plots/Lands' ? state.landSizeSqm : state.sizeSqm,
-      
+
       amenities: state.amenities,
       media: state.media.length > 0 ? state.media : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
       virtualTourUrl: state.virtualTourUrl,
@@ -230,13 +239,72 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
       utilitiesIncluded: state.propertyType === 'PG/Hostel' ? state.pgUtilitiesIncluded : undefined,
     };
 
+    if (state.isEditMode) {
+      console.log('[Edit Mode] Updated property:', property);
+    }
+
     set({ isLoading: false });
-    get().resetForm();
-    // Return the new property — the calling page injects it into useAgentPropertiesStore
-    return newProperty;
+    get().resetAndClose();
+    // Return the property — the calling page injects it into useAgentPropertiesStore
+    return property;
   },
 
   resetForm: () => {
     set({ ...initialState, isOpen: false });
-  }
+  },
+
+  loadPropertyForEdit: (property: AgentProperty) => {
+    set({
+      ...initialState,
+      isOpen: true,
+      currentStep: 1,
+      isEditMode: true,
+      editingPropertyId: property.id,
+
+      // Step 1
+      propertyType: property.propertyCategory,
+      listingType: property.listingType,
+      propertyStatus: property.propertyStatus,
+
+      // Step 2
+      title: property.title,
+      description: property.description,
+      stateGeo: property.state,
+      city: property.city,
+      address: property.address,
+      landmarks: property.landmarks ?? [],
+
+      bedrooms: property.bedrooms != null ? String(property.bedrooms) : '',
+      bathrooms: property.bathrooms != null ? String(property.bathrooms) : '',
+      sizeSqm: property.sizeSqm != null ? String(property.sizeSqm) : '',
+
+      unitsFloors: property.unitsFloors != null ? String(property.unitsFloors) : '',
+      parkingCapacity: property.parkingCapacity != null ? String(property.parkingCapacity) : '',
+      floorAreaSqm: property.floorAreaSqm != null ? String(property.floorAreaSqm) : '',
+      documentTypes: property.documentTypes ?? [],
+      zoningType: property.zoningType ?? '',
+      landSizeSqm: property.propertyCategory === 'Plots/Lands' && property.sizeSqm != null ? String(property.sizeSqm) : '',
+      pgRoomType: property.roomType ?? '',
+      pgUtilitiesIncluded: property.utilitiesIncluded ?? '',
+
+      amenities: property.amenities ?? [],
+
+      // Step 3
+      media: property.media ?? [],
+      virtualTourUrl: property.virtualTourUrl ?? '',
+
+      // Step 4
+      salePrice: property.listingType === 'For Sale' ? String(property.price) : '',
+      rentPrice: property.listingType === 'For Rent' ? String(property.price) : '',
+      rentPriceType: property.priceType ?? ('' as const),
+      securityDeposit: property.securityDeposit != null ? String(property.securityDeposit) : '',
+      agencyFee: property.agencyFee != null ? String(property.agencyFee) : '',
+      legalFee: property.legalFee != null ? String(property.legalFee) : '',
+      cautionFee: property.cautionFee != null ? String(property.cautionFee) : '',
+    });
+  },
+
+  resetAndClose: () => {
+    set({ ...initialState, isOpen: false, isEditMode: false, editingPropertyId: null });
+  },
 }));

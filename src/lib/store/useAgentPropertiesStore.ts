@@ -142,6 +142,8 @@ interface AgentPropertiesState {
   setPage: (page: number) => void;
   deleteProperty: (id: string) => Promise<boolean>;
   addPropertyLocally: (prop: AgentProperty) => void;
+  getPropertyById: (id: string) => AgentProperty | undefined;
+  updatePropertyLocally: (prop: AgentProperty) => void;
 }
 
 export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) => ({
@@ -185,5 +187,18 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
       activeFilter: 'All',
       page: 1
     }));
-  }
+  },
+
+  getPropertyById: (id) => {
+    return get().properties.find(p => p.id === id);
+  },
+
+  updatePropertyLocally: (prop) => {
+    set((state) => ({
+      properties: state.properties.map(p => p.id === prop.id ? prop : p),
+      activeTab: prop.listingType,
+      activeFilter: 'All',
+      page: 1
+    }));
+  },
 }));
