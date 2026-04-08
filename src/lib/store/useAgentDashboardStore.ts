@@ -97,35 +97,39 @@ export const useAgentDashboardStore = create<AgentDashboardState>((set, get) => 
 
   fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
-    
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
 
-    const { profile } = get();
-    
-    // Default empty state for unverified
-    let stats = { totalListings: 0, activeDeals: 0, closedDeals: 0, upcomingTours: 0 };
-    let revenueData: RevenueData[] = [];
-    let escrowData = { fundsInEscrow: 0, availableForWithdrawal: 0 };
-    let transactions: Transaction[] = [];
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // If verified, populate with mock data
-    if (profile?.kycStatus === 'verified') {
-       stats = { totalListings: 30, activeDeals: 20, closedDeals: 20, upcomingTours: 3 };
-       revenueData = [
-         { day: 'Mon', inspectionFee: 10, sales: 50, rentals: 20 },
-         { day: 'Tue', inspectionFee: 20, sales: 60, rentals: 25 },
-         { day: 'Wed', inspectionFee: 15, sales: 40, rentals: 30 },
-         { day: 'Thu', inspectionFee: 25, sales: 70, rentals: 35 },
-         { day: 'Fri', inspectionFee: 30, sales: 80, rentals: 40 },
-         { day: 'Sat', inspectionFee: 40, sales: 90, rentals: 50 },
-         { day: 'Sun', inspectionFee: 35, sales: 85, rentals: 45 },
-       ];
-       escrowData = { fundsInEscrow: 120000000, availableForWithdrawal: 80000000 };
-       transactions = mockTransactions;
+      const { profile } = get();
+
+      // Default empty state for unverified
+      let stats = { totalListings: 0, activeDeals: 0, closedDeals: 0, upcomingTours: 0 };
+      let revenueData: RevenueData[] = [];
+      let escrowData = { fundsInEscrow: 0, availableForWithdrawal: 0 };
+      let transactions: Transaction[] = [];
+
+      // If verified, populate with mock data
+      if (profile?.kycStatus === 'verified') {
+         stats = { totalListings: 30, activeDeals: 20, closedDeals: 20, upcomingTours: 3 };
+         revenueData = [
+           { day: 'Mon', inspectionFee: 10, sales: 50, rentals: 20 },
+           { day: 'Tue', inspectionFee: 20, sales: 60, rentals: 25 },
+           { day: 'Wed', inspectionFee: 15, sales: 40, rentals: 30 },
+           { day: 'Thu', inspectionFee: 25, sales: 70, rentals: 35 },
+           { day: 'Fri', inspectionFee: 30, sales: 80, rentals: 40 },
+           { day: 'Sat', inspectionFee: 40, sales: 90, rentals: 50 },
+           { day: 'Sun', inspectionFee: 35, sales: 85, rentals: 45 },
+         ];
+         escrowData = { fundsInEscrow: 120000000, availableForWithdrawal: 80000000 };
+         transactions = mockTransactions;
+      }
+
+      set({ stats, revenueData, escrowData, transactions, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
     }
-
-    set({ stats, revenueData, escrowData, transactions, isLoading: false });
   },
 
   updateKycProgress: async (step: number) => {
@@ -145,23 +149,29 @@ export const useAgentDashboardStore = create<AgentDashboardState>((set, get) => 
   setCurrentKycStep: (step: number) => set({ currentKycStep: step }),
 
   mockSubmitKycForVerification: async () => {
-    set({ isLoading: true });
-    // Simulate delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Mock success 100% for easier testing
-    const isSuccess = true;
-    
-    if (isSuccess) {
-      set((state) => ({
-        profile: state.profile ? { ...state.profile, kycStatus: 'verified', kycProgress: 100 } : null,
-        isKycModalOpen: false,
-        isLoading: false
-      }));
-      
-      return true;
-    } else {
-      set({ isLoading: false, error: 'Verification failed. Please try again.' });
+    set({ isLoading: true, error: null });
+
+    try {
+      // Simulate delay
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Mock success 100% for easier testing
+      const isSuccess = true;
+
+      if (isSuccess) {
+        set((state) => ({
+          profile: state.profile ? { ...state.profile, kycStatus: 'verified', kycProgress: 100 } : null,
+          isKycModalOpen: false,
+          isLoading: false
+        }));
+
+        return true;
+      } else {
+        set({ isLoading: false, error: 'Verification failed. Please try again.' });
+        return false;
+      }
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
       return false;
     }
   },

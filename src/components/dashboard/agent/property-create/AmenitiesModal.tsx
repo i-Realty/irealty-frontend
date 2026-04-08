@@ -2,6 +2,7 @@
 
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
 import { X } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 const AMENITIES_MAP: Record<string, string[]> = {
   'Residential': [
@@ -36,6 +37,7 @@ const AMENITIES_MAP: Record<string, string[]> = {
 };
 
 export default function AmenitiesModal({ onClose }: { onClose: () => void }) {
+  useEscapeKey(onClose);
   const { propertyType, amenities, addAmenity, removeAmenity } = useCreatePropertyStore();
   
   const options = propertyType && AMENITIES_MAP[propertyType] 
@@ -43,7 +45,7 @@ export default function AmenitiesModal({ onClose }: { onClose: () => void }) {
     : AMENITIES_MAP['fallback'];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Select amenities">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="pt-8 pb-4 px-6 text-center relative border-b border-gray-100">
            <button 

@@ -22,26 +22,27 @@ export interface NavItem {
   icon?: LucideIcon;
   href?: string;
   isHeader?: boolean;
+  i18nKey?: string;
 }
 
 // ── Per-role nav definitions ──────────────────────────────────────────
 
 const agentNav: NavItem[] = [
   { label: 'OVERVIEW', isHeader: true },
-  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/agent' },
-  { label: 'My Properties', icon: Home, href: '/dashboard/agent/properties' },
-  { label: 'Messages', icon: MessageSquare, href: '/dashboard/agent/messages' },
-  { label: 'Documents', icon: FileText, href: '/dashboard/agent/documents' },
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/agent', i18nKey: 'nav.dashboard' },
+  { label: 'My Properties', icon: Home, href: '/dashboard/agent/properties', i18nKey: 'nav.myProperties' },
+  { label: 'Messages', icon: MessageSquare, href: '/dashboard/agent/messages', i18nKey: 'nav.messages' },
+  { label: 'Documents', icon: FileText, href: '/dashboard/agent/documents', i18nKey: 'nav.documents' },
 
   { label: 'FINANCIAL', isHeader: true },
-  { label: 'Wallet', icon: Wallet, href: '/dashboard/agent/wallet' },
-  { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/agent/transactions' },
+  { label: 'Wallet', icon: Wallet, href: '/dashboard/agent/wallet', i18nKey: 'nav.wallet' },
+  { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/agent/transactions', i18nKey: 'nav.transactions' },
 
   { label: 'TOOLS', isHeader: true },
-  { label: 'Calendar', icon: Calendar, href: '/dashboard/agent/calendar' },
+  { label: 'Calendar', icon: Calendar, href: '/dashboard/agent/calendar', i18nKey: 'nav.calendar' },
 
   { label: 'ACCOUNT', isHeader: true },
-  { label: 'Settings', icon: Settings, href: '/dashboard/agent/settings' },
+  { label: 'Settings', icon: Settings, href: '/dashboard/agent/settings', i18nKey: 'nav.settings' },
 ];
 
 const seekerNav: NavItem[] = [
@@ -112,17 +113,17 @@ const landlordNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { label: 'OVERVIEW', isHeader: true },
-  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/admin' },
-  { label: 'Users', icon: Users, href: '/dashboard/admin/users' },
-  { label: 'Properties', icon: Home, href: '/dashboard/admin/properties' },
-  { label: 'Messages', icon: MessageSquare, href: '/dashboard/admin/messages' },
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/admin', i18nKey: 'nav.dashboard' },
+  { label: 'Users', icon: Users, href: '/dashboard/admin/users', i18nKey: 'admin.allUsers' },
+  { label: 'Properties', icon: Home, href: '/dashboard/admin/properties', i18nKey: 'nav.properties' },
+  { label: 'Messages', icon: MessageSquare, href: '/dashboard/admin/messages', i18nKey: 'nav.messages' },
 
   { label: 'FINANCIAL', isHeader: true },
-  { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/admin/transactions' },
+  { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/admin/transactions', i18nKey: 'nav.transactions' },
   { label: 'Finance', icon: Coins, href: '/dashboard/admin/finance' },
 
   { label: 'ACCOUNT', isHeader: true },
-  { label: 'Settings', icon: Settings, href: '/dashboard/admin/settings' },
+  { label: 'Settings', icon: Settings, href: '/dashboard/admin/settings', i18nKey: 'nav.settings' },
 ];
 
 // ── Page title map — used by TopNavBar ────────────────────────────────

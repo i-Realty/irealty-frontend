@@ -28,7 +28,7 @@ export default function RootLayout({
         {/* Inline script to prevent flash of wrong theme */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('irealty-theme')||'light';var d=t==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light':t;if(d==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('irealty-theme')||'light';var d=t==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light':t;if(d==='dark')document.documentElement.classList.add('dark');var l=localStorage.getItem('irealty-locale');if(l)document.documentElement.lang=l}catch(e){}})()`,
           }}
         />
       </head>

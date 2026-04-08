@@ -4,13 +4,15 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useI18n } from '@/lib/i18n';
 
  export default function Navbar(){
   const [open, setOpen] = useState(false);
   const { isLoggedIn, user, logout } = useAuthStore();
+  const { t } = useI18n();
 
   return (
-    <nav className="fixed w-full h-20 top-0 bg-white shadow-sm z-50">
+    <nav className="fixed w-full h-20 top-0 bg-white dark:bg-gray-900 shadow-sm dark:shadow-none z-50">
       <div className="max-w-[1440px] h-full mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <div className="flex-shrink-0">
@@ -21,12 +23,12 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
 
         {/* Navigation Links - Hidden on mobile, shown on desktop */}
         <div className="hidden lg:flex items-center justify-center space-x-1">
-          <NavLink href="/listings?purpose=sale">Buy</NavLink>
-          <NavLink href="/listings?purpose=rent">Rent</NavLink>
-          <NavLink href="/sell">Sell</NavLink>
-          <NavLink href="/rent-out">Rent Out</NavLink>
-          <NavLink href="/agent">Agent</NavLink>
-          <NavLink href="/listings/developers" isLarge>Developers</NavLink>
+          <NavLink href="/listings?purpose=sale">{t('nav.buy')}</NavLink>
+          <NavLink href="/listings?purpose=rent">{t('nav.rent')}</NavLink>
+          <NavLink href="/sell">{t('nav.sell')}</NavLink>
+          <NavLink href="/rent-out">{t('nav.rentOut')}</NavLink>
+          <NavLink href="/agent">{t('nav.agent')}</NavLink>
+          <NavLink href="/listings/developers" isLarge>{t('nav.developers')}</NavLink>
         </div>
 
         {/* Auth Buttons */}
@@ -40,16 +42,16 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
                 <span className="text-sm font-medium">{user?.name}</span>
               </div>
               <button onClick={logout} className="text-sm text-gray-500 hover:text-gray-900 font-medium cursor-pointer">
-                Logout
+                {t('auth.logout')}
               </button>
             </div>
           ) : (
             <>
               <Link href="/auth/login" className="flex justify-center items-center px-6 py-3 h-11 border border-[#2563EB] rounded-lg hover:bg-blue-50 transition-colors">
-                <span className="text-sm font-bold text-[#2563EB]">Login</span>
+                <span className="text-sm font-bold text-[#2563EB]">{t('auth.login')}</span>
               </Link>
               <Link href="/auth/signup" className="flex justify-center items-center px-6 py-3 h-11 bg-[#2563EB] rounded-lg hover:bg-blue-600 transition-colors">
-                <span className="text-sm font-bold text-white">Sign up</span>
+                <span className="text-sm font-bold text-white">{t('auth.signup')}</span>
               </Link>
             </>
           )}
@@ -78,14 +80,14 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0" onClick={() => setOpen(false)} />
-          <div className="absolute top-20 right-0 left-0 bg-white shadow-lg p-6">
+          <div className="absolute top-20 right-0 left-0 bg-white dark:bg-gray-900 shadow-lg p-6">
             <div className="flex flex-col space-y-4">
-              <Link href="/listings?purpose=sale" onClick={() => setOpen(false)} className="text-base font-medium">Buy</Link>
-              <Link href="/listings?purpose=rent" onClick={() => setOpen(false)} className="text-base font-medium">Rent</Link>
-              <Link href="/sell" onClick={() => setOpen(false)} className="text-base font-medium">Sell</Link>
-              <Link href="/rent-out" onClick={() => setOpen(false)} className="text-base font-medium">Rent Out</Link>
-              <Link href="/agent" onClick={() => setOpen(false)} className="text-base font-medium">Agent</Link>
-              <Link href="/listings/developers" onClick={() => setOpen(false)} className="text-base font-medium">Developers</Link>
+              <Link href="/listings?purpose=sale" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.buy')}</Link>
+              <Link href="/listings?purpose=rent" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.rent')}</Link>
+              <Link href="/sell" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.sell')}</Link>
+              <Link href="/rent-out" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.rentOut')}</Link>
+              <Link href="/agent" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.agent')}</Link>
+              <Link href="/listings/developers" onClick={() => setOpen(false)} className="text-base font-medium dark:text-gray-100">{t('nav.developers')}</Link>
 
               <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:gap-4">
                 {isLoggedIn ? (
@@ -97,13 +99,13 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
                       <span className="font-medium text-lg">{user?.name}</span>
                     </div>
                     <button onClick={() => { logout(); setOpen(false); }} className="w-full text-center px-4 py-3 mt-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer">
-                      Logout
+                      {t('auth.logout')}
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/auth/login" onClick={() => setOpen(false)} className="w-full text-center px-4 py-3 text-[#2563EB] border border-[#2563EB] rounded-lg font-medium">Login</Link>
-                    <Link href="/auth/signup" onClick={() => setOpen(false)} className="w-full mt-2 sm:mt-0 text-center px-4 py-3 bg-[#2563EB] text-white rounded-lg font-medium">Sign up</Link>
+                    <Link href="/auth/login" onClick={() => setOpen(false)} className="w-full text-center px-4 py-3 text-[#2563EB] border border-[#2563EB] rounded-lg font-medium">{t('auth.login')}</Link>
+                    <Link href="/auth/signup" onClick={() => setOpen(false)} className="w-full mt-2 sm:mt-0 text-center px-4 py-3 bg-[#2563EB] text-white rounded-lg font-medium">{t('auth.signup')}</Link>
                   </>
                 )}
               </div>

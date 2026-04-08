@@ -1,23 +1,31 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
+import { useWalletStore } from '@/lib/store/useWalletStore';
 
 export default function ReservePaymentModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
   useEscapeKey(() => (onClose ? onClose() : router.back()));
   const params = useParams();
   const id = params?.id ?? '';
+  const walletBalance = useWalletStore((s) => s.walletBalance);
+  const [paystackMsg, setPaystackMsg] = useState('');
 
-  function choose(option: string) {
-    // simulate payment success for reserve
+  function payWithWallet() {
+    // TODO: deduct reservation amount from wallet via API before navigating
     router.push(`/listings/${id}?reserveSuccess=1`);
   }
 
+  function payWithPaystack() {
+    // TODO: initialise Paystack transaction via API then redirect to Paystack checkout
+    setPaystackMsg('Paystack integration coming soon. Please use wallet payment.');
+  }
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Reserve payment option">
       <div className="absolute inset-0 bg-black/40" aria-hidden onClick={() => (onClose ? onClose() : router.back())} />
 
       <div className="relative bg-white rounded-2xl w-full max-w-sm mx-4 p-6 shadow-xl">
@@ -34,20 +42,20 @@ export default function ReservePaymentModal({ onClose }: { onClose?: () => void 
         </div>
 
         <div className="mt-6 space-y-3">
-          <button onClick={() => choose('wallet')} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
+          <button onClick={payWithWallet} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                 <Image src="/icons/wallet.svg" alt="wallet" width={20} height={20} />
               </div>
               <div>
                 <div className="font-medium">Wallet</div>
-                <div className="text-xs text-gray-500">Balance: ₦200,000,000.00</div>
+                <div className="text-xs text-gray-500">Balance: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(walletBalance)}</div>
               </div>
             </div>
             <Image src="/icons/arrow.svg" alt="arrow" width={16} height={16} className="text-gray-300" />
           </button>
 
-          <button onClick={() => choose('paystack')} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
+          <button onClick={payWithPaystack} className="w-full text-left p-4 border border-[#8E98A8] rounded-lg flex items-center justify-between hover:shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                 <Image src="/icons/wallet.svg" alt="paystack" width={20} height={20} />
@@ -58,6 +66,7 @@ export default function ReservePaymentModal({ onClose }: { onClose?: () => void 
             </div>
             <Image src="/icons/arrow.svg" alt="arrow" width={16} height={16} className="text-gray-300" />
           </button>
+          {paystackMsg && <p className="text-xs text-amber-600 text-center">{paystackMsg}</p>}
         </div>
       </div>
     </div>

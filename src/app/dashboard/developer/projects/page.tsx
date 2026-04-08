@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
-import { useCreateProjectStore, DeveloperProject } from '@/lib/store/useCreateProjectStore';
+import { useCreateProjectStore } from '@/lib/store/useCreateProjectStore';
+import { useDeveloperProjectsStore } from '@/lib/store/useDeveloperProjectsStore';
 import DeveloperProjectCard from '@/components/dashboard/developer/projects/DeveloperProjectCard';
 import ProjectEmptyState from '@/components/dashboard/developer/projects/ProjectEmptyState';
 import CreateProjectModal from '@/components/dashboard/developer/projects/CreateProjectModal';
@@ -11,42 +12,16 @@ type TabKey = 'All' | 'Residential' | 'Commercial' | 'Off-Plan';
 
 const TABS: TabKey[] = ['All', 'Residential', 'Commercial', 'Off-Plan'];
 
-// Mock projects for populated state
-const MOCK_PROJECTS: DeveloperProject[] = Array.from({ length: 8 }, (_, i) => ({
-  id: `proj-${i + 1}`,
-  createdAt: new Date().toISOString(),
-  projectType: (['Residential', 'Commercial', 'Off-Plan'] as const)[i % 3],
-  projectName: 'Residential Plot \u2013 GRA Enugu',
-  description: 'A luxury residential development',
-  propertyTypeDropdown: 'Detached Duplex',
-  totalUnits: '30',
-  bathrooms: '2',
-  bedrooms: '3',
-  toilets: '3',
-  plotSizeSqm: '120',
-  builtUpAreaSqm: '350',
-  expectedStartDate: '2024-05-02',
-  expectedCompletionDate: '2024-05-02',
-  stateGeo: 'Enugu',
-  city: 'Enugu',
-  fullAddress: 'Independence Layout, Enugu',
-  documentTypes: ['C Of O'],
-  amenities: ['Swimming Pool', 'Gym'],
-  landmark: 'Near GRA Junction',
-  milestones: [],
-  media: [],
-  virtualTourUrl: '',
-  price: 20000000,
-  tag: 'For Sale',
-  image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
-}));
-
 export default function DeveloperProjectsPage() {
   const openWizard = useCreateProjectStore((s) => s.openWizard);
   const loadProjectForEdit = useCreateProjectStore((s) => s.loadProjectForEdit);
+  const { projects, fetchProjects } = useDeveloperProjectsStore();
   const [activeTab, setActiveTab] = useState<TabKey>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [projects] = useState<DeveloperProject[]>(MOCK_PROJECTS);
+
+  useEffect(() => {
+    if (projects.length === 0) fetchProjects();
+  }, [projects.length, fetchProjects]);
 
   const filtered = useMemo(() => {
     let result = projects;
@@ -113,7 +88,7 @@ export default function DeveloperProjectsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((project) => (
               <DeveloperProjectCard key={project.id} project={project} onEdit={(id) => {
-                const proj = MOCK_PROJECTS.find((p) => p.id === id);
+                const proj = projects.find((p) => p.id === id);
                 if (proj) loadProjectForEdit(proj);
               }} />
             ))}

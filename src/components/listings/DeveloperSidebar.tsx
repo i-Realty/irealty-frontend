@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ interface DeveloperSidebarProps {
 export default function DeveloperSidebar({ property, basePath }: DeveloperSidebarProps) {
   const router = useRouter();
   const propId = property.id;
+  const [reported, setReported] = useState(false);
 
   return (
     <aside className="lg:col-span-4">
@@ -133,13 +134,19 @@ export default function DeveloperSidebar({ property, basePath }: DeveloperSideba
         </div>
 
         {/* Report listing */}
-        <div className="bg-white rounded-lg border border-gray-100 p-4 text-sm text-gray-600 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-red-600">
-            <Image src="/icons/flag.svg" alt="flag" width={20} height={20} />
-            <span className="font-medium text-red-600">Report Listing</span>
+        {reported ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-xs text-green-700 text-center">
+            Report submitted. Our team will review this listing.
           </div>
-          <Image src="/icons/redArrowLeft.svg" alt="arrow" width={16} height={16} className="mr-2 text-gray-400" />
-        </div>
+        ) : (
+          <button onClick={() => setReported(true)} className="w-full bg-white rounded-lg border border-gray-100 p-4 text-sm text-gray-600 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-red-600">
+              <Image src="/icons/flag.svg" alt="flag" width={20} height={20} />
+              <span className="font-medium text-red-600">Report Listing</span>
+            </div>
+            <Image src="/icons/redArrowLeft.svg" alt="arrow" width={16} height={16} className="mr-2 text-gray-400" />
+          </button>
+        )}
       </div>
     </aside>
   );

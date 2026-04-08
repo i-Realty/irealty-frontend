@@ -19,7 +19,7 @@ function KycRejectModal({ userId, userName, onClose }: { userId: string; userNam
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl w-full max-w-md mx-4 p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md mx-4 p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
         <button onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
           <X className="w-5 h-5" />
         </button>
@@ -28,21 +28,21 @@ function KycRejectModal({ userId, userName, onClose }: { userId: string; userNam
             <AlertTriangle className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <h3 className="text-[16px] font-bold text-gray-900">Reject KYC</h3>
+            <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-100">Reject KYC</h3>
             <p className="text-[12px] text-gray-400">{userName}</p>
           </div>
         </div>
         <div className="mb-5">
-          <label className="text-[12px] font-bold text-gray-900 block mb-2">Reason for rejection</label>
+          <label className="text-[12px] font-bold text-gray-900 dark:text-gray-100 block mb-2">Reason for rejection</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Explain why this KYC application is being rejected..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-gray-900 focus:outline-none focus:border-red-400 min-h-[100px] resize-y placeholder:text-gray-300"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-[14px] text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:border-red-400 min-h-[100px] resize-y placeholder:text-gray-300 dark:placeholder:text-gray-500"
           />
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-700 font-medium text-sm py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+          <button onClick={onClose} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Cancel
           </button>
           <button onClick={handleReject} disabled={isActionLoading || !reason.trim()} className="flex-1 bg-red-600 text-white font-medium text-sm py-2.5 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors">
@@ -94,22 +94,22 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
-        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col items-center text-center">
-          <Image src={user.avatarUrl} alt={user.name} width={80} height={80} className="w-20 h-20 rounded-full object-cover border-2 border-gray-100 mb-3" />
-          <h2 className="text-lg font-bold text-gray-900">{user.name}</h2>
-          <p className="text-sm text-gray-500">{user.email}</p>
+        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 shadow-sm dark:shadow-none flex flex-col items-center text-center">
+          <Image src={user.avatarUrl} alt={user.name} width={80} height={80} className="w-20 h-20 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-3" />
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{user.name}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full font-medium">{user.role}</span>
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium border capitalize ${isActive ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-500 border-red-100'}`}>{user.accountStatus}</span>
           </div>
           <div className="w-full mt-6 space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-gray-400">Phone</span><span className="text-gray-900 font-medium">{user.phone}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Joined</span><span className="text-gray-900 font-medium">{user.joinDate}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Last Login</span><span className="text-gray-900 font-medium">{user.lastLogin}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Total Listings</span><span className="text-gray-900 font-medium">{user.totalListings}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Total Transactions</span><span className="text-gray-900 font-medium">{user.totalTransactions}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Phone</span><span className="text-gray-900 dark:text-gray-100 font-medium">{user.phone}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Joined</span><span className="text-gray-900 dark:text-gray-100 font-medium">{user.joinDate}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Last Login</span><span className="text-gray-900 dark:text-gray-100 font-medium">{user.lastLogin}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Total Listings</span><span className="text-gray-900 dark:text-gray-100 font-medium">{user.totalListings}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Total Transactions</span><span className="text-gray-900 dark:text-gray-100 font-medium">{user.totalTransactions}</span></div>
           </div>
-          <div className="w-full mt-6 pt-4 border-t border-gray-100">
+          <div className="w-full mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
             {isActive ? (
               <button onClick={() => suspendUserMock(user.id)} disabled={isActionLoading} className="w-full border border-red-200 text-red-600 font-medium py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
                 <ShieldOff className="w-4 h-4" /> Suspend Account
@@ -125,14 +125,14 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         {/* KYC + Transactions */}
         <div className="lg:col-span-2 space-y-6">
           {/* KYC Review */}
-          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 shadow-sm dark:shadow-none">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">KYC Verification</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">KYC Verification</h3>
               <span className={`text-sm font-bold capitalize ${kycColor}`}>{user.kycStatus}</span>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-gray-100 rounded-full h-2 mb-6">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-6">
               <div className="bg-blue-600 h-2 rounded-full transition-all duration-500" style={{ width: `${user.kycProgress}%` }} />
             </div>
 
@@ -143,7 +143,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                   <div className="flex items-center gap-3">
                     {getDocIcon(doc.status)}
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{doc.step}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{doc.step}</p>
                       {doc.data && <p className="text-xs text-gray-400 mt-0.5">{doc.data}</p>}
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
             {/* KYC Actions */}
             {user.kycStatus === 'in-progress' && (
-              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <button onClick={() => approveKycMock(user.id)} disabled={isActionLoading} className="flex-1 bg-green-600 text-white font-medium py-2.5 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm">
                   Approve KYC
                 </button>
@@ -168,14 +168,14 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
           </div>
 
           {/* Recent Transactions */}
-          <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">Recent Transactions</h3>
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Recent Transactions</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 text-gray-500">
+                  <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                     <th className="py-3 px-5 font-medium">ID</th>
                     <th className="py-3 px-5 font-medium">Type</th>
                     <th className="py-3 px-5 font-medium">Amount</th>
@@ -186,10 +186,10 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                   {user.recentTransactions.length === 0 ? (
                     <tr><td colSpan={4} className="py-8 text-center text-gray-400">No transactions</td></tr>
                   ) : user.recentTransactions.map((tx) => (
-                    <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                      <td className="py-3 px-5 text-gray-900 font-medium">{tx.id}</td>
-                      <td className="py-3 px-5 text-gray-500">{tx.type}</td>
-                      <td className="py-3 px-5 text-gray-900">₦{tx.amount.toLocaleString()}</td>
+                    <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                      <td className="py-3 px-5 text-gray-900 dark:text-gray-100 font-medium">{tx.id}</td>
+                      <td className="py-3 px-5 text-gray-500 dark:text-gray-400">{tx.type}</td>
+                      <td className="py-3 px-5 text-gray-900 dark:text-gray-100">₦{tx.amount.toLocaleString()}</td>
                       <td className="py-3 px-5"><span className={`font-medium ${getStatusStyle(tx.status)}`}>{tx.status}</span></td>
                     </tr>
                   ))}

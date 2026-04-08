@@ -12,6 +12,8 @@ import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import { useThemeStore } from '@/lib/store/useThemeStore';
 import { getPageTitle, getDashboardRoot } from '@/config/nav';
 import NotificationDropdown from '@/components/dashboard/NotificationDropdown';
+import { useI18n } from '@/lib/i18n';
+import type { TranslationKey } from '@/lib/i18n';
 
 const FALLBACK_AVATAR =
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
@@ -38,6 +40,7 @@ export default function TopNavBar() {
 
   const { theme, setTheme, resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme() === 'dark';
+  const { t } = useI18n();
 
   useEffect(() => {
     fetchNotificationsMock();
@@ -53,7 +56,21 @@ export default function TopNavBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const pageTitle = pathname ? getPageTitle(pathname) : 'Dashboard';
+  const PAGE_TITLE_I18N: Record<string, TranslationKey> = {
+    'Dashboard': 'nav.dashboard',
+    'My Properties': 'nav.myProperties',
+    'Messages': 'nav.messages',
+    'Documents': 'nav.documents',
+    'Wallet': 'nav.wallet',
+    'Transactions': 'nav.transactions',
+    'Calendar': 'nav.calendar',
+    'Settings': 'settings.title',
+    'Properties': 'nav.properties',
+    'Favorites': 'nav.favorites',
+    'Search Properties': 'nav.search',
+  };
+  const rawTitle = pathname ? getPageTitle(pathname) : 'Dashboard';
+  const pageTitle = PAGE_TITLE_I18N[rawTitle] ? t(PAGE_TITLE_I18N[rawTitle]) : rawTitle;
   const isMessagesActive = pathname?.includes('/messages') && activeChatId !== null;
 
   const displayName = user?.displayName ?? activeAccount.name;

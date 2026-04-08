@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Calendar as CalendarIcon, Clock, Plus, Trash2 } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 interface InspectionSetupModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface InspectionSetupModalProps {
 }
 
 export default function InspectionSetupModal({ isOpen, onClose }: InspectionSetupModalProps) {
+  useEscapeKey(onClose);
   const [step, setStep] = useState(1);
   const totalSteps = 2;
 

@@ -2,6 +2,7 @@
 
 import { useCreateProjectStore } from '@/lib/store/useCreateProjectStore';
 import { X } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 import Step1ProjectType from './Step1ProjectType';
 import Step2ProjectDetails from './Step2ProjectDetails';
 import Step3Milestones from './Step3Milestones';
@@ -12,6 +13,8 @@ const STEP_TITLES = ['Property Type', 'Property Details', 'Milestones', 'Media U
 
 export default function CreateProjectModal() {
   const { isOpen, closeWizard, currentStep, isEditMode } = useCreateProjectStore();
+
+  useEscapeKey(closeWizard);
 
   if (!isOpen) return null;
 

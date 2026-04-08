@@ -57,7 +57,7 @@ export default function PushNotificationManager() {
     localStorage.setItem('irealty-push-dismissed', 'true');
   };
 
-  if (!showBanner) return null;
+  if (!showBanner || isSubscribed) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[70] max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300">

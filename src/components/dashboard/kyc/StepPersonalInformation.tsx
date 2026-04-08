@@ -45,7 +45,7 @@ export default function StepPersonalInformation() {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">BVN</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">BVN <span className="text-red-500">*</span></label>
         <input 
           type="text" 
           placeholder="Enter BVN" 
@@ -74,7 +74,7 @@ export default function StepPersonalInformation() {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
           <input 
             type="text" 
             placeholder="First Name" 
@@ -85,7 +85,7 @@ export default function StepPersonalInformation() {
           {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             placeholder="Last Name"
@@ -98,7 +98,7 @@ export default function StepPersonalInformation() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Birth date</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Birth date <span className="text-red-500">*</span></label>
         <div className="grid grid-cols-3 gap-3">
           <div className="relative">
             <select 
@@ -142,7 +142,7 @@ export default function StepPersonalInformation() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Residential Address</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Residential Address <span className="text-red-500">*</span></label>
         <input 
           type="text" 
           placeholder="Address" 
@@ -166,7 +166,7 @@ export default function StepPersonalInformation() {
           {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
           <input
             type="text"
             placeholder="City"

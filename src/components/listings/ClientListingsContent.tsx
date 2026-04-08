@@ -10,6 +10,7 @@ import PropertyCard from "@/components/shared/PropertyCard";
 import dynamic from "next/dynamic";
 const MapMarkers = dynamic(() => import("@/components/map/MapMarkers"), { ssr: false });
 import ClusterPanel from "@/components/map/ClusterPanel";
+import MapStyleSwitcher from "@/components/map/MapStyleSwitcher";
 import FilterSidebar from "@/components/listings/FilterSidebar";
 import ComparisonBar from "@/components/listings/ComparisonBar";
 import ComparisonModal from "@/components/listings/ComparisonModal";
@@ -44,12 +45,12 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     activeTab, setActiveTab,
     page, setPage,
     selectedPropertyTypes, togglePropertyType,
-    selectedAmenities, toggleAmenity,
-    priceMin, setPriceMin,
-    priceMax, setPriceMax,
-    selectedBedrooms, toggleBedroom,
-    selectedStatuses, toggleStatus,
+    priceMin,
+    priceMax,
+    selectedBedrooms,
+    selectedStatuses,
     mapMode, setMapMode,
+    mapStyle, setMapStyle,
     filtersOpen, setFiltersOpen,
     resetFilters,
   } = config.useStore();
@@ -158,9 +159,13 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
   useEffect(() => {
     if (!mapMode || !mapContainerRef.current || mapRef.current) return;
 
+    const initialStyle = mapStyle === 'satellite'
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : 'mapbox://styles/mapbox/standard';
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/standard",
+      style: initialStyle,
       center: [3.42, 6.45],
       zoom: 11,
       pitch: 60,
@@ -179,7 +184,18 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
       try { map.remove(); } catch { }
       mapRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapMode]);
+
+  // ── Map style switcher ────────────────────────────────────────────────────
+  function handleMapStyleChange(style: 'light' | 'satellite') {
+    setMapStyle(style);
+    if (!mapRef.current) return;
+    const url = style === 'satellite'
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : 'mapbox://styles/mapbox/standard';
+    mapRef.current.setStyle(url);
+  }
 
   return (
     <>
@@ -259,6 +275,8 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
           {mapMode ? (
             <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm" style={{ height: 600 }}>
               <div ref={mapContainerRef} className="absolute inset-0" style={{ height: "100%" }} />
+
+              <MapStyleSwitcher mapStyle={mapStyle} onStyleChange={handleMapStyleChange} />
 
               {mapRef.current && (
                 <MapMarkers

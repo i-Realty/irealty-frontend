@@ -26,7 +26,7 @@ const banners = [
     subtitle: "Connect with serious, verified clients.",
     cta: "Post Free Property Ads",
     bg: "/images/audience-sellers.png",
-    ctaHref: "/auth/signup",
+    ctaHref: "/auth/signup?role=property-owner",
     bgPosition: "center top",
     bgSize: "cover"
   },
@@ -35,7 +35,7 @@ const banners = [
     subtitle: "Grow your business with powerful tools & a trusted brand.",
     cta: "Join As A Verified Agent",
     bg: "/images/audience-agents.png",
-    ctaHref: "/auth/signup",
+    ctaHref: "/auth/signup?role=real-estate-agent",
     bgPosition: "center",
     bgSize: "cover"
   },
@@ -53,7 +53,7 @@ const banners = [
     subtitle: "Showcase your projects and reach verified buyers and investors.",
     cta: "Contact Our Sales Team",
     bg: "/images/audience-devs.png",
-    ctaHref: "/auth/signup",
+    ctaHref: "/auth/signup?role=developers",
     bgPosition: "center",
     bgSize: "cover"
   },

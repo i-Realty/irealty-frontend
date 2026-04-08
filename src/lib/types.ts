@@ -5,7 +5,7 @@ export type Property = {
   title: string;
   location: string;
   price: string;
-  priceValue?: number;
+  priceValue: number;
   beds?: number;
   baths?: number;
   area?: string;

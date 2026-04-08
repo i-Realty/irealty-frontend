@@ -56,13 +56,13 @@ function ResetSuccessContent() {
   if (success) {
     return (
       <AuthLayout maxWidth={500}>
-        <div className="bg-white rounded-xl p-10 shadow-sm border border-gray-100 flex flex-col items-center mt-4">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+        <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-700 flex flex-col items-center mt-4">
+          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6">
             <Image src="/icons/successicon.svg" alt="Success" width={32} height={32} />
           </div>
 
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Password Reset!</h3>
-          <p className="text-gray-500 text-center mb-8 px-4">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Password Reset!</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-center mb-8 px-4">
             Your password has been successfully reset. You can now login using your new password.
           </p>
 
@@ -82,10 +82,10 @@ function ResetSuccessContent() {
 
   return (
     <AuthLayout maxWidth={500}>
-      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100 mt-4">
-        <h2 className="text-2xl font-bold mb-2">Create New Password</h2>
-        <p className="text-gray-500 mb-6 leading-relaxed">
-          Please enter a new password for <strong className="text-gray-900">{email}</strong>
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-8 sm:p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-700 mt-4">
+        <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Create New Password</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+          Please enter a new password for <strong className="text-gray-900 dark:text-gray-100">{email}</strong>
         </p>
 
         <form onSubmit={handleSavePassword} className="flex flex-col gap-4">

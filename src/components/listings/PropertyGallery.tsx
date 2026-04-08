@@ -44,9 +44,8 @@ export default function PropertyGallery({ property, basePath, onViewMap }: Prope
       <div className="hidden sm:block rounded-lg overflow-hidden">
         <Image src={property.image ?? '/images/property1.png'} alt="thumb" className="w-full h-[155px] lg:h-[205px] object-cover"  width={800} height={500} />
       </div>
-      <div className="hidden sm:block rounded-lg overflow-hidden relative">
+      <div className="hidden sm:block rounded-lg overflow-hidden">
         <Image src={property.image ?? '/images/property1.png'} alt="thumb" className="w-full h-[155px] lg:h-[205px] object-cover"  width={800} height={500} />
-        <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-lg font-semibold">+9</div>
       </div>
     </div>
   );

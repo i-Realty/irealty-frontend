@@ -1,11 +1,15 @@
+import { useCallback } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
 import { X, Check } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function WithdrawSuccessModal() {
   const { setActiveModal } = useWalletStore();
+  const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
+  useEscapeKey(closeModal);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Withdrawal successful">
        <div className="bg-white w-full h-full md:max-w-[420px] md:h-auto md:max-h-[85vh] md:rounded-3xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
           
           <div className="p-6 md:p-6 flex items-center justify-end z-10 w-full bg-white relative">

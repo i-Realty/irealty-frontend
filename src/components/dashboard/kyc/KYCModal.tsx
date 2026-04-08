@@ -12,7 +12,8 @@ import StepIDVerificationDeveloper from './StepIDVerificationDeveloper';
 import StepFaceMatch from './StepFaceMatch';
 import StepPaymentDetails from './StepPaymentDetails';
 import ValidationResult from './ValidationResult';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 /**
  * Role-aware hook that returns KYC actions from the correct dashboard store.
@@ -44,6 +45,9 @@ function useKYCActions() {
 export default function KYCModal() {
   const { isKycModalOpen, setKycModalOpen, currentKycStep, role } = useKYCActions();
   const [validationResult, setValidationResult] = useState<'none' | 'success' | 'failed'>('none');
+
+  const handleClose = useCallback(() => setKycModalOpen(false), [setKycModalOpen]);
+  useEscapeKey(handleClose);
 
   if (!isKycModalOpen) return null;
 
@@ -97,9 +101,9 @@ export default function KYCModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0" role="dialog" aria-modal="true" aria-label="KYC verification">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setKycModalOpen(false)}></div>
-      
+
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden my-auto sm:my-8 h-full sm:h-auto max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-100 flex-shrink-0">

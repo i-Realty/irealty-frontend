@@ -53,7 +53,7 @@ export default function ReserveConfirmationModal({ onClose }: { onClose?: () => 
               <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
               <span>Add To Calendar</span>
             </button>
-            <button onClick={() => router.push(`/listings/${id}`)} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm flex items-center justify-center gap-2">
+            <button onClick={() => router.push(`/listings/developers/${id}?chat=1`)} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm flex items-center justify-center gap-2">
               <Image src="/icons/messages2.svg" alt="chat" width={16} height={16} />
               <span>Chat Agent</span>
             </button>

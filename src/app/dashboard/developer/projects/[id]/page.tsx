@@ -4,6 +4,7 @@ import { use, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Play, MapPin, BedDouble, Bath, Maximize2, Calendar, CheckCircle2, FileText, Download, MapPinned } from 'lucide-react';
+import MapModal from '@/components/MapModal';
 
 const DEFAULT_AMENITIES = [
   'Swimming Pool', 'Gym', 'Parking', '24/7 Security',
@@ -56,6 +57,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   const tabs = ['Description', 'Amenities', 'Documents', 'Landmarks'];
   const [activeTab, setActiveTab] = useState('Description');
+  const [showMapModal, setShowMapModal] = useState(false);
 
   return (
     <div className="space-y-6 pb-12">
@@ -74,7 +76,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             <button className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1">
               <Play className="w-3 h-3" /> Virtual Tour
             </button>
-            <button className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1">
+            <button onClick={() => setShowMapModal(true)} className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1">
               <MapPin className="w-3 h-3" /> View On Map
             </button>
           </div>
@@ -239,6 +241,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           ))}
         </div>
       </div>
+
+      {/* Map Modal */}
+      {showMapModal && (
+        <MapModal lat={6.45} lng={3.42} onClose={() => setShowMapModal(false)} />
+      )}
     </div>
   );
 }

@@ -28,6 +28,15 @@ export type FilePayload = {
   format: string; // 'pdf', 'mp4', 'png'
 };
 
+export interface StagedFile {
+  url: string;
+  name: string;
+  sizeMb: number;
+  format: string;
+  pages?: number;
+  isVideo?: boolean;
+}
+
 export type Message = {
   id: string;
   chatId: string;
@@ -69,7 +78,7 @@ interface MessagesStore {
   
   // Media Upload Flow States
   uploadModalState: UploadModalState;
-  stagedFiles: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any -- mixed FilePayload + File + media objects; typed when upload modals are refactored
+  stagedFiles: StagedFile[];
 
   // Actions
   fetchThreadsMock: () => Promise<void>;
@@ -80,7 +89,7 @@ interface MessagesStore {
   toggleMobileContext: (isOpen: boolean) => void;
   
   setUploadModalState: (state: UploadModalState) => void;
-  setStagedFiles: (files: any[]) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  setStagedFiles: (files: StagedFile[]) => void;
   clearUploadState: () => void;
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Check } from "lucide-react";
 
 interface PasswordInputProps {
   value: string;
@@ -9,11 +10,19 @@ interface PasswordInputProps {
   error?: string;
   id?: string;
   label?: string;
+  showConditions?: boolean;
+  required?: boolean;
 }
 
+const PASSWORD_CONDITIONS = [
+  { label: "At least 8 characters", test: (v: string) => v.length >= 8 },
+  { label: "One uppercase letter", test: (v: string) => /[A-Z]/.test(v) },
+  { label: "One lowercase letter", test: (v: string) => /[a-z]/.test(v) },
+  { label: "One number", test: (v: string) => /[0-9]/.test(v) },
+];
+
 /**
- * Password field with a show/hide toggle button.
- * Extracts the duplicated eye-icon SVGs into a single component.
+ * Password field with a show/hide toggle button and optional live condition checklist.
  */
 export default function PasswordInput({
   value,
@@ -22,14 +31,16 @@ export default function PasswordInput({
   error,
   id = "password",
   label,
+  showConditions = false,
+  required = false,
 }: PasswordInputProps) {
   const [show, setShow] = useState(false);
 
   return (
     <div>
       {label && (
-        <label htmlFor={id} className="block text-sm text-gray-700 mb-1">
-          {label}
+        <label htmlFor={id} className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+          {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
       <div className="relative">
@@ -41,8 +52,8 @@ export default function PasswordInput({
           type={show ? "text" : "password"}
           autoComplete={id === "password" ? "current-password" : "new-password"}
           className={`w-full px-3 pr-10 py-2.5 rounded-lg border text-sm outline-none transition-colors ${
-            error ? "border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500" : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          }`}
+            error ? "border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          } dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500`}
         />
         <button
           type="button"
@@ -66,6 +77,21 @@ export default function PasswordInput({
         </button>
       </div>
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {showConditions && value.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {PASSWORD_CONDITIONS.map((cond) => {
+            const met = cond.test(value);
+            return (
+              <li key={cond.label} className="flex items-center gap-1.5 text-xs">
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${met ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                  <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                </span>
+                <span className={met ? 'text-green-600' : 'text-gray-400'}>{cond.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

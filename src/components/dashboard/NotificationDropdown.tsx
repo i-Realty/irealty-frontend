@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
 import type { NotificationType } from '@/lib/store/useNotificationStore';
+import { useI18n } from '@/lib/i18n';
 
 const ICON_MAP: Record<NotificationType, { icon: typeof Bell; bg: string; color: string }> = {
   message: { icon: MessageSquare, bg: 'bg-blue-50 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
@@ -26,6 +27,7 @@ export default function NotificationDropdown() {
   const { notifications, isOpen, closeDropdown, markAsRead, markAllAsRead } =
     useNotificationStore();
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -49,7 +51,7 @@ export default function NotificationDropdown() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Notifications</h3>
+          <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{t('notifications.title')}</h3>
           {unreadCount > 0 && (
             <span className="text-[11px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
               {unreadCount}
@@ -62,7 +64,7 @@ export default function NotificationDropdown() {
             className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
           >
             <CheckCheck className="w-3.5 h-3.5" />
-            Mark all read
+            {t('notifications.markAllRead')}
           </button>
         )}
       </div>
@@ -82,7 +84,7 @@ export default function NotificationDropdown() {
                 key={n.id}
                 onClick={() => markAsRead(n.id)}
                 className={`w-full px-5 py-3.5 flex items-start gap-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                  !n.read ? 'bg-blue-50/30 dark:bg-blue-900/20' : ''
+                  !n.read ? 'bg-blue-50/30 dark:bg-blue-500/10' : ''
                 }`}
               >
                 <div

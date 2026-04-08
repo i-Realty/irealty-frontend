@@ -72,7 +72,7 @@ export default function MapModal({ lat = 6.45, lng = 3.42, onClose }: Props) {
   }, [lat, lng]);
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center">
+    <div className="fixed inset-0 z-60 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Property location map">
       <div className="absolute inset-0 bg-black/40" aria-hidden onClick={() => (onClose ? onClose() : router.back())} />
 
       <div className="relative bg-white rounded-2xl w-full max-w-3xl mx-4 p-4 shadow-xl">

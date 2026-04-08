@@ -24,6 +24,8 @@ import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { getNavItems, getRoleFromPath } from '@/config/nav';
+import { useI18n } from '@/lib/i18n';
+import type { TranslationKey } from '@/lib/i18n';
 
 const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
 
@@ -43,6 +45,7 @@ export default function Sidebar() {
 
   // Derive nav from URL pathname — always correct regardless of auth store state
   const navItems = getNavItems(getRoleFromPath(pathname ?? ''));
+  const { t } = useI18n();
 
   const handleLogout = () => {
     logout();
@@ -95,7 +98,7 @@ export default function Sidebar() {
               const isDashboardRoot = dashboardRoots.includes(item.href!);
               const isActive =
                 pathname === item.href ||
-                (!isDashboardRoot && pathname.startsWith(item.href!));
+                (!isDashboardRoot && pathname.startsWith(item.href! + '/'));
               const Icon = item.icon!;
 
               return (
@@ -110,7 +113,7 @@ export default function Sidebar() {
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={isActive ? 'font-bold' : ''}>{item.label}</span>
+                  <span className={isActive ? 'font-bold' : ''}>{item.i18nKey ? t(item.i18nKey as TranslationKey) : item.label}</span>
                 </Link>
               );
             })}

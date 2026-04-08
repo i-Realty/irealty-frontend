@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Search, FileText, Plus, Smile } from 'lucide-react';
 import { useMessagesStore } from '@/lib/store/useMessagesStore';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function UploadDocumentModal() {
   const { 
@@ -13,6 +14,7 @@ export default function UploadDocumentModal() {
     setStagedFiles
   } = useMessagesStore();
   
+  useEscapeKey(clearUploadState);
   const [caption, setCaption] = useState('');
   const [searchDoc, setSearchDoc] = useState('');
 
@@ -27,7 +29,7 @@ export default function UploadDocumentModal() {
 
     const filteredDocs = mockDocuments.filter(doc => doc.name.toLowerCase().includes(searchDoc.toLowerCase()));
 
-    const handleSelectDoc = (doc: any) => {
+    const handleSelectDoc = (doc: typeof mockDocuments[number]) => {
       setStagedFiles([{ name: doc.name, url: 'file://mock', sizeMb: doc.sizeMb, format: doc.format, pages: doc.pages }]);
       setUploadModalState('document_preview');
     };

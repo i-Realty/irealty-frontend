@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Send, Users, ChevronDown } from 'lucide-react';
 import type { UserRole } from '@/lib/store/useAuthStore';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 const ROLE_OPTIONS: { value: 'all' | UserRole; label: string }[] = [
   { value: 'all', label: 'All Users' },
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function BroadcastModal({ isOpen, onClose }: Props) {
+  useEscapeKey(onClose);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [targetRoles, setTargetRoles] = useState<Set<string>>(new Set(['all']));

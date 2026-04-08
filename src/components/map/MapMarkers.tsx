@@ -200,6 +200,16 @@ export default function MapMarkers({ mapRef, properties, listingHrefPrefix = "/l
     };
   }, [toggleLike, likedIds]);
 
+  // Expose book-tour to popup's inline onclick
+  useEffect(() => {
+    (window as Window & { __irealty_bookTour?: (id: number) => void }).__irealty_bookTour = (id: number) => {
+      window.location.href = `${listingHrefPrefix}/${id}?bookTour=1`;
+    };
+    return () => {
+      delete (window as Window & { __irealty_bookTour?: (id: number) => void }).__irealty_bookTour;
+    };
+  }, [listingHrefPrefix]);
+
   // ── Marker creation ───────────────────────────────────────────────────────
 
   const buildMarkerEl = useCallback((p: PropertyWithCoords, isActive = false): HTMLDivElement => {
@@ -452,6 +462,22 @@ export default function MapMarkers({ mapRef, properties, listingHrefPrefix = "/l
 
     if (map.isStyleLoaded()) run();
     else map.once("load", run);
+  }, [mapRef, renderMarkers, addClusterLayer]);
+
+  // ── Re-render markers + cluster after map style change ───────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const onStyleLoad = () => {
+      // Clear cached marker refs — they were removed with the old style
+      markersRef.current.forEach(({ marker }) => { try { marker.remove(); } catch { } });
+      markersRef.current.clear();
+      activeIdRef.current = null;
+      renderMarkers(map);
+      addClusterLayer(map);
+    };
+    map.on("style.load", onStyleLoad);
+    return () => { map.off("style.load", onStyleLoad); };
   }, [mapRef, renderMarkers, addClusterLayer]);
 
   // Re-render markers when liked state changes (heart icons update)

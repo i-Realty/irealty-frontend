@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
 import { withdrawAmountSchema, extractErrors } from '@/lib/validations/settings';
 import { X, Edit3, Loader2 } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function WithdrawModal() {
   const { 
@@ -14,6 +15,8 @@ export default function WithdrawModal() {
     processWithdrawalMock
   } = useWalletStore();
 
+  const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
+  useEscapeKey(closeModal);
   const [amount, setAmount] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -33,9 +36,9 @@ export default function WithdrawModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Withdrawal">
        <div className="bg-white w-full h-full md:max-w-md md:h-auto md:max-h-[85vh] md:rounded-3xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
-          
+
           <div className="p-6 md:p-8 flex items-center justify-between z-10 w-full bg-white relative">
              <h2 className="text-[22px] font-bold text-gray-900 tracking-tight leading-tight">
                Withdrawal

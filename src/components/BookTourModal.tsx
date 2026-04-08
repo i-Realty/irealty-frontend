@@ -15,12 +15,21 @@ export default function BookTourModal({ onClose }: Props) {
   const [tab, setTab] = useState<'inperson' | 'video'>('inperson');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const slots = [
-    'Sun, Jul 2 — 11:00 AM - 1:00 PM',
-    'Sun, Jul 2 — 1:00 PM - 3:00 PM',
-    'Sun, Jul 2 — 3:00 PM - 5:00 PM',
-    'Sun, Jul 2 — 5:00 PM - 7:00 PM',
-  ];
+  // Generate 4 upcoming slots starting from the next Sunday
+  const slots = React.useMemo(() => {
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const TIMES = ['11:00 AM - 1:00 PM', '1:00 PM - 3:00 PM', '3:00 PM - 5:00 PM', '5:00 PM - 7:00 PM'];
+    const today = new Date();
+    const daysToSunday = (7 - today.getDay()) % 7 || 7;
+    const base = new Date(today);
+    base.setDate(today.getDate() + daysToSunday);
+    return TIMES.map((time, i) => {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      return `${DAY_NAMES[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()} — ${time}`;
+    });
+  }, []);
 
   // close on escape
   useEffect(() => {

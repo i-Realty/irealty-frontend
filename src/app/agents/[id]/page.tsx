@@ -3,6 +3,22 @@ import Link from 'next/link';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import Image from 'next/image';
+import type { Metadata } from 'next';
+
+const sampleAgentNames: Record<string, string> = {
+  '1': 'Sarah Homes',
+  '2': 'Kelly Williams',
+  '3': 'John Ade',
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const agentName = sampleAgentNames[id] || 'Agent';
+  return {
+    title: `${agentName} | i-Realty Agent Profile`,
+    description: `View ${agentName}'s property listings, reviews, and contact info on i-Realty. Connect with trusted real estate agents in Nigeria.`,
+  };
+}
 
 type Agent = {
   id: number;
@@ -64,9 +80,9 @@ const sampleAgents: Agent[] = [
   },
 ];
 
-export default function AgentProfile(props: unknown) {
-  const { params } = props as { params: { id: string } };
-  const agentId = Number(params?.id || 0);
+export default async function AgentProfile({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const agentId = Number(id || 0);
   const agent = sampleAgents.find((a) => a.id === agentId) ?? sampleAgents[0];
 
   return (

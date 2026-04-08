@@ -6,13 +6,16 @@ import InboxList from '@/components/dashboard/agent/messages/InboxList';
 import ChatWindow from '@/components/dashboard/agent/messages/ChatWindow';
 import ContextPanel from '@/components/dashboard/agent/messages/ContextPanel';
 import EmptyChatState from '@/components/dashboard/agent/messages/EmptyChatState';
+import UploadMediaModal from '@/components/dashboard/agent/messages/modals/UploadMediaModal';
+import UploadDocumentModal from '@/components/dashboard/agent/messages/modals/UploadDocumentModal';
 
 export default function MessagesPage() {
-  const { 
-    activeChatId, 
-    isMobileContextOpen, 
+  const {
+    activeChatId,
+    isMobileContextOpen,
     fetchThreadsMock,
-    isLoadingChats 
+    isLoadingChats,
+    uploadModalState
   } = useMessagesStore();
 
   // Load mock data on mount
@@ -51,9 +54,9 @@ export default function MessagesPage() {
         </div>
       )}
 
-      {/* MODAL MOUNTS GO HERE */}
-      {/* <UploadMediaModal /> */}
-      {/* <UploadDocumentModal /> */}
+      {/* MODAL MOUNTS */}
+      {uploadModalState === 'media' && <UploadMediaModal />}
+      {(uploadModalState === 'document_list' || uploadModalState === 'document_preview') && <UploadDocumentModal />}
     </div>
   );
 }

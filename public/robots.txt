@@ -4,7 +4,7 @@ Allow: /listings
 Allow: /listings/developers
 Allow: /agents
 
-Disallow: /dashboard/
-Disallow: /auth/
+Disallow: /dashboard/*
+Disallow: /auth/*
 
 Sitemap: https://www.irealty.ng/sitemap.xml

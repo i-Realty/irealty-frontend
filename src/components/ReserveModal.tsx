@@ -23,7 +23,7 @@ export default function ReserveModal({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center">
+    <div className="fixed inset-0 z-60 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Reserve property">
       <div className="absolute inset-0 bg-black/40" aria-hidden onClick={() => (onClose ? onClose() : router.back())} />
 
       <div className="relative bg-white rounded-2xl w-md max-w-xl mx-4 p-6 shadow-xl">

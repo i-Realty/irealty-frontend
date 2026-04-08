@@ -2,28 +2,31 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useI18n } from '@/lib/i18n';
 
 export default function Footer() {
+  const { t } = useI18n();
+
   const navigation = {
     services: [
-      { name: 'Escrow Payment', href: '/escrow' },
-      { name: 'Agent Onboarding', href: '/agent-onboarding' },
-      { name: 'Diaspora Investor Services', href: '/diaspora-services' },
-      { name: 'Legal & Documentation Support', href: '/legal-support' },
-      { name: 'Property Inspection', href: '/inspection' },
+      { name: t('footer.escrowPayment'), href: '/escrow' },
+      { name: t('footer.agentOnboarding'), href: '/agent-onboarding' },
+      { name: t('footer.diasporaServices'), href: '/diaspora-services' },
+      { name: t('footer.legalSupport'), href: '/legal-support' },
+      { name: t('footer.propertyInspection'), href: '/inspection' },
     ],
     support: [
-      { name: 'FAQs', href: '/faqs' },
-      { name: 'Help Center', href: '/help' },
-      { name: 'Contact Us', href: '/contact' },
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms & Conditions', href: '/terms' },
+      { name: t('footer.faqs'), href: '/faqs' },
+      { name: t('footer.helpCenter'), href: '/help' },
+      { name: t('footer.contactUs'), href: '/contact' },
+      { name: t('footer.privacy'), href: '/privacy' },
+      { name: t('footer.terms'), href: '/terms' },
     ],
     social: [
-      { name: 'Instagram', href: '#' },
-      { name: 'LinkedIn', href: '#' },
-      { name: 'Twitter (X)', href: '#' },
-      { name: 'WhatsApp Support', href: '#' },
+      { name: t('footer.instagram'), href: '#' },
+      { name: t('footer.linkedin'), href: '#' },
+      { name: t('footer.twitter'), href: '#' },
+      { name: t('footer.whatsapp'), href: '#' },
     ],
   }
 
@@ -42,7 +45,7 @@ export default function Footer() {
               <Image src="/logo-white.png" alt="i-Realty" width={120} height={40} className="h-10 w-auto" />
             </button>
             <p className="text-white/90 text-sm" style={{ fontFamily: 'Lato' }}>
-              We connect buyers, sellers and investors with trusted local developers and agents. Fast searches, secure escrow, and verified listings.
+              {t('footer.description')}
             </p>
           </div>
 
@@ -50,10 +53,10 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>Services</h3>
+                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>{t('footer.services')}</h3>
                 <ul role="list" className="mt-6 space-y-3">
                   {navigation.services.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.href}>
                       <a href={item.href} style={{ fontSize: 14, fontFamily: 'Lato' }} className="text-white/80 hover:text-white">
                         {item.name}
                       </a>
@@ -63,10 +66,10 @@ export default function Footer() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>Support</h3>
+                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>{t('footer.support')}</h3>
                 <ul role="list" className="mt-6 space-y-3">
                   {navigation.support.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.href}>
                       <a href={item.href} style={{ fontSize: 14, fontFamily: 'Lato' }} className="text-white/80 hover:text-white">
                         {item.name}
                       </a>
@@ -76,10 +79,10 @@ export default function Footer() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>Connect With Us</h3>
+                <h3 className="text-sm font-semibold leading-6 text-white" style={{ fontSize: 14, fontFamily: 'Lato' }}>{t('footer.connectWithUs')}</h3>
                 <ul role="list" className="mt-6 space-y-3">
                   {navigation.social.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.href + item.name}>
                       <a href={item.href} style={{ fontSize: 14, fontFamily: 'Lato' }} className="text-white/80 hover:text-white">
                         {item.name}
                       </a>
@@ -97,7 +100,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="mt-6 text-center">
           <p className="text-sm text-white/90" style={{ fontFamily: 'Lato', margin: 0, lineHeight: '1.6' }}>
-            © {new Date().getFullYear()} i-Realty. All rights reserved.
+            &copy; {new Date().getFullYear()} {t('footer.copyright')}
           </p>
         </div>
       </div>

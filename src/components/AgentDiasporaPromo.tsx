@@ -23,7 +23,7 @@ export default function AgentDiasporaPromo() {
               <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
                 Join i-Realty to access verified clients, manage listings with ease, and grow your real estate business on a trusted platform.
               </p>
-              <a href="/auth/signup" className="inline-block font-semibold mb-4" style={{ color: '#B45309', fontFamily: 'Lato' }}>
+              <a href="/auth/signup?role=real-estate-agent" className="inline-block font-semibold mb-4" style={{ color: '#B45309', fontFamily: 'Lato' }}>
                 Join As A Verified Agent <span className="ml-2 text-lg">→</span>
               </a>
 
@@ -50,7 +50,7 @@ export default function AgentDiasporaPromo() {
               <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
                 Browse trusted listings, track ROI, and transact securely—wherever you are in the world.
               </p>
-              <a href="/auth/signup" className="inline-block font-semibold mb-4" style={{ color: '#2563EB', fontFamily: 'Lato' }}>
+              <a href="/auth/signup?role=diaspora-investors" className="inline-block font-semibold mb-4" style={{ color: '#2563EB', fontFamily: 'Lato' }}>
                 Explore Verified Listings <span className="ml-2 text-lg">→</span>
               </a>
 

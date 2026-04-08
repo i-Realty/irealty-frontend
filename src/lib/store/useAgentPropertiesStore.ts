@@ -158,9 +158,13 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
 
   fetchProperties: async () => {
     set({ isLoading: true, error: null });
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    set({ properties: mockAgentProperties, isLoading: false });
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      set({ properties: mockAgentProperties, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
+    }
   },
 
   setActiveTab: (tab) => set({ activeTab: tab, page: 1 }),
@@ -169,14 +173,19 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   setPage: (page) => set({ page }),
 
   deleteProperty: async (id) => {
-    set({ isLoading: true });
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    set((state) => ({
-      properties: state.properties.filter(p => p.id !== id),
-      isLoading: false
-    }));
-    return true;
+    set({ isLoading: true, error: null });
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      set((state) => ({
+        properties: state.properties.filter(p => p.id !== id),
+        isLoading: false
+      }));
+      return true;
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
+      return false;
+    }
   },
 
   addPropertyLocally: (prop) => {

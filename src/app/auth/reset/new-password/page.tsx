@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import PasswordInput from "@/components/auth/PasswordInput";
 import { validatePassword } from "@/lib/utils/authValidation";
+import { useI18n } from '@/lib/i18n';
 
 function ResetNewPasswordContent() {
   const router = useRouter();
@@ -21,6 +22,7 @@ function ResetNewPasswordContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   function handleReset() {
     const errs: Record<string, string> = {};
@@ -40,28 +42,28 @@ function ResetNewPasswordContent() {
 
   return (
     <AuthLayout>
-      <div className="bg-white rounded-xl p-6 sm:p-8">
-        <h3 className="text-lg sm:text-xl font-bold mb-2">Create New Password</h3>
-        <p className="text-gray-500 mb-5 text-sm">
-          Enter a new password for your account
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-6 sm:p-8">
+        <h3 className="text-lg sm:text-xl font-bold mb-2 dark:text-gray-100">{t('auth.newPassword')}</h3>
+        <p className="text-gray-500 dark:text-gray-400 mb-5 text-sm">
+          {t('auth.resetPasswordDesc')}
         </p>
 
         <div className="grid gap-4">
           <PasswordInput
             id="new-password"
-            label="New Password"
+            label={t('auth.newPassword')}
             value={password}
             onChange={setPassword}
-            placeholder="Password (Min. of 8 characters)"
+            placeholder={t('auth.passwordMinChars')}
             error={errors.password}
           />
 
           <PasswordInput
             id="confirm-password"
-            label="Confirm Password"
+            label={t('auth.confirmNewPassword')}
             value={confirmPassword}
             onChange={setConfirmPassword}
-            placeholder="Re-enter your password"
+            placeholder={t('auth.confirmPassword')}
             error={errors.confirm}
           />
 
@@ -72,7 +74,7 @@ function ResetNewPasswordContent() {
               loading ? "bg-blue-300 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {loading ? "Resetting…" : "Reset Password"}
+            {loading ? t('common.loading') : t('auth.resetPassword')}
           </button>
         </div>
       </div>

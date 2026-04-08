@@ -1,7 +1,7 @@
 # TODO.md — i-Realty Frontend
 
-> Comprehensive audit-based roadmap. Each item reflects the **actual current state** of the codebase as of 2026-04-06.
-> Items are grouped by priority, then by area.
+> Comprehensive audit-based roadmap. Each item reflects the **actual current state** of the codebase as of 2026-04-07.
+> Items are grouped by priority, then by area. Checked items (- [x]) are done.
 
 ---
 
@@ -10,14 +10,47 @@
 | Area | Completion | Notes |
 |------|-----------|-------|
 | **Public pages** (landing, listings, detail, profiles) | 95% | Production-ready with mock data |
-| **Agent dashboard** | 90% | Most complete role; edit property flow missing |
-| **Admin dashboard** | 90% | All pages implemented with full UI |
-| **Developer dashboard** | 85% | Projects wizard complete; some pages reuse agent components |
-| **Seeker dashboard** | 85% | All pages implemented; reuses some agent components |
-| **Diaspora dashboard** | 85% | All pages implemented including service catalog |
-| **Landlord dashboard** | 0% | Nav config exists but no pages or components yet |
-| **Auth system** | 90% | Login/signup/reset flows work; Google OAuth is stub |
+| **Agent dashboard** | 92% | Edit property flow missing |
+| **Admin dashboard** | 92% | Full UI, bulk actions, broadcast done |
+| **Developer dashboard** | 88% | Projects wizard complete; edit flow missing |
+| **Seeker dashboard** | 88% | All pages implemented |
+| **Diaspora dashboard** | 88% | All pages including service catalog |
+| **Landlord dashboard** | 85% | All pages built, needs polish |
+| **Auth system** | 92% | Login/signup/reset work; middleware + session persist done; Google OAuth stub |
+| **Dark mode** | 60% | Toggle + ThemeProvider done; ~70% of components lack `dark:` variants |
+| **i18n** | 30% | 4 languages, 125+ keys, store ready; only Sidebar/TopNav/Notifications wired |
+| **Notifications** | 90% | Full UI + store; mock data only |
+| **Offline / PWA** | 90% | Service worker + indicator implemented |
+| **Testing** | 10% | Vitest configured; 3 test files exist |
 | **Backend integration** | 5% | API client exists; all stores use mock functions |
+
+---
+
+## Completed Since Last Audit
+
+- [x] ~~Dark mode support~~ — ThemeProvider, useThemeStore, light/dark/system toggle in settings
+- [x] ~~Notification system~~ — useNotificationStore + NotificationDropdown with 6 notification types
+- [x] ~~Admin bulk actions~~ — BulkActionBar + checkbox selection on admin properties page
+- [x] ~~Admin broadcast messaging~~ — BroadcastModal with target audience selection
+- [x] ~~Push notifications~~ — PushNotificationManager with permission flow + SW
+- [x] ~~Offline support~~ — Service worker caching + OfflineIndicator component
+- [x] ~~Landlord dashboard~~ — All 8 pages (overview, properties, messages, documents, wallet, transactions, settings)
+- [x] ~~Auth middleware~~ — `middleware.ts` protects `/dashboard/*` with `irealty-session` cookie
+- [x] ~~Session persistence~~ — useAuthStore with Zustand `persist` + localStorage
+- [x] ~~Form validation schemas~~ — Zod schemas in `lib/validations/` for KYC, settings, wizards
+- [x] ~~Test infrastructure~~ — vitest.config.ts + 3 initial test files
+- [x] ~~i18n infrastructure~~ — 4 languages (en/yo/ig/ha), 125+ keys, Zustand store, LanguageSwitcher
+- [x] ~~Seeker/Diaspora/Developer dashboards~~ — All nav pages implemented
+- [x] ~~Settings pages~~ — All 6 roles have settings pages with profile/payout/security
+- [x] ~~ESC key on modals~~ — All 12 missing modals now have `useEscapeKey` support
+- [x] ~~KYC ID verification validation~~ — Step 3 now shows inline errors on attempt
+- [x] ~~Password condition checklist~~ — Live-updating checklist on signup page
+- [x] ~~Required field asterisks~~ — Added to signup form and KYC Step 1/3
+- [x] ~~Admin checkbox design~~ — Improved size, accent color, hover states
+- [x] ~~Notification dark mode highlight~~ — Fixed unread item background color
+- [x] ~~Sidebar double-highlight~~ — Fixed `startsWith` matching to use trailing slash
+- [x] ~~Admin messages dark mode~~ — AdminChatWindow + AdminContextPanel fully dark-mode ready
+- [x] ~~Translation wiring~~ — Sidebar nav, TopNavBar page titles, NotificationDropdown use `t()`
 
 ---
 
@@ -26,7 +59,7 @@
 ### Backend Integration
 
 - [ ] **Replace all mock store functions with real API calls**
-  - API client utility already exists at `lib/api/client.ts` with GET/POST/PATCH/PUT/DELETE helpers, 401 redirect, and error handling
+  - API client utility exists at `lib/api/client.ts` with GET/POST/PATCH/PUT/DELETE helpers
   - Every store has isolated `*Mock()` functions — replace the `setTimeout` body with `fetch()` calls
   - Priority order:
     1. `useAuthStore` — login/signup/logout (gates everything)
@@ -48,24 +81,24 @@
   - See `API_SPEC.md` for the full endpoint specification
   - See `CLAUDE.md` → "Backend Integration Guide" for the replacement pattern
 
-### Auth & Security
+### Auth
 
 - [ ] **Implement Google OAuth flow**
-  - Login page: `alert("Google OAuth Coming Soon")` at `src/app/auth/login/page.tsx:119`
-  - Signup page: `alert("Google OAuth Coming Soon")` at `src/app/auth/signup/account/page.tsx:181`
-  - Replace with real OAuth redirect (Firebase Auth, Auth0, or direct Google OAuth)
-  - Handle callback, exchange code for token, update auth store
+  - Login: `alert("Google OAuth Coming Soon")` at `app/auth/login/page.tsx:119`
+  - Signup: `alert("Google OAuth Coming Soon")` at `app/auth/signup/account/page.tsx:181`
+  - Replace with real OAuth redirect (Firebase Auth, Auth0, or direct Google)
 
 - [ ] **Wire up email/OTP verification to real backend**
-  - Signup verify: `src/app/auth/signup/verify/page.tsx` — mock OTP always succeeds
-  - Reset verify: `src/app/auth/reset/verify/page.tsx` — mock resend is `alert("Code resent!")`
-  - Connect to real OTP send/verify API
+  - Signup verify: `app/auth/signup/verify/page.tsx` — mock OTP always succeeds
+  - Reset verify: `app/auth/reset/verify/page.tsx` — mock resend is `alert("Code resent!")`
+
+### Error Handling
 
 - [ ] **Add error handling to all data-fetching pages**
   - Mock functions never fail — no error UI is ever shown
   - Add `.catch()` handlers to all store actions
   - Show inline error states with retry buttons
-  - Error boundaries exist for listings/detail pages but not for dashboard pages
+  - Error boundaries exist for listings/detail but not dashboard pages
 
 ### Data Integrity
 
@@ -73,88 +106,87 @@
   - `Property.price` is a formatted string (e.g., `'₦ 20,000,000'`)
   - Filtering requires fragile `parseInt(price.replace(...))` parsing
   - Add `priceValue: number` to `Property` and `PropertyWithCoords` types
-  - Update all data files (`lib/data/*.ts`) and filter logic
-  - Files: `lib/types.ts`, `lib/data/standardProperties.ts`, `lib/data/developerProperties.ts`, `lib/store/useListingsStore.ts`, `components/listings/FilterSidebar.tsx`
+  - Files: `lib/types.ts`, `lib/data/standardProperties.ts`, `lib/data/developerProperties.ts`
 
 ---
 
-## P1 — High Priority (Feature gaps in existing pages)
+## P1 — High Priority (Feature gaps & dark mode)
+
+### Dark Mode Gaps
+
+- [ ] **Fix dark mode coverage across the app (~70% of components still light-only)**
+  - ~503 instances of `bg-white` but only ~53 have corresponding `dark:bg-*` variants
+  - **Critical areas** (visible in screenshots):
+    - Admin Settings / Platform Fees: `components/dashboard/admin/settings/AdminPlatformFees.tsx` — all fee cards use `bg-white` without dark variants
+    - Landing page VerifiedFeatures: `components/VerifiedFeatures.tsx:42` — cards use `bg-[#EEF8FB]`, `bg-[#EEF2FF]`, etc. with no dark equivalents
+    - Admin Finance page: `app/dashboard/admin/finance/page.tsx` — 6+ `bg-white` cards
+    - Admin User Detail: `app/dashboard/admin/users/[id]/page.tsx` — profile card, KYC section
+    - Admin Transaction Detail: `app/dashboard/admin/transactions/[id]/page.tsx` — all cards
+    - All wallet modals: `components/dashboard/agent/wallet/modals/` — all use `bg-white`
+    - Auth pages: login/signup/reset forms all use `bg-white`
+    - KYC Modal: `components/dashboard/kyc/KYCModal.tsx` — `bg-white` wrapper and steps
+    - Agent properties table: `app/dashboard/admin/properties/page.tsx` — table container
+  - Pattern to apply: every `bg-white` should get a `dark:bg-[#1e1e1e]` or `dark:bg-gray-800`; every `text-gray-900` should get `dark:text-gray-100`; every `border-gray-100` should get `dark:border-gray-700`
 
 ### Agent Dashboard
 
 - [ ] **Implement property edit flow**
-  - Comment at `src/app/dashboard/agent/properties/page.tsx:129`: `onEdit={() => { /* Wait for edit flow implementation */ }}`
-  - Reuse `CreatePropertyModal` with pre-populated data, or build a dedicated edit variant
+  - Edit button exists at `app/dashboard/agent/properties/[id]/page.tsx:76` but has no `onClick` handler
+  - Reuse `CreatePropertyModal` with pre-populated data or build a dedicated edit variant
   - Need `updateProperty()` store action in `useAgentPropertiesStore`
-  - Files: `app/dashboard/agent/properties/page.tsx`, `lib/store/useAgentPropertiesStore.ts`, `components/dashboard/agent/property-create/`
 
-- [ ] **Wire up file uploads in messages**
-  - `UploadMediaModal` and `UploadDocumentModal` exist in `components/dashboard/agent/messages/modals/`
-  - They render but do not actually upload files — `stagedFiles` is `any[]` in `useMessagesStore`
-  - Connect to file upload API, update message with file payload
+- [ ] **Uncomment and wire file uploads in messages**
+  - Upload modals exist but are **commented out** at `app/dashboard/agent/messages/page.tsx:55-56`
+  - `UploadMediaModal` and `UploadDocumentModal` components are built but unused
+  - `stagedFiles` is typed as `any[]` in `useMessagesStore` — needs proper typing
 
-- [ ] **Implement "Add to Calendar" in booking confirmation**
-  - TODO comment at `components/BookingConfirmationModal.tsx:47`: `/* TODO: add to calendar logic */`
-  - TODO comment at `components/ReserveConfirmationModal.tsx:43`: `/* TODO: add calendar logic */`
-  - Generate `.ics` file or integrate with Google Calendar API
-
-- [ ] **Complete property detail tabs (Amenities, Documents, Landmarks)**
-  - Agent property detail page (`/dashboard/agent/properties/[id]`) only shows Description tab
-  - Amenities, Documents, and Landmarks tabs are present but empty/non-functional
-  - Same issue on developer project detail page
+- [ ] **Complete property detail tabs**
+  - Amenities tab uses mock data at `app/dashboard/agent/properties/[id]/page.tsx:181-195`
+  - Documents tab uses `MOCK_DOCUMENTS` hardcoded array
+  - Landmarks tab uses `MOCK_LANDMARKS` hardcoded array
+  - Should pull from property data or dedicated API
 
 ### Developer Dashboard
 
-- [ ] **Build developer-specific messaging**
-  - Currently reuses agent messaging components (`InboxList`, `ChatWindow`, etc.)
-  - Should have developer-specific thread context (project milestones, buyer conversations)
-  - Files: `app/dashboard/developer/messages/page.tsx`
-
-- [ ] **Build developer-specific documents page**
-  - Currently reuses agent document components
-  - Should support developer-specific templates (milestone agreements, project handover docs)
+- [ ] **Wire up project edit flow**
+  - Project cards have Edit in dropdown at `app/dashboard/developer/projects/page.tsx:115`
+  - `loadProjectForEdit()` is called but wizard doesn't auto-populate
+  - Store accepts project data but UI doesn't merge it into form
 
 - [ ] **Complete project detail page tabs**
-  - `/dashboard/developer/projects/[id]` only populates Description tab
-  - Amenities, Documents, and Landmarks tabs are empty stubs
-  - Virtual Tour and View On Map buttons are non-functional
-
-- [ ] **Wire up project edit flow**
-  - Project cards have Edit in their dropdown menu but no edit handler
-  - Should pre-populate CreateProjectModal with existing project data
-
-### Seeker Dashboard
-
-- [ ] **Build seeker-specific messaging**
-  - Currently reuses agent messaging components
-  - Context panel should show property context from seeker's perspective (inquiries, tour bookings)
-
-### Diaspora Dashboard
-
-- [ ] **Build diaspora-specific messaging**
-  - Currently reuses agent messaging components
-  - Should support communication with care managers and service providers
+  - `app/dashboard/developer/projects/[id]/page.tsx:57-58` — Amenities, Documents, Landmarks tabs are empty stubs
+  - Virtual Tour button (line 75) doesn't open viewer
+  - View On Map button (line 78) doesn't work
 
 ### Admin Dashboard
 
-- [ ] **Add rejection reason input for property/KYC moderation**
-  - Admin can approve/reject properties and KYC but cannot provide a reason
-  - Add a text input or modal for rejection reasoning
-  - Affects: `app/dashboard/admin/properties/page.tsx`, `app/dashboard/admin/users/[id]/page.tsx`
-
 - [ ] **Wire up transaction detail action buttons**
-  - "Flag for Review" and "Initiate Refund" buttons on admin transaction detail page are UI-only
-  - "Message" buttons on party cards don't open chat
-  - File: `app/dashboard/admin/transactions/[id]/page.tsx`
+  - "Flag for Review" at `app/dashboard/admin/transactions/[id]/page.tsx:124` — calls `flagTransactionMock()`
+  - "Initiate Refund" at line 128 — calls `refundTransactionMock()`
+  - "Message" buttons on party cards (lines 106, 116) — no `onClick` handler, just static UI
 
-### Landlord Dashboard
+### Wallet
 
-- [ ] **Build landlord dashboard pages and components**
-  - Nav config exists in `src/config/nav.ts` (landlordNav with 6 items)
-  - Route segments exist: `/dashboard/landlord/` but **no pages or layout are created**
-  - Need: layout.tsx, page.tsx (overview), properties, messages, documents, wallet, transactions, settings
-  - Need: `useLandlordDashboardStore` Zustand store
-  - Should support: property listing, tenant management, rental income tracking
+- [ ] **Connect deposit flow to payment gateway**
+  - `FundDepositModal` shows static bank details + Paystack/Flutterwave buttons (UI only)
+  - No real payment integration
+  - File: `components/dashboard/agent/wallet/modals/FundDepositModal.tsx`
+
+- [ ] **Connect withdrawal flow to real API**
+  - Replace `processWithdrawalMock()` with real endpoint
+  - Bank details editing exists but isn't persisted to backend
+
+### i18n — Expand Translation Coverage
+
+- [ ] **Wire `t()` throughout remaining components**
+  - Currently wired: Sidebar nav labels, TopNavBar page titles, NotificationDropdown
+  - Still needed: All auth pages, dashboard stats, table headers, button labels, settings forms, listing pages, property detail sections
+  - 125+ keys already exist in all 4 language files — just need `useI18n()` + `t()` calls
+  - Highest-impact targets:
+    1. Auth pages (login/signup/reset) — user-facing
+    2. Public Navbar + Footer — user-facing
+    3. Dashboard stat cards and section headers
+    4. Common buttons (Save, Cancel, Delete, Edit, etc.) — use `common.*` keys
 
 ---
 
@@ -163,58 +195,53 @@
 ### Real-time Features
 
 - [ ] **Implement WebSocket messaging**
-  - All messaging is currently mock/polling only
-  - Add WebSocket connection for live messages across all role dashboards
-  - Handle typing indicators, online status, delivery receipts
+  - All messaging is mock/polling only across all roles
+  - Add WebSocket for live messages, typing indicators, online status
   - Files: `lib/store/useMessagesStore.ts`, `lib/store/useAdminMessagesStore.ts`
 
-- [ ] **Implement notification system**
-  - Notification bell in `TopNavBar.tsx` has a red dot but is non-functional
-  - Add notification dropdown with real-time updates
-  - Types: new message, tour booking, KYC update, payment received, admin alerts
-  - Need: `useNotificationStore`, `NotificationDropdown` component
+- [ ] **Connect notification system to real backend**
+  - `useNotificationStore` + `NotificationDropdown` are fully built but use mock data
+  - Need real-time notification delivery (WebSocket or SSE)
+  - Types already defined: message, tour, kyc, payment, property, system
 
 ### Pagination
 
 - [ ] **Implement real pagination across all list pages**
-  - All pagination controls are UI mockups ("Page 1 of 30") with static totals
-  - Connect to API pagination params (page, limit, total, hasMore)
-  - Affected pages: Agent properties, Admin users/properties/transactions, Developer projects/transactions, Seeker transactions/favorites/properties, Diaspora transactions, Documents, Wallet transactions
+  - All pagination controls are UI mockups with static totals
+  - Affected: Agent properties, Admin users/properties/transactions, Developer projects, Seeker transactions/favorites, Diaspora transactions, Documents, Wallet transactions
 
 ### File Uploads
 
 - [ ] **Implement avatar upload in settings**
   - Upload button UI exists in all profile settings forms
-  - Currently uses `URL.createObjectURL()` for local preview only
-  - Connect to image upload API, persist avatar URL
+  - Uses `URL.createObjectURL()` for local preview only — not persisted
   - Files: `components/dashboard/admin/settings/AdminProfileSettings.tsx`, `components/dashboard/agent/settings/forms/ProfileSettings.tsx`
 
 - [ ] **Implement media upload in property/project creation**
-  - Step 3 (Media Upload) in both property and project wizards uses placeholder images
+  - Step 3 (Media Upload) in both wizards uses placeholder images
   - `alert("Max 5 images allowed for demo.")` at `components/dashboard/agent/property-create/Step3MediaUpload.tsx:25`
-  - Connect to real file upload API with progress tracking
 
-### Payments
+### Booking
 
-- [ ] **Connect deposit flow to payment gateway**
-  - `FundDepositModal` exists but has no payment integration
-  - Integrate Paystack (Nigeria) or Stripe for card payments
-  - Files: `components/dashboard/agent/wallet/FundDepositModal.tsx`
-
-- [ ] **Connect withdrawal flow to real API**
-  - Replace `processWithdrawalMock()` with real endpoint
-  - Handle processing states, failure, and success
+- [ ] **Fix "Add to Calendar" dates in booking confirmation**
+  - `components/BookingConfirmationModal.tsx:51` — hardcodes a 3-day future date instead of actual booking date
+  - Only supports Google Calendar, no Outlook/Apple Calendar
 
 ### Store Cleanup
 
 - [ ] **Merge duplicate listing stores**
   - `useListingsStore` and `useDeveloperListingsStore` are near-clones
-  - Create a parameterized factory or single store with a `source` discriminator
-  - Files: `lib/store/useListingsStore.ts`, `lib/store/useDeveloperListingsStore.ts`
+  - Create parameterized factory or single store with `source` discriminator
 
 - [ ] **Fix `any` types in stores**
   - `useMessagesStore.ts:83` — `stagedFiles: any[]` should be typed
   - `useCreatePropertyStore.ts:210` — `as any` cast on `rentPriceType`
+
+### Map
+
+- [ ] **Wire "View On Map" buttons**
+  - Agent property detail: `app/dashboard/agent/properties/[id]/page.tsx:100` — non-functional
+  - Developer project detail: `app/dashboard/developer/projects/[id]/page.tsx:78` — non-functional
 
 ---
 
@@ -224,28 +251,24 @@
 
 - [ ] **Add `robots.txt`**
   - `public/robots.txt` does not exist
-  - Block `/dashboard/*`, `/auth/*` from crawling
-  - Allow `/listings`, `/agents`, landing page
+  - Block `/dashboard/*`, `/auth/*`; allow `/listings`, `/agents`, landing
 
 - [ ] **Add `generateMetadata` to all pages**
   - Currently only root layout, listings layout, and detail pages have metadata
   - Add to: `/auth/*`, `/dashboard/*`, `/agents/[id]`
 
 - [ ] **Add Open Graph images for property detail pages**
-  - Property detail pages should have OG images for social sharing
-  - Files: `app/listings/[id]/layout.tsx`, `app/listings/developers/[id]/layout.tsx`
 
 ### Accessibility
 
 - [ ] **Add ARIA attributes to modals and interactive elements**
   - Modals should use `role="dialog"` and `aria-modal="true"`
-  - Focus trap in modals (some modals lack this)
-  - Escape key to close modals (some modals missing this)
+  - Focus traps needed in modals
 
 - [ ] **Add keyboard navigation**
   - Tab order through form elements
-  - Enter key to submit forms (some forms missing)
-  - Arrow key navigation in dropdowns/selectors
+  - Enter key to submit forms (some missing)
+  - Arrow key navigation in dropdowns
 
 ### Performance
 
@@ -254,83 +277,56 @@
     - MapMarkers (~475 lines, Mapbox GL ~200KB)
     - RevenueCharts / DeveloperRevenueCharts (Recharts ~100KB)
     - Calendar grid component
-  - Files: wherever these components are imported
+  - Note: Calendar already uses dynamic import ✓
 
 - [ ] **Add loading skeletons to dashboard pages**
   - Some pages show spinner or blank during data fetch
-  - Add skeleton loaders matching component shapes
-  - Priority: Properties grid, Transaction table, Chat threads, Admin tables
+  - Priority: Properties grid, Transaction table, Chat threads
 
-### Form Validation
+### Testing
 
-- [ ] **Add comprehensive validation to all settings forms**
-  - Currently minimal validation (disabled buttons when empty)
-  - Add inline field errors, email format checks, phone format checks
-  - Consider Zod schemas for consistent validation
-  - Files: all `components/dashboard/*/settings/` form components
-
-- [ ] **Add step validation to Create Property/Project wizards**
-  - Step transitions should validate required fields before proceeding
-  - Show clear error messages per field
+- [ ] **Expand test coverage**
+  - Current: 3 test files (useAuthStore, useNotificationStore, authValidation)
+  - Priority targets: remaining Zustand stores, Zod validation schemas, form components, utility functions
+  - Framework: Vitest + React Testing Library (already configured)
 
 ### Code Quality
 
-- [ ] **Set up test infrastructure**
-  - No test framework or test files exist
-  - Add Vitest + React Testing Library
-  - Priority targets: Zustand stores, validation utils, form components
-
-
-
 - [ ] **Delete unused legacy data file**
-  - `lib/data/properties.ts` (6 legacy items) appears unused
-  - Verify no imports, then delete
-
----
-
-## P4 — Nice to Have (Future features)
-
-- [ ] **Dark mode support** — Tailwind v4 supports it; add toggle in settings
-- [ ] **Property comparison** — Select and compare 2-3 properties side by side
-- [ ] **Saved searches** — Save filter configurations, notify on new matches
-- [ ] **Admin bulk actions** — Select multiple users/properties/transactions for batch operations
-- [ ] **Admin audit trail export** — Download CSV of audit logs
-- [ ] **Admin broadcast messaging** — Send announcements to user groups
-- [ ] **Virtual tour integration** — Replace image carousel with real 3D/VR experience
-- [ ] **Push notifications** — Service worker for browser push notifications
-- [ ] **Offline support** — Service worker caching for listings/detail pages
-- [ ] **i18n** — Add language support (English primary, Yoruba/Igbo/Hausa secondary)
+  - `lib/data/properties.ts` (6 legacy items) — verify no imports, then delete
 
 ---
 
 ## Implementation Order (Recommended)
 
-For building the backend and connecting it to the frontend:
-
 ```
 Phase 1 — Auth & Core
-  1. Auth API (login/signup/reset/OAuth)        → gates everything
-  2. API client wiring                           → shared by all stores
-  3. Agent dashboard data fetch + KYC submit     → most-used role
+  1. Auth API (login/signup/reset/OAuth)          → gates everything
+  2. API client wiring                             → shared by all stores
+  3. Agent dashboard data fetch + KYC submit       → most-used role
 
 Phase 2 — Agent Features
-  4. Property CRUD + edit flow                   → core agent feature
-  5. Transactions + wallet + payments            → monetization
-  6. Messages + WebSocket                        → communication
-  7. Calendar + availability                     → scheduling
-  8. Documents + PDF generation                  → agreements
-  9. Settings APIs                               → account management
+  4. Property CRUD + edit flow                     → core agent feature
+  5. Transactions + wallet + payments              → monetization
+  6. Messages + file uploads + WebSocket           → communication
+  7. Calendar + availability                       → scheduling
+  8. Documents + PDF generation                    → agreements
+  9. Settings APIs                                 → account management
 
-Phase 3 — Other Roles
-  10. Admin dashboard APIs                       → platform management
-  11. Developer dashboard APIs                   → project management
-  12. Seeker + Diaspora APIs                     → buyer/investor flows
-  13. Landlord dashboard (build from scratch)    → new role
+Phase 3 — Dark Mode & i18n
+  10. Dark mode sweep (~70% of components)         → apply dark: variants systematically
+  11. i18n expansion to remaining components       → wire t() throughout app
 
-Phase 4 — Polish
-  14. File uploads (avatar, property media)      → media management
-  15. Real pagination                            → all list pages
-  16. Notifications                              → engagement
-  17. SEO + accessibility                        → production readiness
-  18. Tests                                      → quality assurance
+Phase 4 — Other Roles
+  12. Admin dashboard APIs                         → platform management
+  13. Developer dashboard APIs + edit flow         → project management
+  14. Seeker + Diaspora APIs                       → buyer/investor flows
+  15. Landlord dashboard polish                    → newest role
+
+Phase 5 — Polish
+  16. Real pagination for all list pages           → all roles
+  17. File uploads (avatar, property media)        → media management
+  18. Notification backend + WebSocket             → engagement
+  19. SEO + accessibility                          → production readiness
+  20. Expand test coverage                         → quality assurance
 ```

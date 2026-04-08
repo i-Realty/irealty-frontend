@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useI18n } from '@/lib/i18n';
 
 type TabName = "buy" | "rent" | "shortlet";
 
@@ -11,6 +12,7 @@ export default function SearchCard() {
   const [search, setSearch] = useState<string>('');
   const [selected, setSelected] = useState<string>('fullhouse');
   const router = useRouter();
+  const { t } = useI18n();
 
   useEffect(() => {
     const opts = getOptionsForTab(activeTab);
@@ -35,21 +37,21 @@ export default function SearchCard() {
           aria-pressed={activeTab === "buy"}
           onClick={() => setActiveTab("buy")}
         >
-          BUY
+          {t('search.buy')}
         </button>
         <button
           className={tabClass("rent")}
           aria-pressed={activeTab === "rent"}
           onClick={() => setActiveTab("rent")}
         >
-          RENT
+          {t('search.rent')}
         </button>
         <button
           className={tabClass("shortlet")}
           aria-pressed={activeTab === "shortlet"}
           onClick={() => setActiveTab("shortlet")}
         >
-          SHORTLET
+          {t('search.shortlet')}
         </button>
       </div>
 
@@ -62,7 +64,7 @@ export default function SearchCard() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search By Location"
+            placeholder={t('listings.searchByLocation')}
             className="text-[#8E98A8] font-lato text-[14px] leading-5 bg-transparent outline-none w-full"
             aria-label="Search by location"
           />

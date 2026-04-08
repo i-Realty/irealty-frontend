@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'yo' | 'ig' | 'ha';
+export type Locale = 'en' | 'fr';
 
 export interface LocaleInfo {
   code: Locale;
@@ -9,7 +9,5 @@ export interface LocaleInfo {
 
 export const SUPPORTED_LOCALES: LocaleInfo[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: 'GB' },
-  { code: 'yo', name: 'Yoruba', nativeName: 'Yoruba', flag: 'NG' },
-  { code: 'ig', name: 'Igbo', nativeName: 'Igbo', flag: 'NG' },
-  { code: 'ha', name: 'Hausa', nativeName: 'Hausa', flag: 'NG' },
+  { code: 'fr', name: 'French', nativeName: 'Francais', flag: 'FR' },
 ];

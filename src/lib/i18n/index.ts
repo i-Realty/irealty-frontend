@@ -1,15 +1,11 @@
 import { create } from 'zustand';
 import type { Locale } from './types';
 import en, { type TranslationKey } from './translations/en';
-import yo from './translations/yo';
-import ig from './translations/ig';
-import ha from './translations/ha';
+import fr from './translations/fr';
 
 const translations: Record<Locale, Record<TranslationKey, string>> = {
   en,
-  yo,
-  ig,
-  ha,
+  fr,
 };
 
 interface I18nState {
@@ -20,7 +16,8 @@ interface I18nState {
 
 function getStoredLocale(): Locale {
   if (typeof window === 'undefined') return 'en';
-  return (localStorage.getItem('irealty-locale') as Locale) || 'en';
+  const stored = localStorage.getItem('irealty-locale') as Locale;
+  return stored === 'fr' ? 'fr' : 'en';
 }
 
 export const useI18n = create<I18nState>((set, get) => ({

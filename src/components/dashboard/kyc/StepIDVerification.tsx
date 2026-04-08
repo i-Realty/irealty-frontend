@@ -6,13 +6,15 @@ import { UploadCloud, File, Trash2, ChevronDown } from 'lucide-react';
 
 export default function StepIDVerification() {
   const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
-  
+
   const [idNumber, setIdNumber] = useState('');
   const [idType, setIdType] = useState('');
   const [fileName, setFileName] = useState('');
+  const [attempted, setAttempted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
+    setAttempted(true);
     if (idNumber && idType && fileName) {
       updateKycProgress(3);
       setCurrentKycStep(4);
@@ -38,21 +40,22 @@ export default function StepIDVerification() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Identification Number</label>
-        <input 
-          type="text" 
-          placeholder="Enter Identification Number" 
-          className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+        <label className="block text-sm font-medium text-gray-700 mb-2">Identification Number <span className="text-red-500">*</span></label>
+        <input
+          type="text"
+          placeholder="Enter Identification Number"
+          className={`w-full border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${attempted && !idNumber ? 'border-red-400' : 'border-gray-200'}`}
           value={idNumber}
           onChange={(e) => setIdNumber(e.target.value)}
         />
+        {attempted && !idNumber && <p className="text-xs text-red-500 mt-1">Identification number is required</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Identification</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Identification <span className="text-red-500">*</span></label>
         <div className="relative">
-          <select 
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          <select
+            className={`w-full border rounded-lg px-4 py-3 text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${attempted && !idType ? 'border-red-400' : 'border-gray-200'}`}
             value={idType}
             onChange={(e) => setIdType(e.target.value)}
           >
@@ -64,12 +67,13 @@ export default function StepIDVerification() {
           </select>
           <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
+        {attempted && !idType && <p className="text-xs text-red-500 mt-1">Please select a means of identification</p>}
       </div>
 
       {/* Upload Zone */}
       {!fileName ? (
-        <div 
-          className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors"
+        <div
+          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors ${attempted && !fileName ? 'border-red-300 bg-red-50/30' : 'border-gray-300'}`}
           onClick={() => fileInputRef.current?.click()}
         >
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm mb-3">
@@ -106,15 +110,12 @@ export default function StepIDVerification() {
         </div>
       )}
 
+      {attempted && !fileName && <p className="text-xs text-red-500 -mt-4">Please upload an identification document</p>}
+
       <div className="pt-4 flex justify-end">
-        <button 
+        <button
           onClick={handleNext}
-          disabled={!idNumber || !idType || !fileName}
-          className={`font-medium py-3 px-8 rounded-lg transition-colors ${
-            (idNumber && idType && fileName) 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-blue-300 text-white cursor-not-allowed'
-          }`}
+          className="font-medium py-3 px-8 rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700"
         >
           Proceed
         </button>

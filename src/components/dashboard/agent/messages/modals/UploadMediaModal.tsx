@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Plus, Smile, Play, Video } from 'lucide-react';
 import { useMessagesStore } from '@/lib/store/useMessagesStore';
+import type { StagedFile } from '@/lib/store/useMessagesStore';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function UploadMediaModal() {
   const { clearUploadState, sendMessageMock, activeChatId, stagedFiles, setStagedFiles } = useMessagesStore();
+  useEscapeKey(clearUploadState);
   const [caption, setCaption] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   // Mock initial state if none exists yet
-  const mockMediaFiles = stagedFiles.length > 0 ? stagedFiles : [
+  const mockMediaFiles: StagedFile[] = stagedFiles.length > 0 ? stagedFiles : [
     { url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80', name: 'front_view.jpg', sizeMb: 2.1, format: 'jpg' },
     { url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80', name: 'pool_view.jpg', sizeMb: 1.8, format: 'jpg' },
     { url: 'https://images.unsplash.com/photo-1600607687920-4e2a09be15f1?auto=format&fit=crop&q=80', name: 'interior.jpg', sizeMb: 2.5, format: 'jpg' },
@@ -19,7 +22,7 @@ export default function UploadMediaModal() {
   /* Ensure we have set the files up in state if not done yet */
   useEffect(() => {
     if (stagedFiles.length === 0) {
-      setStagedFiles(mockMediaFiles as any);
+      setStagedFiles(mockMediaFiles);
     }
   }, [stagedFiles.length, setStagedFiles]); // Ignore mockMediaFiles for stable dependency
 
@@ -27,7 +30,8 @@ export default function UploadMediaModal() {
     if (!activeChatId) return;
     const isVideo = mockMediaFiles[selectedIdx]?.isVideo;
     const type = isVideo ? 'video' : 'image_grid';
-    sendMessageMock(activeChatId, caption, type, mockMediaFiles as any);
+    const filePayloads = mockMediaFiles.map(({ url, name, sizeMb, format, pages }) => ({ url, name, sizeMb, format, pages }));
+    sendMessageMock(activeChatId, caption, type, filePayloads);
   };
 
   const selectedFile = mockMediaFiles[selectedIdx];

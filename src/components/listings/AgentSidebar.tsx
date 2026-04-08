@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ interface AgentSidebarProps {
 export default function AgentSidebar({ property, basePath }: AgentSidebarProps) {
   const router = useRouter();
   const propId = property.id;
+  const [reported, setReported] = useState(false);
 
   return (
     <aside className="lg:col-span-4">
@@ -43,6 +44,7 @@ export default function AgentSidebar({ property, basePath }: AgentSidebarProps) 
 
           <div className="mt-2 mx-2 space-y-2">
             <button
+              onClick={() => router.push(`${basePath}/${propId}?chat=1`)}
               className="w-full bg-white border border-[#8E98A8] rounded-lg py-2 text-[#8E98A8] text-sm flex items-center justify-center gap-2"
             >
               <Image src="/icons/messages.svg" alt="chat" width={16} height={16} /> Chat Agent
@@ -62,13 +64,19 @@ export default function AgentSidebar({ property, basePath }: AgentSidebarProps) 
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#8E98A8] p-4 text-sm text-gray-600 flex items-center justify-between">
-          <div className="flex ml-2 items-center gap-3 text-red-600">
-            <Image src="/icons/flag.svg" alt="flag" width={20} height={20} />
-            <span className="font-medium text-red-600">Report Listing</span>
+        {reported ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-xs text-green-700 text-center">
+            Report submitted. Our team will review this listing.
           </div>
-          <Image src="/icons/redArrowLeft.svg" alt="arrow" width={16} height={16} className="mr-2" />
-        </div>
+        ) : (
+          <button onClick={() => setReported(true)} className="w-full bg-white rounded-lg border border-[#8E98A8] p-4 text-sm text-gray-600 flex items-center justify-between">
+            <div className="flex ml-2 items-center gap-3 text-red-600">
+              <Image src="/icons/flag.svg" alt="flag" width={20} height={20} />
+              <span className="font-medium text-red-600">Report Listing</span>
+            </div>
+            <Image src="/icons/redArrowLeft.svg" alt="arrow" width={16} height={16} className="mr-2" />
+          </button>
+        )}
       </div>
     </aside>
   );

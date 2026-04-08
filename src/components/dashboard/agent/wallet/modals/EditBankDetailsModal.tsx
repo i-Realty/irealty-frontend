@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function EditBankDetailsModal() {
   const { setActiveModal, fiatDetails, updateFiatDetailsMock, isProcessingAction } = useWalletStore();
+  const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
+  useEscapeKey(closeModal);
 
   const [bankName, setBankName] = useState(fiatDetails.bankName);
   const [accountName, setAccountName] = useState(fiatDetails.accountName);
@@ -14,12 +17,12 @@ export default function EditBankDetailsModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Edit bank details">
        <div className="bg-white w-full h-full md:max-w-md md:h-auto md:max-h-[85vh] md:rounded-3xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
-          
+
           <div className="p-6 md:p-8 flex items-center justify-between z-10 w-full bg-white relative border-b border-gray-100 pb-6">
              <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={() => setActiveModal('withdraw')}
                   className="text-gray-500 hover:text-gray-900 transition-colors"
                 >

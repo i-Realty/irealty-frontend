@@ -1,14 +1,27 @@
 'use client';
 
 import { useCreateProjectStore } from '@/lib/store/useCreateProjectStore';
+import { useDeveloperProjectsStore } from '@/lib/store/useDeveloperProjectsStore';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { CheckCircle2, MapPin } from 'lucide-react';
 
 export default function Step5Review() {
+  const router = useRouter();
   const store = useCreateProjectStore();
+  const { addProjectLocally, updateProjectLocally } = useDeveloperProjectsStore();
 
   const handleSubmit = async () => {
-    await store.submitProject();
+    const wasEditMode = store.isEditMode;
+    const project = await store.submitProject();
+    if (project) {
+      if (wasEditMode) {
+        updateProjectLocally(project);
+      } else {
+        addProjectLocally(project);
+      }
+      router.push('/dashboard/developer/projects');
+    }
   };
 
   const previewImage = store.media[0] || '/images/property-placeholder.jpg';

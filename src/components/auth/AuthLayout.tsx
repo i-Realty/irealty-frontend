@@ -16,7 +16,7 @@ interface AuthLayoutProps {
  */
 export default function AuthLayout({ children, maxWidth = 640 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#F8FAFB] flex justify-center items-center px-4 py-4 sm:py-6">
+    <div className="min-h-screen bg-[#F8FAFB] dark:bg-[#111111] flex justify-center items-center px-4 py-4 sm:py-6">
       <div className="w-full" style={{ maxWidth }}>
         {/* Logo */}
         <div className="flex justify-center mb-4 sm:mb-5">

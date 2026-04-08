@@ -57,7 +57,7 @@ export default function AdminPlatformFees() {
     <div className="flex flex-col gap-8 w-full animate-in slide-in-from-right-4 fade-in duration-300">
       
       <div className="flex flex-col">
-        <h2 className="text-[18px] font-bold text-gray-900 tracking-tight mb-1">Platform Fees</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tracking-tight mb-1">Platform Fees</h2>
         <p className="text-[13px] font-medium text-gray-400">
           Configure the fee percentages applied to transactions across the platform
         </p>
@@ -83,7 +83,7 @@ export default function AdminPlatformFees() {
           return (
             <div
               key={key}
-              className="bg-white border border-gray-200 rounded-2xl md:rounded-[24px] p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all hover:shadow-md"
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl md:rounded-[24px] p-5 md:p-6 shadow-sm dark:shadow-none flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all hover:shadow-md"
             >
               {/* Left: Label & Description */}
               <div className="flex-1 min-w-0">
@@ -91,7 +91,7 @@ export default function AdminPlatformFees() {
                   <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                     <Percent className="w-4 h-4 text-blue-600" />
                   </div>
-                  <h3 className="text-[15px] font-bold text-gray-900">{meta.label}</h3>
+                  <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{meta.label}</h3>
                 </div>
                 <p className="text-[12px] font-medium text-gray-400 ml-10">
                   {meta.description}
@@ -111,7 +111,7 @@ export default function AdminPlatformFees() {
                       onChange={(e) =>
                         updatePlatformFees({ [key]: e.target.value ? Number(e.target.value) : 0 })
                       }
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-[15px] font-bold text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors text-right"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 pr-10 text-[15px] font-bold text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none transition-colors text-right"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[14px]">
                       {meta.unit}

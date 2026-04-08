@@ -8,10 +8,12 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { useAuthStore, AuthUser } from '@/lib/store/useAuthStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
+import { useI18n } from '@/lib/i18n';
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore(state => state.login);
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,44 +59,44 @@ export default function LoginPage() {
 
   return (
     <AuthLayout maxWidth={500}>
-      <div className="bg-white rounded-xl p-8 sm:p-10 shadow-sm border border-gray-100">
-        <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
-        <p className="text-gray-500 mb-6">
-          Don&apos;t have an account?{' '}
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-8 sm:p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-700">
+        <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">{t('auth.welcomeBackTitle')}</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">
+          {t('auth.noAccount')}{' '}
           <Link href="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-            Sign up
+            {t('auth.signup')}
           </Link>
         </p>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           {errors.general && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-2">{errors.general}</div>
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg text-sm mb-2">{errors.general}</div>
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Email address</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.emailAddress')}</label>
             <input
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({...errors, email: ''}); }}
-              placeholder="Enter Email Address"
-              className={`px-3 py-2.5 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-blue-200 focus:border-blue-500'} focus:outline-none focus:ring-2 transition-all`}
+              placeholder={t('auth.enterEmail')}
+              className={`px-3 py-2.5 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-gray-700 focus:ring-blue-200 focus:border-blue-500'} focus:outline-none focus:ring-2 transition-all dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500`}
             />
             {errors.email && <span className="text-xs text-red-500 mt-1">{errors.email}</span>}
           </div>
 
           <div className="flex flex-col gap-1" style={{ marginTop: '-4px' }}>
             <PasswordInput
-              label="Password"
+              label={t('auth.password')}
               value={password}
               onChange={(v) => { setPassword(v); if (errors.password) setErrors({...errors, password: ''}); }}
-              placeholder="Enter Password"
+              placeholder={t('auth.enterPassword')}
               error={errors.password}
             />
           </div>
 
           <div className="flex justify-start">
             <Link href="/auth/reset" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-              Forgot Password? Reset it here
+              {t('auth.forgotPasswordReset')}
             </Link>
           </div>
 
@@ -105,22 +107,23 @@ export default function LoginPage() {
               ${canSubmit ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'}
               ${loading ? 'opacity-80' : ''}`}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t('auth.loggingIn') : t('auth.loginButton')}
           </button>
 
           <div className="flex items-center gap-4 my-2">
-            <div className="flex-1 h-px bg-gray-200" />
-            <div className="text-gray-400 text-sm">Or Continue With</div>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <div className="text-gray-400 text-sm">{t('auth.orContinueWith')}</div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
           <button
             type="button"
-            onClick={() => alert("Google OAuth Coming Soon")}
-            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-gray-700"
+            disabled
+            title="Google sign-in is coming soon"
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60"
           >
             <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-            Continue with Google
+            {t('auth.continueWithGoogle')}
           </button>
         </form>
       </div>

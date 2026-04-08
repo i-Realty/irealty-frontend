@@ -22,9 +22,10 @@ export default function Step5Review() {
   const { addPropertyLocally, updatePropertyLocally } = useAgentPropertiesStore();
 
   const handleSubmit = async () => {
+    const wasEditMode = isEditMode;
     const property = await submitProperty();
     if (property) {
-      if (isEditMode) {
+      if (wasEditMode) {
         updatePropertyLocally(property);
       } else {
         addPropertyLocally(property);

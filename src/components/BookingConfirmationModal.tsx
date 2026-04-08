@@ -7,9 +7,13 @@ import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 type Props = {
   onClose?: () => void;
+  /** ISO date string or Date for the tour start. Defaults to current date/time. */
+  tourDate?: string | Date;
+  /** Tour duration in minutes. Defaults to 60. */
+  tourDurationMinutes?: number;
 };
 
-export default function BookingConfirmationModal({ onClose }: Props) {
+export default function BookingConfirmationModal({ onClose, tourDate, tourDurationMinutes = 60 }: Props) {
   const router = useRouter();
   useEscapeKey(() => (onClose ? onClose() : router.back()));
   const params = useParams();
@@ -45,19 +49,31 @@ export default function BookingConfirmationModal({ onClose }: Props) {
             </div>
           </div>
 
-          <div className="mt-6 w-full flex gap-3">
-            <button onClick={() => {
-              const now = new Date();
-              const start = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-              const end = new Date(start.getTime() + 60 * 60 * 1000);
-              const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-              const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Property Tour – i-Realty')}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent('Property tour booked via i-Realty. Check your messages for details.')}`;
-              window.open(url, '_blank');
-            }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
-              <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
-              <span>Add To Calendar</span>
-            </button>
-            <button onClick={() => router.push(`/listings/${id}`)} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm flex items-center justify-center gap-2">
+          <div className="mt-6 w-full flex flex-col gap-3">
+            <div className="flex gap-3">
+              <button onClick={() => {
+                const start = tourDate ? new Date(tourDate) : new Date();
+                const end = new Date(start.getTime() + tourDurationMinutes * 60 * 1000);
+                const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+                const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Property Tour – i-Realty')}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent('Property tour booked via i-Realty. Check your messages for details.')}`;
+                window.open(url, '_blank');
+              }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
+                <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
+                <span>Google Calendar</span>
+              </button>
+              <button onClick={() => {
+                const start = tourDate ? new Date(tourDate) : new Date();
+                const end = new Date(start.getTime() + tourDurationMinutes * 60 * 1000);
+                const startIso = start.toISOString();
+                const endIso = end.toISOString();
+                const url = `https://outlook.office.com/calendar/0/action/compose?subject=${encodeURIComponent('Property Tour – i-Realty')}&startdt=${encodeURIComponent(startIso)}&enddt=${encodeURIComponent(endIso)}&body=${encodeURIComponent('Property tour booked via i-Realty. Check your messages for details.')}`;
+                window.open(url, '_blank');
+              }} className="flex-1 border border-blue-200 rounded-lg py-2 text-sm text-blue-600 flex items-center justify-center gap-2">
+                <Image src="/icons/calender.svg" alt="calendar" width={16} height={16} />
+                <span>Outlook Calendar</span>
+              </button>
+            </div>
+            <button onClick={() => router.push(`/listings/${id}?chat=1`)} className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm flex items-center justify-center gap-2">
               <Image src="/icons/messages2.svg" alt="chat" width={16} height={16} />
               <span>Chat Agent</span>
             </button>

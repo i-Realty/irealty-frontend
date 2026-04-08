@@ -23,12 +23,22 @@ export default function SignupSuccess() {
       return;
     }
 
+    // Map signup store role slug to AuthUser role type
+    const roleMap: Record<string, AuthUser['role']> = {
+      'real-estate-agent': 'Agent',
+      'property-seeker': 'Property Seeker',
+      'developers': 'Developer',
+      'property-owner': 'Landlord',
+      'diaspora-investors': 'Diaspora',
+    };
+    const mappedRole: AuthUser['role'] = roleMap[signupStore.role] ?? 'Agent';
+
     // Persist to actual auth session
     const newUser: AuthUser = {
       id: `user-${Date.now()}`,
       name: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
       email: signupStore.email,
-      role: 'Agent',
+      role: mappedRole,
       displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
       avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
       kycStatus: 'unverified',
@@ -52,13 +62,13 @@ export default function SignupSuccess() {
 
   return (
     <AuthLayout maxWidth={500}>
-      <div className="bg-white rounded-xl p-10 shadow-sm border border-gray-100 flex flex-col items-center">
-        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-700 flex flex-col items-center">
+        <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6">
           <Image src="/icons/successicon.svg" alt="Success" width={32} height={32} />
         </div>
 
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Created!</h3>
-        <p className="text-gray-500 text-center mb-8 px-4">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Profile Created!</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-center mb-8 px-4">
           Your i-Realty account has been successfully created. Welcome aboard, {signupStore.firstName || 'User'}!
         </p>
 

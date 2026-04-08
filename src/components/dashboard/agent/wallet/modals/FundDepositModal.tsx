@@ -1,12 +1,15 @@
+import { useCallback } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
 import { X, Copy, ChevronRight } from 'lucide-react';
-import React from 'react';
+import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function FundDepositModal() {
   const { setActiveModal } = useWalletStore();
+  const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
+  useEscapeKey(closeModal);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Fund deposit">
        <div className="bg-white w-full h-full md:max-w-[500px] md:h-auto md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
           
           {/* Header */}

@@ -2,10 +2,13 @@
 
 import { use, useEffect, useState } from 'react';
 import { useAgentPropertiesStore } from '@/lib/store/useAgentPropertiesStore';
+import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
 import { ArrowLeft, Trash2, Edit3, MapPin, Play, Map, CheckCircle2, FileText, Download, MapPinned } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import MapModal from '@/components/MapModal';
+import CreatePropertyModal from '@/components/dashboard/agent/property-create/CreatePropertyModal';
 
 const DEFAULT_AMENITIES = [
   'Swimming Pool', 'Gym', 'Parking', '24/7 Security',
@@ -31,12 +34,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const router = useRouter();
   const { id } = use(params);
   const { properties, fetchProperties, deleteProperty } = useAgentPropertiesStore();
+  const loadPropertyForEdit = useCreatePropertyStore((s) => s.loadPropertyForEdit);
   
   useEffect(() => {
     if (properties.length === 0) fetchProperties();
   }, [properties.length, fetchProperties]);
 
   const [activeTab, setActiveTab] = useState('Description');
+  const [showMapModal, setShowMapModal] = useState(false);
   const property = properties.find(p => p.id === id);
 
   if (!property) return <div className="p-8">Loading property details...</div>;
@@ -73,7 +78,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         </div>
         
         <div className="flex items-center gap-2">
-           <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+           <button onClick={() => loadPropertyForEdit(property)} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
              <Edit3 className="w-4 h-4" />
            </button>
            <button onClick={handleDelete} className="w-10 h-10 rounded-full border border-red-100 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
@@ -97,7 +102,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
              <button className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors">
                <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span> Virtual Tour
              </button>
-             <button className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors">
+             <button onClick={() => setShowMapModal(true)} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors">
                <Map className="w-4 h-4" /> View On Map
              </button>
            </div>
@@ -246,7 +251,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             )}
          </div>
       </div>
-      
+
+      <CreatePropertyModal />
+
+      {/* Map Modal */}
+      {showMapModal && (
+        <MapModal lat={6.45} lng={3.42} onClose={() => setShowMapModal(false)} />
+      )}
     </div>
   );
 }

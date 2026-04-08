@@ -53,19 +53,19 @@ export default function AdminFinancePage() {
         ].map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+            <div key={card.label} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none">
               <div className={`w-10 h-10 ${card.bg} rounded-full flex items-center justify-center mb-3`}>
                 <Icon className={`w-5 h-5 ${card.color}`} />
               </div>
-              <p className="text-sm text-gray-500 font-medium">{card.label}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{card.label}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{card.value}</p>
             </div>
           );
         })}
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         {([
           { key: 'revenue' as FinanceTab, label: 'Revenue' },
           { key: 'escrow' as FinanceTab, label: 'Escrow' },
@@ -81,8 +81,8 @@ export default function AdminFinancePage() {
       {activeTab === 'revenue' && (
         <div className="space-y-6">
           {/* Chart */}
-          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Trend</h3>
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 shadow-sm dark:shadow-none">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Revenue Trend</h3>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
@@ -97,13 +97,13 @@ export default function AdminFinancePage() {
           </div>
 
           {/* Breakdown Table */}
-          <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">Revenue by Category</h3>
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Revenue by Category</h3>
             </div>
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-gray-500">
+                <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                   <th className="py-3 px-6 font-medium">Category</th>
                   <th className="py-3 px-6 font-medium">Transactions</th>
                   <th className="py-3 px-6 font-medium">Revenue</th>
@@ -112,10 +112,10 @@ export default function AdminFinancePage() {
               </thead>
               <tbody>
                 {revenueBreakdown.map((r) => (
-                  <tr key={r.category} className="border-b border-gray-50">
-                    <td className="py-4 px-6 text-gray-900 font-medium">{r.category}</td>
-                    <td className="py-4 px-6 text-gray-500">{r.count}</td>
-                    <td className="py-4 px-6 text-gray-900 font-medium">₦{r.amount.toLocaleString()}</td>
+                  <tr key={r.category} className="border-b border-gray-50 dark:border-gray-700">
+                    <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">{r.category}</td>
+                    <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{r.count}</td>
+                    <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">₦{r.amount.toLocaleString()}</td>
                     <td className="py-4 px-6 text-blue-600 font-medium">{totalRevenue > 0 ? ((r.amount / totalRevenue) * 100).toFixed(1) : 0}%</td>
                   </tr>
                 ))}
@@ -127,14 +127,14 @@ export default function AdminFinancePage() {
 
       {/* ── Escrow Tab ───────────────────────────────────── */}
       {activeTab === 'escrow' && (
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-gray-100">
-            <h3 className="text-base font-bold text-gray-900">Active Escrow Items</h3>
+        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
+          <div className="p-5 border-b border-gray-100 dark:border-gray-700">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Active Escrow Items</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-gray-500">
+                <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                   <th className="py-3 px-6 font-medium">Transaction</th>
                   <th className="py-3 px-6 font-medium">Parties</th>
                   <th className="py-3 px-6 font-medium">Amount</th>
@@ -147,11 +147,11 @@ export default function AdminFinancePage() {
               <tbody>
                 {escrowItems.map((e) => (
                   <tr key={e.id} className={`border-b border-gray-50 ${e.ageDays > 90 ? 'bg-red-50/30' : ''}`}>
-                    <td className="py-4 px-6 text-gray-900 font-medium">{e.transactionId}</td>
-                    <td className="py-4 px-6 text-gray-600">{e.parties}</td>
-                    <td className="py-4 px-6 text-gray-900 font-medium">₦{e.amount.toLocaleString()}</td>
-                    <td className="py-4 px-6 text-gray-500">{e.dateDeposited}</td>
-                    <td className="py-4 px-6 text-gray-500">{e.expectedRelease}</td>
+                    <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">{e.transactionId}</td>
+                    <td className="py-4 px-6 text-gray-600 dark:text-gray-300">{e.parties}</td>
+                    <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">₦{e.amount.toLocaleString()}</td>
+                    <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{e.dateDeposited}</td>
+                    <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{e.expectedRelease}</td>
                     <td className="py-4 px-6"><span className={`font-medium ${e.ageDays > 60 ? 'text-red-500' : e.ageDays > 30 ? 'text-amber-600' : 'text-gray-600'}`}>{e.ageDays}d</span></td>
                     <td className="py-4 px-6"><span className={`text-sm font-medium ${getEscrowStyle(e.status)}`}>{e.status}</span></td>
                   </tr>
@@ -168,17 +168,17 @@ export default function AdminFinancePage() {
           {/* Filter pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
             {['all', 'Pending', 'Processing', 'Approved', 'Rejected'].map((f) => (
-              <button key={f} onClick={() => setPayoutFilter(f)} className={`whitespace-nowrap px-4 py-2 text-sm rounded-full border font-medium transition-colors ${payoutFilter === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+              <button key={f} onClick={() => setPayoutFilter(f)} className={`whitespace-nowrap px-4 py-2 text-sm rounded-full border font-medium transition-colors ${payoutFilter === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                 {f === 'all' ? 'All' : f}
               </button>
             ))}
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 text-gray-500">
+                  <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                     <th className="py-3 px-6 font-medium">User</th>
                     <th className="py-3 px-6 font-medium">Role</th>
                     <th className="py-3 px-6 font-medium">Amount</th>
@@ -192,14 +192,14 @@ export default function AdminFinancePage() {
                   {filteredPayouts.length === 0 ? (
                     <tr><td colSpan={7} className="py-16 text-center text-gray-400">No payouts found</td></tr>
                   ) : filteredPayouts.map((p) => (
-                    <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-6 text-gray-900 font-medium">{p.userName}</td>
-                      <td className="py-4 px-6 text-gray-500">{p.role}</td>
-                      <td className="py-4 px-6 text-gray-900 font-medium">₦{p.amount.toLocaleString()}</td>
-                      <td className="py-4 px-6 text-gray-600">
+                    <tr key={p.id} className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">{p.userName}</td>
+                      <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{p.role}</td>
+                      <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">₦{p.amount.toLocaleString()}</td>
+                      <td className="py-4 px-6 text-gray-600 dark:text-gray-300">
                         {p.method === 'Bank' ? `${p.bankName} - ${p.accountNumber}` : `${p.cryptoCurrency} - ${p.cryptoAddress}`}
                       </td>
-                      <td className="py-4 px-6 text-gray-500">{p.requestDate}</td>
+                      <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{p.requestDate}</td>
                       <td className="py-4 px-6"><span className={`text-sm font-medium ${getPayoutStyle(p.status)}`}>{p.status}</span></td>
                       <td className="py-4 px-6">
                         {p.status === 'Pending' && (
