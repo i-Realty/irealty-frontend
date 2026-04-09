@@ -1,26 +1,39 @@
 'use client';
 
+import { useState } from 'react';
 import { useSettingsStore, SettingsTab } from '@/lib/store/useSettingsStore';
-import { User, CreditCard, FileText, HelpCircle, type LucideIcon } from 'lucide-react';
+import { User, CreditCard, FileText, HelpCircle, Bell, type LucideIcon } from 'lucide-react';
 import ProfileSettings from '@/components/dashboard/agent/settings/forms/ProfileSettings';
 import PayoutSettings from '@/components/dashboard/agent/settings/forms/PayoutSettings';
 import AccountSettings from '@/components/dashboard/agent/settings/forms/AccountSettings';
 import HelpCenterSettings from '@/components/dashboard/agent/settings/forms/HelpCenterSettings';
+import SeekerNotificationSettings from '@/components/dashboard/seeker/settings/SeekerNotificationSettings';
 import AddAccountModal from '@/components/dashboard/agent/settings/AddAccountModal';
 
-// Seeker settings has 4 tabs — no Subscription Plans or Commissions
-const SEEKER_TABS: { id: SettingsTab; icon: LucideIcon }[] = [
-  { id: 'Profile',     icon: User },
-  { id: 'Payout',      icon: CreditCard },
-  { id: 'Account',     icon: FileText },
-  { id: 'Help Center', icon: HelpCircle },
+type SeekerTab = SettingsTab | 'Notifications';
+
+const SEEKER_TABS: { id: SeekerTab; icon: LucideIcon }[] = [
+  { id: 'Profile',       icon: User },
+  { id: 'Payout',        icon: CreditCard },
+  { id: 'Notifications', icon: Bell },
+  { id: 'Account',       icon: FileText },
+  { id: 'Help Center',   icon: HelpCircle },
 ];
 
 export default function SeekerSettingsPage() {
   const { activeTab, setActiveTab } = useSettingsStore();
+  const [localTab, setLocalTab] = useState<SeekerTab>('Profile');
 
-  // If the store has an agent-only tab active, reset to Profile
-  const validTab = SEEKER_TABS.find((t) => t.id === activeTab) ? activeTab : 'Profile';
+  const validSettingsTab = SEEKER_TABS.find((t) => t.id === activeTab) ? activeTab as SeekerTab : null;
+  const activeLocalTab = validSettingsTab ?? localTab;
+
+  const handleTabChange = (tab: SeekerTab) => {
+    setLocalTab(tab);
+    // Only sync to shared settings store for tabs it knows about
+    if (tab !== 'Notifications') {
+      setActiveTab(tab as SettingsTab);
+    }
+  };
 
   return (
     <div className="w-full min-h-full bg-gray-50/30 md:bg-white flex flex-col p-4 md:p-8 animate-in fade-in duration-300">
@@ -33,12 +46,12 @@ export default function SeekerSettingsPage() {
         <div className="hidden md:flex flex-col w-56 shrink-0 relative border-r border-gray-100 pr-4">
           <div className="sticky top-24 flex flex-col space-y-2">
             {SEEKER_TABS.map((tab) => {
-              const isActive = validTab === tab.id;
+              const isActive = activeLocalTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all font-bold text-[14px] text-left relative ${
                     isActive ? 'bg-blue-50/50 text-blue-600' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
                   }`}
@@ -57,11 +70,11 @@ export default function SeekerSettingsPage() {
         {/* Mobile Horizontal Tabs */}
         <div className="md:hidden w-[calc(100%+2rem)] -ml-4 px-4 overflow-x-auto no-scrollbar border-b border-gray-200 mb-6 flex space-x-6 sticky top-0 bg-gray-50/30 z-10 font-bold backdrop-blur-md">
           {SEEKER_TABS.map((tab) => {
-            const isActive = validTab === tab.id;
+            const isActive = activeLocalTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`pb-3 pt-2 text-[14px] whitespace-nowrap transition-colors relative ${
                   isActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
                 }`}
@@ -75,10 +88,11 @@ export default function SeekerSettingsPage() {
 
         {/* Content */}
         <div className="flex-1 w-full max-w-4xl min-h-[500px]">
-          {validTab === 'Profile'     && <ProfileSettings />}
-          {validTab === 'Payout'      && <PayoutSettings />}
-          {validTab === 'Account'     && <AccountSettings />}
-          {validTab === 'Help Center' && <HelpCenterSettings />}
+          {activeLocalTab === 'Profile'       && <ProfileSettings />}
+          {activeLocalTab === 'Payout'        && <PayoutSettings />}
+          {activeLocalTab === 'Notifications' && <SeekerNotificationSettings />}
+          {activeLocalTab === 'Account'       && <AccountSettings />}
+          {activeLocalTab === 'Help Center'   && <HelpCenterSettings />}
         </div>
       </div>
 

@@ -15,7 +15,21 @@ const STATUS_COLOR: Record<string, string> = {
   Completed: 'bg-blue-500 text-white',
 };
 
-export default function SeekerPropertyCard({ property: p }: { property: SeekerProperty }) {
+interface SeekerPropertyCardProps {
+  property: SeekerProperty;
+  onLeaseDetails?: () => void;
+  onPayRent?: () => void;
+  onViewDetails?: () => void;
+  onContactAgent?: () => void;
+}
+
+export default function SeekerPropertyCard({
+  property: p,
+  onLeaseDetails,
+  onPayRent,
+  onViewDetails,
+  onContactAgent,
+}: SeekerPropertyCardProps) {
   const isRented = p.propertyType === 'Rented';
   const isOwned  = p.propertyType === 'Owned';
 
@@ -73,10 +87,16 @@ export default function SeekerPropertyCard({ property: p }: { property: SeekerPr
               </div>
             </div>
             <div className="flex gap-2 mt-auto">
-              <button className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              <button
+                onClick={onLeaseDetails}
+                className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
                 Lease Details
               </button>
-              <button className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+              <button
+                onClick={onPayRent}
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
                 Pay Rent
               </button>
             </div>
@@ -103,10 +123,16 @@ export default function SeekerPropertyCard({ property: p }: { property: SeekerPr
               </div>
             </div>
             <div className="flex gap-2 mt-auto">
-              <button className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              <button
+                onClick={onViewDetails}
+                className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
                 View Details
               </button>
-              <button className="flex-1 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors">
+              <button
+                onClick={onContactAgent}
+                className="flex-1 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors"
+              >
                 Contact Agent/Seller
               </button>
             </div>

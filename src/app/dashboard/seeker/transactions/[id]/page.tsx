@@ -5,9 +5,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, MessageCircle, Flag, ArrowRight,
-  CheckCircle2, BedDouble, Bath, Maximize2, Download,
+  CheckCircle2, BedDouble, Bath, Maximize2, Download, X,
 } from 'lucide-react';
-import { useSeekerTransactionsStore } from '@/lib/store/useSeekerTransactionsStore';
+import { useSeekerTransactionsStore, SeekerTransactionDetail } from '@/lib/store/useSeekerTransactionsStore';
 import SeekerTransactionTimeline from '@/components/dashboard/seeker/SeekerTransactionTimeline';
 
 // ── Status Badge ───────────────────────────────────────────────────────
@@ -89,6 +89,180 @@ function PropertyCard({ image, tag, name, location, price, beds, baths, sqm }: {
   );
 }
 
+// ── Report / Dispute Modal ─────────────────────────────────────────────
+
+const REPORT_REASONS = [
+  'Non-performance by agent/developer',
+  'Property not as described',
+  'Suspected fraud or scam',
+  'Unauthorized charges',
+  'Other',
+];
+
+function ReportModal({
+  transactionId,
+  onClose,
+}: {
+  transactionId: string;
+  onClose: () => void;
+}) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason) return;
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    setIsSubmitting(false);
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center">
+              <Flag className="w-5 h-5 text-red-500" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">Report Transaction</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {submitted ? (
+          <div className="text-center py-6 space-y-3">
+            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="font-bold text-gray-900 text-lg">Report Submitted</h3>
+            <p className="text-sm text-gray-500">
+              Your report for transaction <span className="font-semibold">{transactionId}</span> has been received.
+              Our team will review it within 24–48 hours.
+            </p>
+            <button onClick={onClose} className="mt-2 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+              Done
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-4">
+              Transaction: <span className="font-semibold text-gray-900">{transactionId}</span>
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">Reason for report</label>
+                <div className="space-y-2">
+                  {REPORT_REASONS.map((r) => (
+                    <label key={r} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="reason"
+                        value={r}
+                        checked={reason === r}
+                        onChange={() => setReason(r)}
+                        className="w-4 h-4 text-blue-600 accent-blue-600"
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{r}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">Additional details</label>
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="Describe the issue..."
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none placeholder:text-gray-300"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!reason || isSubmitting}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Submitting…
+                  </>
+                ) : 'Submit Report'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Receipt generation ─────────────────────────────────────────────────
+
+function downloadReceipt(tx: SeekerTransactionDetail) {
+  const fmt = (n: number) => `₦${n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+  const lines = [
+    '===========================================',
+    '          i-REALTY TRANSACTION RECEIPT     ',
+    '===========================================',
+    '',
+    `Transaction ID  : ${tx.id}`,
+    `Date            : ${tx.date}`,
+    `Status          : ${tx.status}`,
+    '',
+    '--- Property ---',
+    `Name            : ${tx.propertyName}`,
+    `Type            : ${tx.propertyType}`,
+    `Location        : ${tx.propertyLocation}`,
+    `Flow            : ${tx.flow}`,
+    '',
+    '--- Financial Summary ---',
+    `Amount Paid     : ${fmt(tx.amount)}`,
+    `Escrow (held)   : ${fmt(tx.escrowAmount)}`,
+    `i-Realty Fee    : ${fmt(tx.irealtyFee)}`,
+    `Property Price  : ${fmt(tx.propertyPrice)}`,
+    '',
+    '--- Counterpart ---',
+    `Name            : ${tx.clientName}`,
+    `Label           : ${tx.clientLabel}`,
+    `Verified        : ${tx.clientVerified ? 'Yes' : 'No'}`,
+    '',
+    '===========================================',
+    '  Powered by i-Realty Escrow Protection   ',
+    '===========================================',
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `receipt-${tx.id}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ── Page ───────────────────────────────────────────────────────────────
 
 export default function SeekerTransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -103,6 +277,7 @@ export default function SeekerTransactionDetailPage({ params }: { params: Promis
   } = useSeekerTransactionsStore();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchTransactionByIdMock(id);
@@ -162,6 +337,7 @@ export default function SeekerTransactionDetailPage({ params }: { params: Promis
               onApproveMilestone={() => approveMilestoneMock(tx.id)}
               onMakePayment={() => makePaymentMock(tx.id)}
               onSubmitReview={(rating, comment) => submitReviewMock(tx.id, rating, comment)}
+              onOpenDispute={() => setReportOpen(true)}
               isActionLoading={isActionLoading}
             />
           </div>
@@ -183,7 +359,10 @@ export default function SeekerTransactionDetailPage({ params }: { params: Promis
             />
 
             {/* Download Receipt */}
-            <button className="flex items-center justify-between w-full group py-2 px-1">
+            <button
+              onClick={() => downloadReceipt(tx)}
+              className="flex items-center justify-between w-full group py-2 px-1"
+            >
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
                   <Download className="w-4 h-4 text-gray-500" />
@@ -196,7 +375,10 @@ export default function SeekerTransactionDetailPage({ params }: { params: Promis
             </button>
 
             {/* Report Transaction */}
-            <button className="flex items-center justify-between w-full group py-2 px-1">
+            <button
+              onClick={() => setReportOpen(true)}
+              className="flex items-center justify-between w-full group py-2 px-1"
+            >
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                   <Flag className="w-4 h-4 text-red-500" />
@@ -225,6 +407,11 @@ export default function SeekerTransactionDetailPage({ params }: { params: Promis
             sqm={tx.propertySqm}
           />
         </div>
+      )}
+
+      {/* Report / Dispute Modal */}
+      {reportOpen && (
+        <ReportModal transactionId={tx.id} onClose={() => setReportOpen(false)} />
       )}
     </div>
   );

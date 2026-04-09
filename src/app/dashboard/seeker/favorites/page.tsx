@@ -30,10 +30,22 @@ export default function SeekerFavoritesPage() {
     [likedIds]
   );
 
+  // Map tab labels to title keywords (titles follow "N Bed <Type> ..." convention)
+  const CATEGORY_KEYWORD_MAP: Record<CategoryTab, string | null> = {
+    'All': null,
+    'Residential': 'residential',
+    'Commercial': 'commercial',
+    'Plots/Lands': 'plot',
+    'Service Apartments & Short Lets': 'service',
+    'PG/Hostel': 'pg/hostel',
+  };
+
   const filtered = useMemo(() => {
     if (activeCategory === 'All') return likedProperties;
-    // PropertyWithCoords has no category field matching tabs directly, so filter by tag as proxy
-    return likedProperties;
+    const keyword = CATEGORY_KEYWORD_MAP[activeCategory];
+    if (!keyword) return likedProperties;
+    return likedProperties.filter((p) => p.title.toLowerCase().includes(keyword));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [likedProperties, activeCategory]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));

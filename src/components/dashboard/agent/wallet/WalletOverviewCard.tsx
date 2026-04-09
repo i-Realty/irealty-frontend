@@ -1,8 +1,16 @@
+'use client';
+
 import { useWalletStore } from '@/lib/store/useWalletStore';
+import { useRouter, usePathname } from 'next/navigation';
 import { Plus, ArrowDownLeft, Settings } from 'lucide-react';
 
 export default function WalletOverviewCard() {
   const { walletBalance, escrowBalance, setActiveModal } = useWalletStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  const settingsPath = pathname.includes('/agent')
+    ? '/dashboard/agent/settings'
+    : '/dashboard/seeker/settings';
 
   const formatCurrency = (val: number) => {
     return `₦${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -44,8 +52,8 @@ export default function WalletOverviewCard() {
              <ArrowDownLeft className="w-4 h-4" /> Withdraw
           </button>
 
-          <button 
-            onClick={() => console.log('Settings triggered')}
+          <button
+            onClick={() => router.push(settingsPath)}
             className="w-full md:flex-1 bg-white border border-gray-200 font-medium text-gray-400 hover:border-gray-300 hover:text-gray-600 py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-[15px]"
           >
              <Settings className="w-4 h-4" /> Settings

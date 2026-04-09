@@ -45,7 +45,7 @@ interface WalletStore {
   setWithdrawMethod: (method: WithdrawalMethod) => void;
 }
 
-export const useWalletStore = create<WalletStore>((set, get) => ({
+export const useWalletStore = create<WalletStore>((set) => ({
   // Seed Mockup Base Balances
   walletBalance: 25000000.00,
   escrowBalance: 0.00,
@@ -72,30 +72,39 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
 
   fetchLedgerMock: async () => {
     set({ isLoadingLedger: true, error: null });
-    // Simulate network latency
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Seed Mockup Transactions exactly as shown
-    const mockLedger: Transaction[] = [
-      { id: 'tx1', type: 'Deposit', amount: 24000.00, status: 'Completed', date: '15 Dec, 2023' },
-      { id: 'tx2', type: 'Deposit', amount: 24000.00, status: 'Completed', date: '15 Dec, 2023' },
-      { id: 'tx3', type: 'Withdrawal', amount: 24000.00, status: 'Pending', date: '15 Dec, 2023' },
-      { id: 'tx4', type: 'Withdrawal', amount: 24000.00, status: 'Pending', date: '15 Dec, 2023' },
-      { id: 'tx5', type: 'Withdrawal', amount: 24000.00, status: 'Pending', date: '15 Dec, 2023' },
-    ];
-    set({ transactions: mockLedger, isLoadingLedger: false });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const mockLedger: Transaction[] = [
+        { id: 'tx1', type: 'Deposit',    amount: 24000.00, status: 'Completed', date: '15 Dec, 2023' },
+        { id: 'tx2', type: 'Deposit',    amount: 24000.00, status: 'Completed', date: '15 Dec, 2023' },
+        { id: 'tx3', type: 'Withdrawal', amount: 24000.00, status: 'Pending',   date: '15 Dec, 2023' },
+        { id: 'tx4', type: 'Withdrawal', amount: 24000.00, status: 'Pending',   date: '15 Dec, 2023' },
+        { id: 'tx5', type: 'Withdrawal', amount: 24000.00, status: 'Pending',   date: '15 Dec, 2023' },
+      ];
+      set({ transactions: mockLedger, isLoadingLedger: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load ledger', isLoadingLedger: false });
+    }
   },
 
-  processWithdrawalMock: async (amount: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  processWithdrawalMock: async (_amount: number) => {
     set({ isProcessingAction: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    set({ isProcessingAction: false, activeModal: 'withdrawSuccess' });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      set({ isProcessingAction: false, activeModal: 'withdrawSuccess' });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Withdrawal failed', isProcessingAction: false });
+    }
   },
 
   updateFiatDetailsMock: async (details: BankDetailsPayload) => {
     set({ isProcessingAction: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    set({ fiatDetails: details, isProcessingAction: false, activeModal: 'withdraw' }); 
-    // Go "Back" to main withdraw modal after edit
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      set({ fiatDetails: details, isProcessingAction: false, activeModal: 'withdraw' });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Update failed', isProcessingAction: false });
+    }
   }
 }));

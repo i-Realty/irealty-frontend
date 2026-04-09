@@ -2,21 +2,32 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, Smile, Mic, FolderOpen, Image as ImageIcon } from 'lucide-react';
 import { useMessagesStore } from '@/lib/store/useMessagesStore';
 
+const COMMON_EMOJIS = [
+  '😊', '😂', '👍', '❤️', '🙏', '👋',
+  '✅', '🎉', '💬', '🏠', '🔑', '💰',
+  '📋', '✨', '🤝', '😅', '🙌', '💯',
+];
+
 export default function MessageInput() {
   const [text, setText] = useState('');
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
   const { activeChatId, sendMessageMock, isSendingMessage, setUploadModalState } = useMessagesStore();
 
-  // Close attachment menu if clicked outside
+  // Close attachment menu / emoji picker if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowAttachMenu(false);
       }
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSend = () => {
@@ -82,9 +93,29 @@ export default function MessageInput() {
           disabled={isSendingMessage}
         />
         
-        <button className="p-1.5 flex-shrink-0 text-gray-500 hover:text-gray-800 rounded-full transition-colors">
-          <Smile className="w-5 h-5" />
-        </button>
+        <div className="relative" ref={emojiRef}>
+          {showEmojiPicker && (
+            <div className="absolute bottom-9 right-0 bg-white border border-gray-100 shadow-xl rounded-xl p-3 w-52 z-50 animate-in fade-in slide-in-from-bottom-2">
+              <div className="grid grid-cols-6 gap-1">
+                {COMMON_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => { setText((prev) => prev + emoji); setShowEmojiPicker(false); }}
+                    className="w-7 h-7 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            className="p-1.5 flex-shrink-0 text-gray-500 hover:text-gray-800 rounded-full transition-colors"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Mic/Send Button */}

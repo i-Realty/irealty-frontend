@@ -82,7 +82,11 @@ export const useSeekerPropertiesStore = create<SeekerPropertiesState>((set) => (
 
   fetchPropertiesMock: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ properties: mockSeekerProperties, isLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({ properties: mockSeekerProperties, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load properties', isLoading: false });
+    }
   },
 }));

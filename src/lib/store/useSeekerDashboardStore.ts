@@ -26,15 +26,19 @@ export const useSeekerDashboardStore = create<SeekerDashboardState>((set) => ({
 
   fetchDashboardDataMock: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({
-      stats: {
-        savedProperties: 12,
-        activeDeals: 3,
-        closedDeals: 5,
-        upcomingTours: 2,
-      },
-      isLoading: false,
-    });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({
+        stats: {
+          savedProperties: 12,
+          activeDeals: 3,
+          closedDeals: 5,
+          upcomingTours: 2,
+        },
+        isLoading: false,
+      });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load dashboard', isLoading: false });
+    }
   },
 }));

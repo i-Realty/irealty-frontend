@@ -11,6 +11,7 @@ interface Props {
   onApproveMilestone: () => void;
   onMakePayment: () => void;
   onSubmitReview: (rating: number, comment: string) => void;
+  onOpenDispute?: () => void;
   isActionLoading: boolean;
 }
 
@@ -66,6 +67,7 @@ export default function SeekerTransactionTimeline({
   onApproveMilestone,
   onMakePayment,
   onSubmitReview,
+  onOpenDispute,
   isActionLoading,
 }: Props) {
   const [reviewRating, setReviewRating] = useState(0);
@@ -231,7 +233,13 @@ export default function SeekerTransactionTimeline({
                     </p>
                     <p>
                       If you have concerns, raise a dispute directly from this stage by{' '}
-                      <span className="text-blue-600 cursor-pointer underline">Clicking here</span> or by reporting this transaction.
+                      <span
+                        onClick={onOpenDispute}
+                        className="text-blue-600 cursor-pointer underline hover:text-blue-700 transition-colors"
+                      >
+                        Clicking here
+                      </span>{' '}
+                      or by reporting this transaction.
                     </p>
                     <button
                       onClick={onConfirmHandover}

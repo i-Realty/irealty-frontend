@@ -282,18 +282,26 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
 
   fetchTransactionsMock: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ transactions: mockSeekerTransactions, isLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({ transactions: mockSeekerTransactions, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load transactions', isLoading: false });
+    }
   },
 
   fetchTransactionByIdMock: async (id) => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 400));
-    const tx =
-      get().transactions.find((t) => t.id === id) ??
-      mockSeekerTransactions.find((t) => t.id === id) ??
-      null;
-    set({ selectedTransaction: tx, isLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+      const tx =
+        get().transactions.find((t) => t.id === id) ??
+        mockSeekerTransactions.find((t) => t.id === id) ??
+        null;
+      set({ selectedTransaction: tx, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load transaction', isLoading: false });
+    }
   },
 
   confirmInspectionMock: async (id) => {
