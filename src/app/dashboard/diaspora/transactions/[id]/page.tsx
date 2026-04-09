@@ -1,9 +1,11 @@
 'use client';
 
+'use client';
+
 import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, Circle, Diamond, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Diamond, CheckCircle2, MessageCircle } from 'lucide-react';
 import {
   useDiasporaDashboardStore,
   DiasporaTimelineStep,
@@ -245,10 +247,19 @@ export default function DiasporaTransactionDetailPage({ params }: { params: Prom
                   <CheckCircle2 className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex gap-2 w-full">
-                  <button className="flex-1 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                    Chat Client
+                  <button
+                    onClick={() => router.push('/dashboard/diaspora/messages')}
+                    className="flex-1 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <MessageCircle className="w-4 h-4" /> Chat
                   </button>
-                  <button className="flex-1 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={() => {
+                      const msg = encodeURIComponent(`Hi ${tx.repName}! I have a question about transaction ${tx.id}.`);
+                      window.open(`https://wa.me/?text=${msg}`, '_blank');
+                    }}
+                    className="flex-1 border border-green-200 rounded-lg py-2.5 text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"
+                  >
                     WhatsApp
                   </button>
                 </div>

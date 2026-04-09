@@ -127,63 +127,73 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
 
   fetchDashboardDataMock: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({
-      activePlan: {
-        tier: 'Premium',
-        scopeOfService: 'Property search, architectural design, contractor management',
-        amount: '$15,000 (10% of construction cost)',
-        status: 'Active',
-      },
-      invoices: MOCK_INVOICES,
-      payments: MOCK_PAYMENTS,
-      isLoading: false,
-    });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({
+        activePlan: {
+          tier: 'Premium',
+          scopeOfService: 'Property search, architectural design, contractor management',
+          amount: '$15,000 (10% of construction cost)',
+          status: 'Active',
+        },
+        invoices: MOCK_INVOICES,
+        payments: MOCK_PAYMENTS,
+        isLoading: false,
+      });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load dashboard', isLoading: false });
+    }
   },
 
   fetchTransactionByIdMock: async (id) => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 400));
-
-    const payments = get().payments.length > 0 ? get().payments : MOCK_PAYMENTS;
-    const payment = payments.find((p) => p.id === id);
-    const activeStep = payment?.status === 'Completed' ? 7 : payment?.status === 'In-progress' ? 2 : 1;
-
-    set({
-      selectedTransaction: {
-        id: id,
-        status: payment?.status ?? 'Pending',
-        transactionDate: 'December 13, 2024',
-        amount: payment?.amount ?? 625000,
-        serviceType: payment?.serviceType ?? 'Premium Plan',
-        planTier: 'Premium',
-        timeline: buildMockTimeline(activeStep),
-        repName: 'Sarah Homes',
-        repAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
-      },
-      isLoading: false,
-    });
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+      const payments = get().payments.length > 0 ? get().payments : MOCK_PAYMENTS;
+      const payment = payments.find((p) => p.id === id);
+      const activeStep = payment?.status === 'Completed' ? 7 : payment?.status === 'In-progress' ? 2 : 1;
+      set({
+        selectedTransaction: {
+          id,
+          status: payment?.status ?? 'Pending',
+          transactionDate: 'December 13, 2024',
+          amount: payment?.amount ?? 625000,
+          serviceType: payment?.serviceType ?? 'Premium Plan',
+          planTier: 'Premium',
+          timeline: buildMockTimeline(activeStep),
+          repName: 'Sarah Homes',
+          repAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+        },
+        isLoading: false,
+      });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load transaction', isLoading: false });
+    }
   },
 
   advanceTimelineStepMock: async (_txId, stepIndex) => {
     set({ isLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
-    set((s) => {
-      if (!s.selectedTransaction) return { isLoading: false };
-      const timeline = s.selectedTransaction.timeline.map((step, i) => {
-        if (i === stepIndex) return { ...step, status: 'completed' as const };
-        if (i === stepIndex + 1) return { ...step, status: 'active' as const };
-        return step;
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set((s) => {
+        if (!s.selectedTransaction) return { isLoading: false };
+        const timeline = s.selectedTransaction.timeline.map((step, i) => {
+          if (i === stepIndex) return { ...step, status: 'completed' as const };
+          if (i === stepIndex + 1) return { ...step, status: 'active' as const };
+          return step;
+        });
+        const allDone = timeline.every((t) => t.status === 'completed');
+        return {
+          selectedTransaction: {
+            ...s.selectedTransaction,
+            timeline,
+            status: allDone ? 'Completed' : s.selectedTransaction.status,
+          },
+          isLoading: false,
+        };
       });
-      const allDone = timeline.every((t) => t.status === 'completed');
-      return {
-        selectedTransaction: {
-          ...s.selectedTransaction,
-          timeline,
-          status: allDone ? 'Completed' : s.selectedTransaction.status,
-        },
-        isLoading: false,
-      };
-    });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Action failed', isLoading: false });
+    }
   },
 }));

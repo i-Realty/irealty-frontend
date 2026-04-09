@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
@@ -48,10 +48,35 @@ export default function DiasporaTransactionsPage() {
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [amountMin, setAmountMin] = useState('');
+  const [amountMax, setAmountMax] = useState('');
+  const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchDashboardDataMock();
   }, [fetchDashboardDataMock]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setShowFilterPanel(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const applyAmountFilter = <T extends { amountDue?: number; amount?: number }>(list: T[]) => {
+    const min = amountMin ? parseFloat(amountMin) : null;
+    const max = amountMax ? parseFloat(amountMax) : null;
+    return list.filter((item) => {
+      const val = (item as DiasporaInvoice).amountDue ?? (item as DiasporaPayment).amount ?? 0;
+      if (min !== null && val < min) return false;
+      if (max !== null && val > max) return false;
+      return true;
+    });
+  };
 
   // Filter invoices
   const filteredInvoices = useMemo(() => {
@@ -61,8 +86,9 @@ export default function DiasporaTransactionsPage() {
       const q = searchQuery.toLowerCase();
       result = result.filter((i) => i.id.toLowerCase().includes(q) || i.serviceType.toLowerCase().includes(q));
     }
-    return result;
-  }, [invoices, invoiceFilter, searchQuery]);
+    return applyAmountFilter(result) as DiasporaInvoice[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices, invoiceFilter, searchQuery, amountMin, amountMax]);
 
   // Filter payments
   const filteredPayments = useMemo(() => {
@@ -72,8 +98,9 @@ export default function DiasporaTransactionsPage() {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.id.toLowerCase().includes(q) || p.serviceType.toLowerCase().includes(q));
     }
-    return result;
-  }, [payments, paymentFilter, searchQuery]);
+    return applyAmountFilter(result) as DiasporaPayment[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payments, paymentFilter, searchQuery, amountMin, amountMax]);
 
   const activeList = mainTab === 'invoices' ? filteredInvoices : filteredPayments;
   const totalPages = Math.max(1, Math.ceil(activeList.length / ITEMS_PER_PAGE));
@@ -161,9 +188,59 @@ export default function DiasporaTransactionsPage() {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 border border-gray-200 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-            <SlidersHorizontal className="w-4 h-4" /> Filter
-          </button>
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setShowFilterPanel((v) => !v)}
+              className={`flex items-center gap-2 border px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                amountMin || amountMax
+                  ? 'border-blue-400 text-blue-600 bg-blue-50'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" /> Filter
+              {(amountMin || amountMax) && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+            </button>
+            {showFilterPanel && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl p-4 z-20 w-64 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-gray-900">Amount Range</span>
+                  {(amountMin || amountMax) && (
+                    <button onClick={() => { setAmountMin(''); setAmountMax(''); }} className="text-xs text-blue-600 hover:text-blue-700">
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-gray-500 font-medium block mb-1">Min Amount (₦)</label>
+                    <input
+                      type="number"
+                      value={amountMin}
+                      onChange={(e) => { setAmountMin(e.target.value); setCurrentPage(1); }}
+                      placeholder="0"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 font-medium block mb-1">Max Amount (₦)</label>
+                    <input
+                      type="number"
+                      value={amountMax}
+                      onChange={(e) => { setAmountMax(e.target.value); setCurrentPage(1); }}
+                      placeholder="No limit"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowFilterPanel(false)}
+                  className="mt-3 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Invoices Tab ─────────────────────────────────────── */}

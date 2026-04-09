@@ -1,24 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import { useSettingsStore, SettingsTab } from '@/lib/store/useSettingsStore';
-import { User, CreditCard, FileText, HelpCircle, type LucideIcon } from 'lucide-react';
+import { User, CreditCard, FileText, HelpCircle, Globe, type LucideIcon } from 'lucide-react';
 import ProfileSettings from '@/components/dashboard/agent/settings/forms/ProfileSettings';
 import PayoutSettings from '@/components/dashboard/agent/settings/forms/PayoutSettings';
 import AccountSettings from '@/components/dashboard/agent/settings/forms/AccountSettings';
 import HelpCenterSettings from '@/components/dashboard/agent/settings/forms/HelpCenterSettings';
+import DiasporaFXSettings from '@/components/dashboard/diaspora/settings/DiasporaFXSettings';
 import AddAccountModal from '@/components/dashboard/agent/settings/AddAccountModal';
 
-const DIASPORA_TABS: { id: SettingsTab; icon: LucideIcon }[] = [
-  { id: 'Profile',     icon: User },
-  { id: 'Payout',      icon: CreditCard },
-  { id: 'Account',     icon: FileText },
-  { id: 'Help Center', icon: HelpCircle },
+type DiasporaTab = SettingsTab | 'FX & Currency';
+
+const DIASPORA_TABS: { id: DiasporaTab; icon: LucideIcon }[] = [
+  { id: 'Profile',      icon: User },
+  { id: 'Payout',       icon: CreditCard },
+  { id: 'FX & Currency', icon: Globe },
+  { id: 'Account',      icon: FileText },
+  { id: 'Help Center',  icon: HelpCircle },
 ];
 
 export default function DiasporaSettingsPage() {
   const { activeTab, setActiveTab } = useSettingsStore();
+  const [localTab, setLocalTab] = useState<DiasporaTab>('Profile');
 
-  const validTab = DIASPORA_TABS.find((t) => t.id === activeTab) ? activeTab : 'Profile';
+  const validSettingsTab = DIASPORA_TABS.find((t) => t.id === activeTab) ? activeTab as DiasporaTab : null;
+  const activeLocalTab = validSettingsTab ?? localTab;
+
+  const handleTabChange = (tab: DiasporaTab) => {
+    setLocalTab(tab);
+    if (tab !== 'FX & Currency') {
+      setActiveTab(tab as SettingsTab);
+    }
+  };
 
   return (
     <div className="w-full min-h-full bg-gray-50/30 md:bg-white flex flex-col p-4 md:p-8 animate-in fade-in duration-300">
@@ -27,15 +41,16 @@ export default function DiasporaSettingsPage() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-0 md:gap-12 flex-1 relative">
+        {/* Desktop Left Nav */}
         <div className="hidden md:flex flex-col w-56 shrink-0 relative border-r border-gray-100 pr-4">
           <div className="sticky top-24 flex flex-col space-y-2">
             {DIASPORA_TABS.map((tab) => {
-              const isActive = validTab === tab.id;
+              const isActive = activeLocalTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all font-bold text-[14px] text-left relative ${
                     isActive ? 'bg-blue-50/50 text-blue-600' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
                   }`}
@@ -51,13 +66,14 @@ export default function DiasporaSettingsPage() {
           </div>
         </div>
 
+        {/* Mobile Horizontal Tabs */}
         <div className="md:hidden w-[calc(100%+2rem)] -ml-4 px-4 overflow-x-auto no-scrollbar border-b border-gray-200 mb-6 flex space-x-6 sticky top-0 bg-gray-50/30 z-10 font-bold backdrop-blur-md">
           {DIASPORA_TABS.map((tab) => {
-            const isActive = validTab === tab.id;
+            const isActive = activeLocalTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`pb-3 pt-2 text-[14px] whitespace-nowrap transition-colors relative ${
                   isActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
                 }`}
@@ -69,11 +85,13 @@ export default function DiasporaSettingsPage() {
           })}
         </div>
 
+        {/* Content */}
         <div className="flex-1 w-full max-w-4xl min-h-[500px]">
-          {validTab === 'Profile'     && <ProfileSettings />}
-          {validTab === 'Payout'      && <PayoutSettings />}
-          {validTab === 'Account'     && <AccountSettings />}
-          {validTab === 'Help Center' && <HelpCenterSettings />}
+          {activeLocalTab === 'Profile'       && <ProfileSettings />}
+          {activeLocalTab === 'Payout'        && <PayoutSettings />}
+          {activeLocalTab === 'FX & Currency' && <DiasporaFXSettings />}
+          {activeLocalTab === 'Account'       && <AccountSettings />}
+          {activeLocalTab === 'Help Center'   && <HelpCenterSettings />}
         </div>
       </div>
 
