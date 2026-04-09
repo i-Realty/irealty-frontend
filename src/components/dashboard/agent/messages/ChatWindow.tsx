@@ -77,12 +77,20 @@ export default function ChatWindow() {
         </div>
         
         <div className="flex items-center gap-2 md:gap-4 text-gray-500">
-           <button className="p-2 hover:bg-gray-100 hover:text-blue-600 rounded-full transition-colors hidden md:flex">
+           <button
+             onClick={() => alert(`Voice/video calls with ${activeThread.participant.name} coming soon.`)}
+             title="Call (coming soon)"
+             className="p-2 hover:bg-gray-100 hover:text-blue-600 rounded-full transition-colors hidden md:flex"
+           >
              <Phone className="w-5 h-5" />
            </button>
-           
+
            {/* Mobile Call Icon */}
-           <button className="p-2 -mr-1 hover:bg-gray-100 hover:text-blue-600 rounded-full transition-colors md:hidden text-blue-500">
+           <button
+             onClick={() => alert(`Voice/video calls with ${activeThread.participant.name} coming soon.`)}
+             title="Call (coming soon)"
+             className="p-2 -mr-1 hover:bg-gray-100 hover:text-blue-600 rounded-full transition-colors md:hidden text-blue-500"
+           >
              <Phone className="w-5 h-5" />
            </button>
 

@@ -71,7 +71,7 @@ export default function DiasporaTransactionsPage() {
     const min = amountMin ? parseFloat(amountMin) : null;
     const max = amountMax ? parseFloat(amountMax) : null;
     return list.filter((item) => {
-      const val = (item as DiasporaInvoice).amountDue ?? (item as DiasporaPayment).amount ?? 0;
+      const val = item.amountDue ?? item.amount ?? 0;
       if (min !== null && val < min) return false;
       if (max !== null && val > max) return false;
       return true;

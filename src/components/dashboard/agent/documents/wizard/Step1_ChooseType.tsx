@@ -1,8 +1,31 @@
+'use client';
+
+import { useRef, useState } from 'react';
 import { useDocumentsStore } from '@/lib/store/useDocumentsStore';
-import { UploadCloud, FileText, ChevronDown } from 'lucide-react';
+import { UploadCloud, FileText, ChevronDown, Check } from 'lucide-react';
 
 export default function Step1_ChooseType() {
   const { templateType, setTemplateType, setWizardStep } = useDocumentsStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFile = (file: File) => {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowed.includes(file.type)) {
+      alert('Unsupported file type. Please upload PDF, JPG, PNG, or DOC.');
+      return;
+    }
+    setStagedFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
 
   const handleProceed = () => {
     if (templateType) {
@@ -18,13 +41,39 @@ export default function Step1_ChooseType() {
            <h3 className="text-[16px] font-bold text-gray-900 mb-1">Upload Manually</h3>
            <p className="text-[13px] font-medium text-gray-400 mb-6">Upload your own property documents directly. Supported formats: PDF, JPG, PNG, DOC</p>
 
-           <div className="w-full border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-8 flex flex-col items-center justify-center transition-colors shadow-sm bg-gray-50/30 cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-3 group-hover:bg-blue-50 transition-colors">
-                 <UploadCloud className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
-              </div>
-              <p className="text-[14px] font-medium text-gray-900">
-                 Drop your documents here, or <span className="text-blue-600 font-semibold cursor-pointer">click to upload</span>
-              </p>
+           <input
+             ref={fileInputRef}
+             type="file"
+             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+             className="hidden"
+             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+           />
+           <div
+             onClick={() => fileInputRef.current?.click()}
+             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+             onDragLeave={() => setIsDragging(false)}
+             onDrop={handleDrop}
+             className={`w-full border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-colors shadow-sm cursor-pointer group ${
+               isDragging ? 'border-blue-500 bg-blue-50/50' : stagedFile ? 'border-green-400 bg-green-50/30' : 'border-gray-200 hover:border-blue-400 bg-gray-50/30'
+             }`}
+           >
+             <div className={`w-12 h-12 rounded-full shadow-sm border flex items-center justify-center mb-3 transition-colors ${
+               stagedFile ? 'bg-green-50 border-green-100' : 'bg-white border-gray-100 group-hover:bg-blue-50'
+             }`}>
+               {stagedFile
+                 ? <Check className="w-5 h-5 text-green-500" />
+                 : <UploadCloud className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />}
+             </div>
+             {stagedFile ? (
+               <p className="text-[14px] font-medium text-green-700">
+                 {stagedFile.name} <span className="text-green-500">({(stagedFile.size / 1024).toFixed(0)} KB)</span>
+               </p>
+             ) : (
+               <p className="text-[14px] font-medium text-gray-900">
+                 Drop your documents here, or <span className="text-blue-600 font-semibold">click to upload</span>
+               </p>
+             )}
+             <p className="text-[12px] text-gray-400 mt-1">PDF, JPG, PNG, DOC supported</p>
            </div>
 
            <div className="mt-5 w-full flex flex-col">

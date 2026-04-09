@@ -1,12 +1,35 @@
-import { useCallback } from 'react';
+'use client';
+
+import { useCallback, useState } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
-import { X, Copy, ChevronRight } from 'lucide-react';
+import { X, Copy, ChevronRight, Check } from 'lucide-react';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
+
+const ACCOUNT_NUMBER = '12222223321';
 
 export default function FundDepositModal() {
   const { setActiveModal } = useWalletStore();
   const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
   useEscapeKey(closeModal);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(ACCOUNT_NUMBER);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for browsers without clipboard API
+      const el = document.createElement('textarea');
+      el.value = ACCOUNT_NUMBER;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Fund deposit">
@@ -42,9 +65,12 @@ export default function FundDepositModal() {
                 <div className="flex flex-col gap-1">
                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest">Account number</span>
                    <div className="flex items-center justify-between">
-                       <p className="text-[14px] font-bold text-gray-900 tracking-wide">12222223321</p>
-                       <button className="text-blue-600 font-bold text-[13px] flex items-center gap-1.5 hover:text-blue-800 transition-colors">
-                          <Copy className="w-4 h-4" /> Copy
+                       <p className="text-[14px] font-bold text-gray-900 tracking-wide">{ACCOUNT_NUMBER}</p>
+                       <button
+                         onClick={handleCopy}
+                         className={`font-bold text-[13px] flex items-center gap-1.5 transition-colors ${copied ? 'text-green-600' : 'text-blue-600 hover:text-blue-800'}`}
+                       >
+                          {copied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
                        </button>
                    </div>
                 </div>
@@ -74,11 +100,13 @@ export default function FundDepositModal() {
 
              {/* Gateway Lists */}
              <div className="w-full flex flex-col gap-2 mt-2 border-t border-gray-100 pt-6">
-                 
-                 <button className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group">
+
+                 <button
+                   onClick={() => alert('Flutterwave integration coming soon.')}
+                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
+                 >
                      <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                            {/* Generic symbol matching mockup circular icon */}
                             <span className="text-[#3b82f6] text-[15px] font-black italic tracking-tighter">f</span>
                          </div>
                          <span className="font-bold text-gray-900 text-[14px]">Fund with flutterwave</span>
@@ -86,7 +114,10 @@ export default function FundDepositModal() {
                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
                  </button>
 
-                 <button className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group">
+                 <button
+                   onClick={() => alert('Paystack integration coming soon.')}
+                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
+                 >
                      <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                             <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>

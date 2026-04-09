@@ -226,16 +226,20 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
 
   fetchDashboardDataMock: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({
-      stats: {
-        totalProperties: 6,
-        occupiedUnits: 3,
-        vacantUnits: 2,
-        monthlyIncome: 1650000,
-      },
-      isLoading: false,
-    });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({
+        stats: {
+          totalProperties: 6,
+          occupiedUnits: 3,
+          vacantUnits: 2,
+          monthlyIncome: 1650000,
+        },
+        isLoading: false,
+      });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load dashboard', isLoading: false });
+    }
   },
 
   // Properties
@@ -249,8 +253,13 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
 
   fetchPropertiesMock: async () => {
     set({ propertiesLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ properties: mockProperties, propertiesLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({ properties: mockProperties, propertiesLoading: false });
+    } catch (err) {
+      set({ propertiesLoading: false });
+      console.error('Failed to load properties', err);
+    }
   },
 
   // Transactions
@@ -269,17 +278,27 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
 
   fetchTransactionsMock: async () => {
     set({ transactionsLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ transactions: mockTransactions, transactionsLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      set({ transactions: mockTransactions, transactionsLoading: false });
+    } catch (err) {
+      set({ transactionsLoading: false });
+      console.error('Failed to load transactions', err);
+    }
   },
 
   fetchTransactionByIdMock: async (id) => {
     set({ transactionsLoading: true });
-    await new Promise((r) => setTimeout(r, 400));
-    const tx =
-      get().transactions.find((t) => t.id === id) ??
-      mockTransactions.find((t) => t.id === id) ??
-      null;
-    set({ selectedTransaction: tx, transactionsLoading: false });
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+      const tx =
+        get().transactions.find((t) => t.id === id) ??
+        mockTransactions.find((t) => t.id === id) ??
+        null;
+      set({ selectedTransaction: tx, transactionsLoading: false });
+    } catch (err) {
+      set({ transactionsLoading: false });
+      console.error('Failed to load transaction', err);
+    }
   },
 }));

@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useAgentPropertiesStore, PropertyCategory } from '@/lib/store/useAgentPropertiesStore';
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
@@ -28,6 +30,8 @@ export default function MyPropertiesPage() {
   const { openWizard, loadPropertyForEdit } = useCreatePropertyStore();
   
   const [localSearch, setLocalSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   // Initial fetch
   useEffect(() => {
@@ -36,9 +40,12 @@ export default function MyPropertiesPage() {
 
   // Handle local search sync
   useEffect(() => {
-    const timer = setTimeout(() => setSearchQuery(localSearch), 300);
+    const timer = setTimeout(() => { setSearchQuery(localSearch); setCurrentPage(1); }, 300);
     return () => clearTimeout(timer);
   }, [localSearch, setSearchQuery]);
+
+  // Reset page on tab/filter change
+  useEffect(() => { setCurrentPage(1); }, [activeTab, activeFilter]);
 
   // Derived filtered properties
   const filteredProperties = properties.filter(p => {
@@ -47,6 +54,9 @@ export default function MyPropertiesPage() {
     if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase()) && !p.address.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / ITEMS_PER_PAGE));
+  const paginatedProperties = filteredProperties.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6 pb-12 w-full">
@@ -130,7 +140,7 @@ export default function MyPropertiesPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProperties.map(property => (
+            {paginatedProperties.map(property => (
               <AgentPropertyCard 
                 key={property.id} 
                 property={property} 
@@ -149,18 +159,35 @@ export default function MyPropertiesPage() {
             ))}
           </div>
 
-          {/* Dummy Pagination */}
-          <div className="flex items-center justify-between mt-8 border-t border-gray-100 pt-4">
-             <span className="text-sm text-gray-500">Page 1 of 10</span>
-             <div className="flex items-center gap-1">
-                <button className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 cursor-not-allowed text-sm bg-gray-50">&lt;</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md border border-blue-600 bg-blue-50 text-blue-600 text-sm font-medium">1</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">2</button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">3</button>
-                <span className="text-gray-500 mx-1">...</span>
-                <button className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">&gt;</button>
-             </div>
-          </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-8 border-t border-gray-100 pt-4">
+              <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 disabled:opacity-40 text-sm"
+                >&lt;</button>
+                {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium ${
+                      currentPage === page
+                        ? 'border border-blue-600 bg-blue-50 text-blue-600'
+                        : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >{page}</button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 disabled:opacity-40 text-sm"
+                >&gt;</button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

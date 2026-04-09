@@ -15,19 +15,29 @@ const STATUS_COLOR: Record<string, string> = {
   Maintenance: 'bg-red-500 text-white',
 };
 
-export default function LandlordPropertyCard({ property: p }: { property: LandlordProperty }) {
+interface LandlordPropertyCardProps {
+  property: LandlordProperty;
+  onViewDetails?: () => void;
+  onMessageTenant?: () => void;
+  onListProperty?: () => void;
+  onTrackRepairs?: () => void;
+}
+
+export default function LandlordPropertyCard({
+  property: p,
+  onViewDetails,
+  onMessageTenant,
+  onListProperty,
+  onTrackRepairs,
+}: LandlordPropertyCardProps) {
   return (
     <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm flex flex-col">
       {/* Image */}
       <div className="relative h-48 w-full">
         <Image src={p.image} alt={p.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
-
-        {/* Type badge -- top left */}
         <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-800/80 text-white">
           {p.type}
         </span>
-
-        {/* Status badge -- top right */}
         <span className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold rounded-md ${STATUS_COLOR[p.status] ?? 'bg-gray-400 text-white'}`}>
           {p.status}
         </span>
@@ -38,7 +48,6 @@ export default function LandlordPropertyCard({ property: p }: { property: Landlo
         <h3 className="font-bold text-gray-900 text-[15px] mb-0.5">{p.title}</h3>
         <p className="text-gray-400 text-xs mb-3">{p.location}</p>
 
-        {/* Rent & Tenant Info */}
         <div className="bg-blue-50/70 rounded-lg px-3 py-2 mb-3">
           <div className="flex justify-between items-center">
             <span className="text-xs font-semibold text-blue-700">
@@ -53,7 +62,6 @@ export default function LandlordPropertyCard({ property: p }: { property: Landlo
           )}
         </div>
 
-        {/* Details */}
         <div className="space-y-1.5 mb-4 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Monthly Rent</span>
@@ -73,19 +81,31 @@ export default function LandlordPropertyCard({ property: p }: { property: Landlo
 
         {/* Actions */}
         <div className="flex gap-2 mt-auto">
-          <button className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+          <button
+            onClick={onViewDetails}
+            className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
             View Details
           </button>
           {p.status === 'Occupied' ? (
-            <button className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+            <button
+              onClick={onMessageTenant}
+              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
               Message Tenant
             </button>
           ) : p.status === 'Vacant' ? (
-            <button className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+            <button
+              onClick={onListProperty}
+              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
               List Property
             </button>
           ) : (
-            <button className="flex-1 py-2 border border-amber-200 text-amber-600 hover:bg-amber-50 rounded-lg text-sm font-medium transition-colors">
+            <button
+              onClick={onTrackRepairs}
+              className="flex-1 py-2 border border-amber-200 text-amber-600 hover:bg-amber-50 rounded-lg text-sm font-medium transition-colors"
+            >
               Track Repairs
             </button>
           )}

@@ -1,7 +1,60 @@
-import { Info, Check, Hexagon } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { Info, Check, Hexagon, X, Loader2 } from 'lucide-react';
+
+function ConfirmModal({ planName, price, onConfirm, onClose }: { planName: string; price: string; onConfirm: () => void; onClose: () => void }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsProcessing(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    setIsProcessing(false);
+    setDone(true);
+    onConfirm();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900">Confirm Subscription</h2>
+          <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+        </div>
+        {done ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <p className="text-sm text-gray-600">You are now subscribed to the <span className="font-semibold">{planName}</span>.</p>
+            <button onClick={onClose} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Done</button>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-2">You are about to subscribe to:</p>
+            <div className="bg-blue-50/60 rounded-xl p-4 mb-4 text-sm">
+              <p className="font-semibold text-gray-900">{planName}</p>
+              <p className="text-blue-700 font-medium mt-1">{price}/Month</p>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">Payment processing integration coming soon. This is a preview of the subscription flow.</p>
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleConfirm} disabled={isProcessing} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : 'Subscribe'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function SubscriptionSettings() {
-  
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [activePlan, setActivePlan] = useState('free');
+
   const PLANS = [
      {
         id: 'free',
@@ -48,7 +101,10 @@ export default function SubscriptionSettings() {
      }
   ];
 
+  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan);
+
   return (
+    <>
     <div className="flex flex-col gap-6 w-full animate-in slide-in-from-right-4 fade-in duration-300">
        
        <div className="flex flex-col">
@@ -97,17 +153,18 @@ export default function SubscriptionSettings() {
                 </div>
 
                 {/* Action Button */}
-                <button 
+                <button
+                   onClick={() => !plan.isCurrent && activePlan !== plan.id && setSelectedPlan(plan.id)}
                    className={`w-full py-3.5 rounded-xl font-bold text-[14px] transition-colors mb-8 ${
-                      plan.isCurrent 
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                      activePlan === plan.id
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : plan.isPopular
                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                          : 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-600 hover:text-blue-600'
                    }`}
-                   disabled={plan.isCurrent}
+                   disabled={activePlan === plan.id}
                 >
-                   {plan.isCurrent ? 'Current Plan' : 'Subscribe'}
+                   {activePlan === plan.id ? 'Current Plan' : 'Subscribe'}
                 </button>
 
                 {/* Features */}
@@ -126,5 +183,15 @@ export default function SubscriptionSettings() {
        </div>
 
     </div>
+
+    {selectedPlan && selectedPlanData && (
+      <ConfirmModal
+        planName={selectedPlanData.name}
+        price={selectedPlanData.price}
+        onConfirm={() => { setActivePlan(selectedPlan); setSelectedPlan(null); }}
+        onClose={() => setSelectedPlan(null)}
+      />
+    )}
+    </>
   );
 }

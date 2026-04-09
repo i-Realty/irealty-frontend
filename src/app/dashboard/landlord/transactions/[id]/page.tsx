@@ -1,9 +1,11 @@
 'use client';
 
+'use client';
+
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, ArrowRight, Flag, Download,
+  ArrowLeft, ArrowRight, Flag, Download, X, MessageCircle,
 } from 'lucide-react';
 import {
   useLandlordDashboardStore,
@@ -54,7 +56,7 @@ function SummaryCard({ amount, type, status }: {
 
 // ── Tenant Card ────────────────────────────────────────────────────────
 
-function TenantCard({ tenantName }: { tenantName: string }) {
+function TenantCard({ tenantName, onMessage }: { tenantName: string; onMessage: () => void }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 flex flex-col items-center text-center shadow-sm">
       <h4 className="text-sm font-bold text-gray-900 mb-3">Tenant</h4>
@@ -65,10 +67,91 @@ function TenantCard({ tenantName }: { tenantName: string }) {
       </div>
       <p className="text-sm font-semibold text-gray-900 mb-3">{tenantName}</p>
       {tenantName !== '-' && (
-        <button className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-          Message Tenant
+        <button
+          onClick={onMessage}
+          className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <MessageCircle className="w-4 h-4" /> Message Tenant
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Report Modal ───────────────────────────────────────────────────────
+
+const REPORT_REASONS = [
+  'Payment not received',
+  'Tenant dispute',
+  'Property damage',
+  'Unauthorized charges',
+  'Other',
+];
+
+function ReportModal({ transactionId, onClose }: { transactionId: string; onClose: () => void }) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason) return;
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    setIsSubmitting(false);
+    setDone(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center"><Flag className="w-4 h-4 text-red-500" /></div>
+            <h2 className="text-lg font-bold text-gray-900">Report Transaction</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+        </div>
+        {done ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h3 className="font-bold text-gray-900">Report Submitted</h3>
+            <p className="text-sm text-gray-500">Your report for <span className="font-semibold">{transactionId}</span> has been received and will be reviewed within 24–48 hours.</p>
+            <button onClick={onClose} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Done</button>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-4">Transaction: <span className="font-semibold text-gray-900">{transactionId}</span></p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">Reason</label>
+                <div className="space-y-2">
+                  {REPORT_REASONS.map((r) => (
+                    <label key={r} className="flex items-center gap-3 cursor-pointer">
+                      <input type="radio" name="reason" value={r} checked={reason === r} onChange={() => setReason(r)} className="accent-blue-600 w-4 h-4" />
+                      <span className="text-sm text-gray-700">{r}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">Additional details</label>
+                <textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Describe the issue..." rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+              <button onClick={handleSubmit} disabled={!reason || isSubmitting}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                {isSubmitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting…</> : 'Submit Report'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -168,11 +251,44 @@ export default function LandlordTransactionDetailPage({ params }: { params: Prom
   } = useLandlordDashboardStore();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchTransactionByIdMock(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handleDownloadReceipt = () => {
+    const fmt = (n: number) => `₦${n.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+    const lines = [
+      '===========================================',
+      '          i-REALTY TRANSACTION RECEIPT     ',
+      '===========================================',
+      '',
+      `Transaction ID  : ${tx?.id ?? ''}`,
+      `Date            : ${tx?.date ?? ''}`,
+      `Status          : ${tx?.status ?? ''}`,
+      '',
+      '--- Transaction Details ---',
+      `Property        : ${tx?.propertyName ?? ''}`,
+      `Tenant          : ${tx?.tenantName ?? ''}`,
+      `Type            : ${tx?.type ?? ''}`,
+      `Amount          : ${fmt(tx?.amount ?? 0)}`,
+      '',
+      '===========================================',
+      '  Powered by i-Realty Escrow Protection   ',
+      '===========================================',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `receipt-${tx?.id ?? 'landlord'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   if (transactionsLoading || !tx) {
     return (
@@ -229,10 +345,10 @@ export default function LandlordTransactionDetailPage({ params }: { params: Prom
               status={tx.status}
             />
 
-            <TenantCard tenantName={tx.tenantName} />
+            <TenantCard tenantName={tx.tenantName} onMessage={() => router.push('/dashboard/landlord/messages')} />
 
             {/* Download Receipt */}
-            <button className="flex items-center justify-between w-full group py-2 px-1">
+            <button onClick={handleDownloadReceipt} className="flex items-center justify-between w-full group py-2 px-1">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
                   <Download className="w-4 h-4 text-gray-500" />
@@ -245,7 +361,7 @@ export default function LandlordTransactionDetailPage({ params }: { params: Prom
             </button>
 
             {/* Report Transaction */}
-            <button className="flex items-center justify-between w-full group py-2 px-1">
+            <button onClick={() => setReportOpen(true)} className="flex items-center justify-between w-full group py-2 px-1">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                   <Flag className="w-4 h-4 text-red-500" />
@@ -284,6 +400,8 @@ export default function LandlordTransactionDetailPage({ params }: { params: Prom
           </div>
         </div>
       )}
+
+      {reportOpen && <ReportModal transactionId={tx.id} onClose={() => setReportOpen(false)} />}
     </div>
   );
 }
