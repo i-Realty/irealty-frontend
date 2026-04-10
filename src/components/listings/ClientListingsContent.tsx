@@ -150,6 +150,11 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
 
   const ITEMS_PER_PAGE = 6;
   const totalPages = Math.max(1, Math.ceil(filteredProperties.length / ITEMS_PER_PAGE));
+
+  const goToPage = (n: number) => {
+    setPage(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   
   useEffect(() => {
     if (page > totalPages) setPage(1);
@@ -326,19 +331,19 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
               {/* Page-number buttons — hidden on mobile to prevent overflow */}
               <div className="hidden sm:flex items-center gap-1 flex-wrap">
                 {Array.from({ length: totalPages }).map((_, i) => i + 1).map((n) => (
-                  <button key={n} onClick={() => setPage(n)}
+                  <button key={n} onClick={() => goToPage(n)}
                     className={`w-8 h-8 flex items-center justify-center text-sm rounded ${page === n ? "border border-blue-200 text-blue-700 bg-white" : "bg-white border text-gray-500 hover:text-gray-700"}`}>
                     {n}
                   </button>
                 ))}
               </div>
               <div className="flex items-center bg-blue-600 text-white rounded-full overflow-hidden shrink-0">
-                <button onClick={() => setPage(Math.max(1, page - 1))} aria-label="Previous page" className="px-3 py-2 flex items-center">
+                <button onClick={() => goToPage(Math.max(1, page - 1))} aria-label="Previous page" className="px-3 py-2 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <button onClick={() => setPage(Math.min(totalPages, page + 1))} aria-label="Next page" className="px-3 py-2 flex items-center">
+                <button onClick={() => goToPage(Math.min(totalPages, page + 1))} aria-label="Next page" className="px-3 py-2 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
