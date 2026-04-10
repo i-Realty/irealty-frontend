@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type UserRole = 'Agent' | 'Property Seeker' | 'Developer' | 'Landlord' | 'Diaspora' | 'Admin';
+export type AccountStatus = 'active' | 'suspended' | 'deactivated';
 
 export interface AuthUser {
   id: string;
@@ -11,6 +12,7 @@ export interface AuthUser {
   displayName: string;
   avatarUrl: string;
   kycStatus: 'unverified' | 'in-progress' | 'verified';
+  accountStatus: AccountStatus;
 }
 
 interface AuthState {
@@ -25,15 +27,23 @@ interface AuthState {
    * Clears auth state and removes the session cookie.
    */
   logout: () => void;
-  /** Update specific user fields (e.g. after profile save). */
+  /** Update specific user fields (e.g. after profile save or KYC approval). */
   updateUser: (data: Partial<AuthUser>) => void;
+  /**
+   * Called by admin when approving KYC for the currently logged-in user
+   * (or via a server-side sync in production).
+   */
+  setKycVerified: () => void;
+  setKycInProgress: () => void;
+  setAccountStatus: (status: AccountStatus) => void;
 }
 
 const SESSION_COOKIE = 'irealty-session';
 
-function setSessionCookie() {
+function setSessionCookie(role: UserRole) {
   if (typeof document === 'undefined') return;
-  document.cookie = `${SESSION_COOKIE}=1; path=/; max-age=604800; SameSite=Lax`;
+  // Encode the role in the cookie so middleware can read it for role-based routing
+  document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax`;
 }
 
 function clearSessionCookie() {
@@ -48,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
 
       login: (user) => {
-        setSessionCookie();
+        setSessionCookie(user.role);
         set({ isLoggedIn: true, user });
       },
 
@@ -61,13 +71,27 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...data } : null,
         })),
+
+      setKycVerified: () =>
+        set((state) => ({
+          user: state.user ? { ...state.user, kycStatus: 'verified' } : null,
+        })),
+
+      setKycInProgress: () =>
+        set((state) => ({
+          user: state.user ? { ...state.user, kycStatus: 'in-progress' } : null,
+        })),
+
+      setAccountStatus: (status) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, accountStatus: status } : null,
+        })),
     }),
     {
       name: 'irealty-auth',
       storage: createJSONStorage(() => localStorage),
-      // Re-set cookie on store rehydration so middleware stays in sync
       onRehydrateStorage: () => (state) => {
-        if (state?.isLoggedIn) setSessionCookie();
+        if (state?.isLoggedIn && state.user) setSessionCookie(state.user.role);
       },
     }
   )

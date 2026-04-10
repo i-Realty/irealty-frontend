@@ -1,17 +1,19 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // ---------------------------------------------------------------------------
-// TYPES: Structured to explicitly mirror expected NestJS API Payloads
+// TYPES
 // ---------------------------------------------------------------------------
-export type CalendarEventType = 'Inspection' | 'Viewing' | 'Meeting' | 'Other';
+export type CalendarEventType = 'Inspection' | 'Viewing' | 'Meeting' | 'Other' | 'Tour';
 
 export type CalendarEvent = {
   id: string;
   type: CalendarEventType;
   clientName: string;
   dateISO: string; // "YYYY-MM-DD"
-  startTime: string; // "1am"
-  endTime: string; // "4 pm"
+  startTime: string;
+  endTime: string;
+  bookingId?: string; // links back to useTourBookingStore
 };
 
 export type AvailabilityPayload = {
@@ -20,20 +22,19 @@ export type AvailabilityPayload = {
 };
 
 interface CalendarStore {
-  // Config state
   events: CalendarEvent[];
   isLoadingEvents: boolean;
   isSavingAvailability: boolean;
   error: string | null;
 
-  // UI State
   currentMonth: Date;
-  selectedDate: Date; // Important for Mobile feed layout
+  selectedDate: Date;
   isAvailabilityModalOpen: boolean;
 
-  // Actions
   fetchEventsMock: (month: Date) => Promise<void>;
   saveAvailabilityMock: (availabilities: AvailabilityPayload[]) => Promise<void>;
+  addTourEvent: (event: CalendarEvent) => void;
+  removeEvent: (id: string) => void;
 
   setCurrentMonth: (date: Date) => void;
   setSelectedDate: (date: Date) => void;
@@ -45,11 +46,7 @@ interface CalendarStore {
 // ---------------------------------------------------------------------------
 const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
   const year = baseMonth.getFullYear();
-  // We use current month strictly for logic tracking, 
-  // ensuring the dummy dates map to valid integers based on the UI.
-  // The mockup showed events on the 14th, 16th, and 21st.
   const month = String(baseMonth.getMonth() + 1).padStart(2, '0');
-  
   return [
     {
       id: 'e1',
@@ -57,7 +54,7 @@ const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
       clientName: 'John Doe',
       dateISO: `${year}-${month}-14`,
       startTime: '1am',
-      endTime: '4 pm'
+      endTime: '4pm',
     },
     {
       id: 'e2',
@@ -65,7 +62,7 @@ const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
       clientName: 'John Doe',
       dateISO: `${year}-${month}-16`,
       startTime: '1am',
-      endTime: '4 pm'
+      endTime: '4pm',
     },
     {
       id: 'e3',
@@ -73,49 +70,80 @@ const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
       clientName: 'John Doe',
       dateISO: `${year}-${month}-21`,
       startTime: '1am',
-      endTime: '4 pm'
-    }
+      endTime: '4pm',
+    },
   ];
 };
 
 // ---------------------------------------------------------------------------
-// EXPORT ZUSTAND HOOK
+// STORE
 // ---------------------------------------------------------------------------
-export const useCalendarStore = create<CalendarStore>((set, get) => ({
-  events: [],
-  isLoadingEvents: false,
-  isSavingAvailability: false,
-  error: null,
+export const useCalendarStore = create<CalendarStore>()(
+  persist(
+    (set) => ({
+      events: [],
+      isLoadingEvents: false,
+      isSavingAvailability: false,
+      error: null,
 
-  currentMonth: new Date(),
-  selectedDate: new Date(),
-  isAvailabilityModalOpen: false,
+      currentMonth: new Date(),
+      selectedDate: new Date(),
+      isAvailabilityModalOpen: false,
 
-  fetchEventsMock: async (month) => {
-    set({ isLoadingEvents: true, error: null });
-    // Simulate network latency
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    try {
-      const activeEvents = generateBaseMockEvents(month);
-      set({ events: activeEvents, isLoadingEvents: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoadingEvents: false });
+      fetchEventsMock: async (month) => {
+        set({ isLoadingEvents: true, error: null });
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        try {
+          const base = generateBaseMockEvents(month);
+          set((s) => {
+            // Merge seed events with any real tour events already stored
+            const tourEvents = s.events.filter((e) => e.type === 'Tour' || e.bookingId);
+            const merged = [...base, ...tourEvents];
+            return { events: merged, isLoadingEvents: false };
+          });
+        } catch (err: unknown) {
+          set({ error: err instanceof Error ? err.message : 'Failed', isLoadingEvents: false });
+        }
+      },
+
+      saveAvailabilityMock: async () => {
+        set({ isSavingAvailability: true, error: null });
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        try {
+          set({ isSavingAvailability: false, isAvailabilityModalOpen: false });
+        } catch (err: unknown) {
+          set({ error: err instanceof Error ? err.message : 'Failed', isSavingAvailability: false });
+        }
+      },
+
+      addTourEvent: (event) => {
+        set((s) => ({
+          events: [...s.events.filter((e) => e.id !== event.id), event],
+        }));
+      },
+
+      removeEvent: (id) => {
+        set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
+      },
+
+      setCurrentMonth: (date) => set({ currentMonth: date }),
+      setSelectedDate: (date) => set({ selectedDate: date }),
+      setAvailabilityModalOpen: (isOpen) => set({ isAvailabilityModalOpen: isOpen }),
+    }),
+    {
+      name: 'irealty-calendar',
+      storage: createJSONStorage(() => localStorage),
+      // Dates are serialised as ISO strings — revive them as Date objects
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          if (typeof state.currentMonth === 'string') {
+            state.currentMonth = new Date(state.currentMonth);
+          }
+          if (typeof state.selectedDate === 'string') {
+            state.selectedDate = new Date(state.selectedDate);
+          }
+        }
+      },
     }
-  },
-
-  saveAvailabilityMock: async (availabilities) => {
-    set({ isSavingAvailability: true, error: null });
-    // Simulate save duration
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    try {
-      // Upon success, mock resolving immediately and close modal
-      set({ isSavingAvailability: false, isAvailabilityModalOpen: false });
-    } catch (err: any) {
-      set({ error: err.message, isSavingAvailability: false });
-    }
-  },
-
-  setCurrentMonth: (date) => set({ currentMonth: date }),
-  setSelectedDate: (date) => set({ selectedDate: date }),
-  setAvailabilityModalOpen: (isOpen) => set({ isAvailabilityModalOpen: isOpen })
-}));
+  )
+);

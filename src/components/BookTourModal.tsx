@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { useTourBookingStore } from '@/lib/store/useTourBookingStore';
+import { usePropertyStore } from '@/lib/store/usePropertyStore';
+import { calculateFees } from '@/lib/utils/calculateFees';
+import type { TourType } from '@/lib/store/useTourBookingStore';
 
 type Props = {
   onClose?: () => void;
@@ -11,9 +15,17 @@ type Props = {
 export default function BookTourModal({ onClose }: Props) {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id ?? '';
-  const [tab, setTab] = useState<'inperson' | 'video'>('inperson');
+  const propertyId = (params?.id as string) ?? '';
+
+  const [tab, setTab] = useState<TourType>('in-person');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  const { stageDraft } = useTourBookingStore();
+  const property = usePropertyStore((s) => s.getPropertyById(propertyId));
+
+  const inspectionFee = 25000;
+  const { fee } = calculateFees(inspectionFee, 'inspection');
+  const netToAgent = inspectionFee - fee;
 
   // Generate 4 upcoming slots starting from the next Sunday
   const slots = React.useMemo(() => {
@@ -42,6 +54,27 @@ export default function BookTourModal({ onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, router]);
 
+  function handleProceed() {
+    if (!selectedSlot) return;
+
+    // Stage the draft so the payment page can finalise booking
+    stageDraft({
+      propertyId,
+      propertyTitle: property?.title ?? `Property ${propertyId}`,
+      propertyImage: property?.media?.[0] ?? '/images/property1.png',
+      propertyLocation: property ? `${property.city}, ${property.state}` : '',
+      agentId: property?.ownerId ?? 'agent-unknown',
+      agentName: property?.ownerName ?? 'Agent',
+      slot: selectedSlot,
+      type: tab,
+      inspectionFee,
+    });
+
+    router.push(`/listings/${propertyId}?bookTourPayment=1`);
+  }
+
+  const propertyImage = property?.media?.[0] ?? '/images/property1.png';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Book a tour">
       {/* Backdrop */}
@@ -57,7 +90,9 @@ export default function BookTourModal({ onClose }: Props) {
           <div>
             <div className="text-xs text-gray-400">Step 1/2</div>
             <h2 className="text-lg font-semibold">Book A Tour</h2>
-            <div className="text-xs text-gray-500 mt-1">Go on a personalized tour of this property by connecting with a local agent who advertises on i-Realty</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Go on a personalized tour of this property by connecting with a local agent who advertises on i-Realty
+            </div>
           </div>
           <button
             aria-label="Close"
@@ -70,12 +105,12 @@ export default function BookTourModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* Tabs (styled as rounded track with elevated white pill for active) */}
+        {/* Tabs */}
         <div className="mt-4 flex gap-3 bg-gray-100 rounded-full p-1.5 items-center">
           <button
-            onClick={() => setTab('inperson')}
-            className={`w-full text-center px-5 py-2 rounded-full text-sm ${tab === 'inperson' ? 'bg-white shadow text-black font-semibold' : 'text-gray-400'}`}
-            aria-pressed={tab === 'inperson'}
+            onClick={() => setTab('in-person')}
+            className={`w-full text-center px-5 py-2 rounded-full text-sm ${tab === 'in-person' ? 'bg-white shadow text-black font-semibold' : 'text-gray-400'}`}
+            aria-pressed={tab === 'in-person'}
           >
             In-person
           </button>
@@ -90,7 +125,7 @@ export default function BookTourModal({ onClose }: Props) {
 
         {/* Slots grid */}
         <div className="mt-4">
-          <div className="text-xs font-medium text-gray-700 mb-2">Select date & time</div>
+          <div className="text-xs font-medium text-gray-700 mb-2">Select date &amp; time</div>
           <div className="grid grid-cols-2 gap-3">
             {slots.map((s) => {
               const active = selectedSlot === s;
@@ -111,13 +146,15 @@ export default function BookTourModal({ onClose }: Props) {
         {/* Image preview & fee */}
         <div className="mt-4">
           <div className="relative w-full h-36 border border-gray-100 rounded-lg overflow-hidden">
-             <Image src="/images/property1.png" alt="preview" fill className="object-cover" />
+            <Image src={propertyImage} alt="preview" fill className="object-cover" />
           </div>
 
           <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
             <div className="text-sm text-gray-600">Inspection Fee</div>
-            <div className="text-lg font-semibold">₦200,000.00</div>
-            <div className="text-xs text-gray-500 mt-1">One-time fee for a professional property tour</div>
+            <div className="text-lg font-semibold">₦{inspectionFee.toLocaleString()}.00</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Platform fee: ₦{fee.toLocaleString()} — Agent receives: ₦{netToAgent.toLocaleString()}
+            </div>
           </div>
         </div>
 
@@ -125,18 +162,13 @@ export default function BookTourModal({ onClose }: Props) {
         <div className="mt-5">
           <button
             disabled={!selectedSlot}
-            onClick={() => {
-              // navigate to same listing route with a query param so the page can render the payment overlay
-              // do NOT call onClose() first — we want a history entry for the bookTour state so Back navigates correctly
-              router.push(`/listings/${id}?bookTourPayment=1`);
-            }}
-            className={`w-full py-2 rounded-lg text-white font-medium ${selectedSlot ? 'bg-blue-600' : 'bg-blue-200 cursor-not-allowed'}`}
+            onClick={handleProceed}
+            className={`w-full py-2 rounded-lg text-white font-medium ${selectedSlot ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-200 cursor-not-allowed'}`}
           >
-            Proceed
+            Proceed to Payment
           </button>
         </div>
       </div>
-      {/* Payment is handled on its own route: /listings/{id}/book-tour/payment */}
     </div>
   );
 }

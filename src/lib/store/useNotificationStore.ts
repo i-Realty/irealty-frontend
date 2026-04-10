@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type NotificationType = 'message' | 'tour' | 'kyc' | 'payment' | 'property' | 'system';
 
@@ -10,6 +11,7 @@ export interface Notification {
   time: string;
   read: boolean;
   href?: string;
+  createdAt: string;
 }
 
 interface NotificationState {
@@ -21,83 +23,87 @@ interface NotificationState {
   closeDropdown: () => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
-  fetchNotificationsMock: () => Promise<void>;
+  /**
+   * Emit a new notification. Call this from any store action that should produce a visible alert.
+   * In production this would be a push from the server; here it writes to the local store.
+   */
+  emit: (type: NotificationType, title: string, description: string, href?: string) => void;
+  /**
+   * Broadcast a notification to all users (admin use). In this frontend-only implementation
+   * it simply emits a system notification into the current session's notification list.
+   */
+  broadcast: (title: string, description: string, href?: string) => void;
+  clearAll: () => void;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'n1',
-    type: 'message',
-    title: 'New message from Marcus Bell',
-    description: 'I need help with my KYC verification...',
-    time: '5m ago',
-    read: false,
-  },
-  {
-    id: 'n2',
-    type: 'tour',
-    title: 'Tour booking confirmed',
-    description: '3-Bed Duplex, Lekki — scheduled for Apr 10',
-    time: '1h ago',
-    read: false,
-  },
-  {
-    id: 'n3',
-    type: 'payment',
-    title: 'Payment received',
-    description: 'Escrow funded: ₦25,000,000 for Ikoyi Mansion',
-    time: '3h ago',
-    read: false,
-  },
-  {
-    id: 'n4',
-    type: 'kyc',
-    title: 'KYC verification approved',
-    description: 'Your identity has been verified successfully',
-    time: '1d ago',
-    read: true,
-  },
-  {
-    id: 'n5',
-    type: 'property',
-    title: 'Listing approved',
-    description: 'Your property "Office Space, Ikeja GRA" is now live',
-    time: '1d ago',
-    read: true,
-  },
-  {
-    id: 'n6',
-    type: 'system',
-    title: 'Platform update',
-    description: 'New escrow protection features are now available',
-    time: '2d ago',
-    read: true,
-  },
-];
+function formatRelativeTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
-export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: [],
-  isOpen: false,
-  isLoading: false,
+export const useNotificationStore = create<NotificationState>()(
+  persist(
+    (set) => ({
+      notifications: [],
+      isOpen: false,
+      isLoading: false,
 
-  toggleDropdown: () => set((s) => ({ isOpen: !s.isOpen })),
-  closeDropdown: () => set({ isOpen: false }),
+      toggleDropdown: () => set((s) => ({ isOpen: !s.isOpen })),
+      closeDropdown: () => set({ isOpen: false }),
 
-  markAsRead: (id) =>
-    set((s) => ({
-      notifications: s.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      ),
-    })),
+      markAsRead: (id) =>
+        set((s) => ({
+          notifications: s.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
+          ),
+        })),
 
-  markAllAsRead: () =>
-    set((s) => ({
-      notifications: s.notifications.map((n) => ({ ...n, read: true })),
-    })),
+      markAllAsRead: () =>
+        set((s) => ({
+          notifications: s.notifications.map((n) => ({ ...n, read: true })),
+        })),
 
-  fetchNotificationsMock: async () => {
-    set({ isLoading: true });
-    await new Promise((r) => setTimeout(r, 300));
-    set({ notifications: MOCK_NOTIFICATIONS, isLoading: false });
-  },
-}));
+      emit: (type, title, description, href) => {
+        const now = new Date().toISOString();
+        const notification: Notification = {
+          id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          type,
+          title,
+          description,
+          time: formatRelativeTime(now),
+          read: false,
+          href,
+          createdAt: now,
+        };
+        set((s) => ({ notifications: [notification, ...s.notifications].slice(0, 50) }));
+      },
+
+      broadcast: (title, description, href) => {
+        const now = new Date().toISOString();
+        const notification: Notification = {
+          id: `broadcast_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          type: 'system',
+          title,
+          description,
+          time: formatRelativeTime(now),
+          read: false,
+          href,
+          createdAt: now,
+        };
+        set((s) => ({ notifications: [notification, ...s.notifications].slice(0, 50) }));
+      },
+
+      clearAll: () => set({ notifications: [] }),
+    }),
+    {
+      name: 'irealty-notifications',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);

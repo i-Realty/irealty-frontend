@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import type { UserRole } from './useAuthStore';
+import { useNotificationStore } from './useNotificationStore';
+import { usePropertyStore } from './usePropertyStore';
+import { useTransactionLedger } from './useTransactionLedger';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -398,6 +401,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
   approveKycMock: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const user = (useAdminDashboardStore.getState().users.find((u) => u.id === userId) ??
+      useAdminDashboardStore.getState().selectedUser) as AdminUser | null;
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId
         ? { ...s.selectedUser, kycStatus: 'verified', kycProgress: 100, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'verified' as const })) }
@@ -405,11 +410,18 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       users: s.users.map((u) => u.id === userId ? { ...u, kycStatus: 'verified' as const } : u),
       isActionLoading: false,
     }));
+    useNotificationStore.getState().emit(
+      'kyc',
+      'KYC verification approved',
+      `Identity verification for ${user?.name ?? 'user'} has been approved. Account is now fully verified.`,
+      '/dashboard/agent/settings'
+    );
   },
 
   rejectKycMock: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId
         ? { ...s.selectedUser, kycStatus: 'unverified', kycProgress: 0, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'rejected' as const })) }
@@ -417,26 +429,46 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       users: s.users.map((u) => u.id === userId ? { ...u, kycStatus: 'unverified' as const } : u),
       isActionLoading: false,
     }));
+    useNotificationStore.getState().emit(
+      'kyc',
+      'KYC verification rejected',
+      `Identity verification for ${user?.name ?? 'user'} was rejected. Please re-submit with correct documents.`,
+      '/dashboard/agent/settings'
+    );
   },
 
   suspendUserMock: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'suspended' } : s.selectedUser,
       users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'suspended' as const } : u),
       isActionLoading: false,
     }));
+    useNotificationStore.getState().emit(
+      'system',
+      'Account suspended',
+      `Account for ${user?.name ?? 'user'} has been suspended by admin.`,
+      '/dashboard/admin/users'
+    );
   },
 
   reactivateUserMock: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'active' } : s.selectedUser,
       users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'active' as const } : u),
       isActionLoading: false,
     }));
+    useNotificationStore.getState().emit(
+      'system',
+      'Account reactivated',
+      `Account for ${user?.name ?? 'user'} has been reactivated.`,
+      '/dashboard/admin/users'
+    );
   },
 
   // ── Properties ──────────────────────────────────────────────────────
@@ -454,6 +486,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Verified' as const } : p),
       isActionLoading: false,
     }));
+    // Also approve in the unified property store
+    usePropertyStore.getState().approveProperty(id);
   },
 
   rejectPropertyMock: async (id) => {
@@ -463,6 +497,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Rejected' as const } : p),
       isActionLoading: false,
     }));
+    usePropertyStore.getState().rejectProperty(id, 'Rejected by admin — please review the listing requirements.');
   },
 
   flagPropertyMock: async (id) => {
@@ -472,6 +507,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Flagged' as const } : p),
       isActionLoading: false,
     }));
+    usePropertyStore.getState().flagProperty(id);
   },
 
   // ── Transactions ────────────────────────────────────────────────────
@@ -508,6 +544,35 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
   fetchFinanceMock: async () => {
     set({ isLoading: true, error: null });
     await new Promise((r) => setTimeout(r, 500));
+    // Merge static payouts with any real payout requests from walletStore
+    const { useWalletStore } = await import('./useWalletStore');
+    const realPayouts = useWalletStore.getState().payoutRequests.map((p, i) => ({
+      id: p.id,
+      userId: `user_${i}`,
+      userName: 'Platform User',
+      role: 'Agent' as UserRole,
+      amount: p.amount,
+      method: (p.method === 'Fiat' ? 'Bank' : 'Crypto') as 'Bank' | 'Crypto',
+      bankName: p.bankDetails?.bankName,
+      accountNumber: p.bankDetails?.accountNumber,
+      cryptoCurrency: p.cryptoDetails?.network,
+      cryptoAddress: p.cryptoDetails?.address,
+      requestDate: p.requestedAt.split('T')[0],
+      status: p.status as PayoutStatus,
+    }));
+
+    // Build escrow from transaction ledger
+    const ledgerEscrow = useTransactionLedger.getState().getEscrowEntries().map((e) => ({
+      id: `ESC_${e.id}`,
+      transactionId: e.id,
+      parties: `${e.payerName} ↔ ${e.payeeName}`,
+      amount: e.amount,
+      dateDeposited: e.createdAt.split('T')[0],
+      expectedRelease: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'Held' as EscrowItemStatus,
+      ageDays: Math.floor((Date.now() - new Date(e.createdAt).getTime()) / 86400000),
+    }));
+
     set({
       revenueBreakdown: [
         { category: 'Inspection Fees', amount: 11250000, count: 450 },
@@ -516,8 +581,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
         { category: 'Developer Fees', amount: 24300000, count: 45 },
         { category: 'Diaspora Services', amount: 18750000, count: 30 },
       ],
-      escrowItems: MOCK_ESCROW,
-      payouts: MOCK_PAYOUTS,
+      escrowItems: ledgerEscrow.length > 0 ? ledgerEscrow : MOCK_ESCROW,
+      payouts: [...realPayouts, ...MOCK_PAYOUTS],
       isLoading: false,
     });
   },
@@ -525,19 +590,37 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
   approvePayoutMock: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
     set((s) => ({
       payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Approved' as const } : p),
       isActionLoading: false,
     }));
+    if (payout) {
+      useNotificationStore.getState().emit(
+        'payment',
+        'Payout approved',
+        `Your withdrawal request of ₦${payout.amount.toLocaleString()} has been approved and is being processed.`,
+        '/dashboard/agent/wallet'
+      );
+    }
   },
 
   rejectPayoutMock: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
+    const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
     set((s) => ({
       payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Rejected' as const } : p),
       isActionLoading: false,
     }));
+    if (payout) {
+      useNotificationStore.getState().emit(
+        'payment',
+        'Payout rejected',
+        `Your withdrawal request of ₦${payout.amount.toLocaleString()} was rejected. Contact support for details.`,
+        '/dashboard/agent/wallet'
+      );
+    }
   },
 
   flagTransactionMock: async (id) => {

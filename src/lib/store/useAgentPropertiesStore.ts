@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { usePropertyStore } from './usePropertyStore';
+import { useAuthStore } from './useAuthStore';
 
 // --- Types ---
 export type PropertyCategory = 'Residential' | 'Commercial' | 'Plots/Lands' | 'Service Apartments & Short Lets' | 'PG/Hostel';
@@ -191,11 +193,36 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   addPropertyLocally: (prop) => {
     set((state) => ({
       properties: [prop, ...state.properties],
-      // Switch back to the newly created property's tab to show it
       activeTab: prop.listingType,
       activeFilter: 'All',
-      page: 1
+      page: 1,
     }));
+
+    // Submit to unified property store for admin moderation
+    const user = useAuthStore.getState().user;
+    usePropertyStore.getState().submitForReview({
+      source: 'agent',
+      ownerId: user?.id ?? prop.id,
+      ownerName: user?.name ?? 'Agent',
+      ownerRole: 'Agent',
+      ownerAvatar: user?.avatarUrl,
+      title: prop.title,
+      description: prop.description,
+      category: prop.propertyCategory as import('./usePropertyStore').PropertyCategory,
+      listingType: prop.listingType,
+      price: prop.price,
+      priceType: prop.priceType,
+      state: prop.state,
+      city: prop.city,
+      address: prop.address,
+      landmarks: prop.landmarks,
+      bedrooms: typeof prop.bedrooms === 'number' ? prop.bedrooms : undefined,
+      bathrooms: typeof prop.bathrooms === 'number' ? prop.bathrooms : undefined,
+      sizeSqm: typeof prop.sizeSqm === 'number' ? prop.sizeSqm : undefined,
+      amenities: prop.amenities,
+      media: prop.media,
+      virtualTourUrl: prop.virtualTourUrl,
+    });
   },
 
   getPropertyById: (id) => {

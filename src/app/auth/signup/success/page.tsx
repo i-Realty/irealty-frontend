@@ -42,6 +42,7 @@ export default function SignupSuccess() {
       displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
       avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
       kycStatus: 'unverified',
+      accountStatus: 'active',
     };
     login(newUser);
 

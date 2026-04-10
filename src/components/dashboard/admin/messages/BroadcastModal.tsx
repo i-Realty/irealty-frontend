@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Send, Users } from 'lucide-react';
 import type { UserRole } from '@/lib/store/useAuthStore';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
+import { useNotificationStore } from '@/lib/store/useNotificationStore';
 
 const ROLE_OPTIONS: { value: 'all' | UserRole; label: string }[] = [
   { value: 'all', label: 'All Users' },
@@ -44,8 +45,14 @@ export default function BroadcastModal({ isOpen, onClose }: Props) {
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) return;
     setIsSending(true);
-    // Mock send
     await new Promise((r) => setTimeout(r, 1200));
+
+    // Emit broadcast notification into the current session
+    useNotificationStore.getState().broadcast(
+      subject.trim(),
+      message.trim()
+    );
+
     setIsSending(false);
     setSent(true);
     setTimeout(() => {

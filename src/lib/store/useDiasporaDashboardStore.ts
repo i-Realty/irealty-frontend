@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { useNotificationStore } from './useNotificationStore';
+import { useTransactionLedger } from './useTransactionLedger';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -12,6 +14,10 @@ export interface DiasporaActivePlan {
   scopeOfService: string;
   amount: string;
   status: 'Active' | 'Completed' | 'Cancelled';
+  /** The agent assigned as Care Representative for this diaspora client */
+  careRepId?: string;
+  careRepName?: string;
+  careRepAvatar?: string;
 }
 
 export interface DiasporaInvoice {
@@ -64,15 +70,18 @@ interface DiasporaDashboardState {
   isLoading: boolean;
   error: string | null;
 
-  // Invoice detail modal
   isInvoiceModalOpen: boolean;
   setInvoiceModalOpen: (open: boolean) => void;
   setSelectedInvoice: (invoice: DiasporaInvoice | null) => void;
 
-  // Actions
   fetchDashboardDataMock: () => Promise<void>;
   fetchTransactionByIdMock: (id: string) => Promise<void>;
   advanceTimelineStepMock: (txId: string, stepIndex: number) => Promise<void>;
+  /**
+   * Diaspora pays a service invoice — creates a ledger entry in escrow and
+   * advances the timeline to step 1 (Funds Held In Escrow).
+   */
+  payInvoiceMock: (invoiceId: string, diasporaUserId: string, diasporaUserName: string) => Promise<void>;
 }
 
 // ── Mock Data ──────────────────────────────────────────────────────────
@@ -135,6 +144,9 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
           scopeOfService: 'Property search, architectural design, contractor management',
           amount: '$15,000 (10% of construction cost)',
           status: 'Active',
+          careRepId: 'USR-001',
+          careRepName: 'Sarah Homes',
+          careRepAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
         },
         invoices: MOCK_INVOICES,
         payments: MOCK_PAYMENTS,
@@ -171,6 +183,60 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
     }
   },
 
+  payInvoiceMock: async (invoiceId, diasporaUserId, diasporaUserName) => {
+    set({ isLoading: true });
+    try {
+      await new Promise((r) => setTimeout(r, 800));
+      const invoice = useDiasporaDashboardStore.getState().invoices.find((i) => i.id === invoiceId);
+      const plan = useDiasporaDashboardStore.getState().activePlan;
+
+      if (invoice) {
+        // Create ledger entry in escrow
+        useTransactionLedger.getState().createEntry({
+          type: 'service',
+          status: 'in_escrow',
+          payerId: diasporaUserId,
+          payerName: diasporaUserName,
+          payeeId: plan?.careRepId ?? 'agent-unknown',
+          payeeName: plan?.careRepName ?? 'Care Representative',
+          amount: invoice.amountDue,
+          platformFee: invoice.amountDue, // Diaspora service fee is 100%
+          netAmount: 0,
+          propertyId: 'diaspora_service',
+          propertyTitle: `Diaspora Service — ${invoice.serviceType}`,
+          notes: invoice.scopeOfService,
+        });
+
+        // Mark invoice as paid
+        set((s) => ({
+          invoices: s.invoices.map((i) =>
+            i.id === invoiceId ? { ...i, status: 'Paid' as InvoiceStatus, escrowStatus: 'Active' as EscrowStatus } : i
+          ),
+          isLoading: false,
+        }));
+
+        useNotificationStore.getState().emit(
+          'payment',
+          'Invoice paid — funds held in escrow',
+          `₦${invoice.amountDue.toLocaleString()} for "${invoice.serviceType}" is held in escrow. Your Care Rep has been notified.`,
+          '/dashboard/diaspora/transactions'
+        );
+
+        // Notify care rep
+        useNotificationStore.getState().emit(
+          'payment',
+          'Diaspora client paid invoice',
+          `${diasporaUserName} paid ₦${invoice.amountDue.toLocaleString()} for "${invoice.serviceType}". Funds are in escrow.`,
+          '/dashboard/agent'
+        );
+      } else {
+        set({ isLoading: false });
+      }
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Payment failed', isLoading: false });
+    }
+  },
+
   advanceTimelineStepMock: async (_txId, stepIndex) => {
     set({ isLoading: true });
     try {
@@ -183,6 +249,18 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
           return step;
         });
         const allDone = timeline.every((t) => t.status === 'completed');
+        const completedStep = s.selectedTransaction.timeline[stepIndex];
+
+        // Notify diaspora client that a step was completed
+        useNotificationStore.getState().emit(
+          'property',
+          `Timeline update: ${completedStep?.label ?? 'Step'} completed`,
+          allDone
+            ? 'All stages complete — your property is ready for handover!'
+            : `Step ${stepIndex + 1} of your acquisition has been completed by your Care Rep.`,
+          '/dashboard/diaspora/transactions'
+        );
+
         return {
           selectedTransaction: {
             ...s.selectedTransaction,
