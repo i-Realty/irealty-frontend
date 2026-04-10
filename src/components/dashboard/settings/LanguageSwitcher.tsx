@@ -21,7 +21,7 @@ export default function LanguageSwitcher() {
             <button
               key={code}
               onClick={() => setLocale(code)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
                 isActive
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'

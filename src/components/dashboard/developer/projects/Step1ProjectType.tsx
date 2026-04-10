@@ -26,7 +26,7 @@ export default function Step1ProjectType() {
             <button
               key={item.type}
               onClick={() => setField('projectType', item.type)}
-              className={`flex flex-col items-center justify-center p-6 border-2 rounded-xl transition-all text-center ${
+              className={`flex flex-col items-center justify-center p-6 border rounded-xl transition-all text-center ${
                 isSelected
                   ? 'border-blue-500 bg-blue-50 shadow-sm'
                   : 'border-gray-200 hover:border-gray-300 bg-white'

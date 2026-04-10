@@ -38,7 +38,7 @@ export default function Step3MediaUpload() {
           <label className="text-sm font-semibold text-gray-800 mb-3 block">Upload Images</label>
           <div 
              onClick={handleMockUpload}
-             className="w-full border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
+             className="w-full border border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
           >
              <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                <UploadCloud className="w-8 h-8 text-blue-500" />

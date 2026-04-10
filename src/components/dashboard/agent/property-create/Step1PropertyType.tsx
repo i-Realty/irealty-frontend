@@ -31,7 +31,7 @@ export default function Step1PropertyType() {
             return (
               <label 
                 key={cat.id} 
-                className={`relative flex flex-col p-4 cursor-pointer rounded-xl border-2 transition-all ${
+                className={`relative flex flex-col p-4 cursor-pointer rounded-xl border transition-all ${
                   isSelected ? 'border-blue-600 bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >

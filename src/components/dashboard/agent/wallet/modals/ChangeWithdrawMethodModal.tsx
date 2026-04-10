@@ -55,7 +55,7 @@ export default function ChangeWithdrawMethodModal() {
                   </div>
 
                   {/* Radio Visual */}
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMethod === 'Fiat' ? 'border-blue-600' : 'border-gray-300'}`}>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedMethod === 'Fiat' ? 'border-blue-600' : 'border-gray-300'}`}>
                       {selectedMethod === 'Fiat' && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full"></div>}
                   </div>
               </button>
@@ -75,7 +75,7 @@ export default function ChangeWithdrawMethodModal() {
                   </div>
 
                   {/* Radio Visual */}
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMethod === 'Crypto' ? 'border-blue-600' : 'border-gray-300'}`}>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedMethod === 'Crypto' ? 'border-blue-600' : 'border-gray-300'}`}>
                       {selectedMethod === 'Crypto' && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full"></div>}
                   </div>
               </button>

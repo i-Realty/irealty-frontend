@@ -41,7 +41,7 @@ export default function CommissionSettings() {
                        onChange={() => updateCommission({ feeType: 'Percentage', value: '' })}
                        className="hidden"
                     />
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
                        commission.feeType === 'Percentage' ? 'border-blue-500 bg-blue-500' : 'border-gray-300 group-hover:border-blue-300'
                     }`}>
                        {commission.feeType === 'Percentage' && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -58,7 +58,7 @@ export default function CommissionSettings() {
                        onChange={() => updateCommission({ feeType: 'Amount', value: '' })}
                        className="hidden"
                     />
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
                        commission.feeType === 'Amount' ? 'border-blue-500 bg-blue-500' : 'border-gray-300 group-hover:border-blue-300'
                     }`}>
                        {commission.feeType === 'Amount' && <div className="w-2 h-2 rounded-full bg-white" />}

@@ -240,7 +240,7 @@ export default function DiasporaTransactionDetailPage({ params }: { params: Prom
                   alt={tx.repName}
                   width={56}
                   height={56}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-gray-100 mb-2"
+                  className="w-14 h-14 rounded-full object-cover border border-gray-100 mb-2"
                 />
                 <div className="flex items-center gap-1 mb-3">
                   <span className="text-sm font-bold text-gray-900">{tx.repName}</span>

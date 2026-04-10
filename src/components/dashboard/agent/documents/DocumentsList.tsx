@@ -119,7 +119,7 @@ export default function DocumentsList() {
            {/* Loading Overlay */}
            {isLoadingList && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                 <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                 <div className="w-6 h-6 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
               </div>
            )}
 

@@ -326,7 +326,7 @@ export default function DiasporaDashboardPage() {
               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop"
               alt="Care Manager"
               width={56} height={56}
-              className="w-14 h-14 rounded-full object-cover border-2 border-gray-100 mb-2"
+              className="w-14 h-14 rounded-full object-cover border border-gray-100 mb-2"
             />
             <div className="flex items-center gap-1 mb-4">
               <span className="text-sm font-bold text-gray-900">i-Realty Team</span>

@@ -95,7 +95,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 shadow-sm dark:shadow-none flex flex-col items-center text-center">
-          <Image src={user.avatarUrl} alt={user.name} width={80} height={80} className="w-20 h-20 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-3" />
+          <Image src={user.avatarUrl} alt={user.name} width={80} height={80} className="w-20 h-20 rounded-full object-cover border border-gray-100 dark:border-gray-700 mb-3" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{user.name}</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
           <div className="flex items-center gap-2 mt-2">

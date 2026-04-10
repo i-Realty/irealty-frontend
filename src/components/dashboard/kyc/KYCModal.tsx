@@ -109,7 +109,7 @@ export default function KYCModal() {
         <div className="flex justify-between items-center p-6 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-xl font-bold text-blue-600 flex items-center gap-2">
             {/* Logo placeholder */}
-            <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full block"></span>
+            <span className="w-6 h-6 border border-blue-600 border-t-transparent rounded-full block"></span>
             i-REALTY
           </h2>
           <button 

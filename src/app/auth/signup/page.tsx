@@ -44,7 +44,7 @@ function SignupStepOneContent() {
             <button
               key={opt.id}
               onClick={() => setRole(opt.id)}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all cursor-pointer ${
                 role === opt.id
                   ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
                   : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
@@ -65,7 +65,7 @@ function SignupStepOneContent() {
           {/* Developers full width */}
           <button
             onClick={() => setRole('developers')}
-            className={`sm:col-span-2 flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all cursor-pointer ${
+            className={`sm:col-span-2 flex flex-col items-center gap-3 p-5 rounded-xl border transition-all cursor-pointer ${
               role === 'developers'
                 ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'

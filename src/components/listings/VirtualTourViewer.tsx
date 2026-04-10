@@ -207,7 +207,7 @@ export default function VirtualTourViewer({ scenes, initialScene = 0, onClose }:
             <button
               key={s.id}
               onClick={(e) => { e.stopPropagation(); navigateToScene(i); }}
-              className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+              className={`w-16 h-12 rounded-lg overflow-hidden border transition-all ${
                 i === sceneIndex ? 'border-blue-500 scale-110' : 'border-white/30 opacity-70 hover:opacity-100'
               }`}
             >

@@ -53,7 +53,7 @@ export default function Step1_ChooseType() {
              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
              onDragLeave={() => setIsDragging(false)}
              onDrop={handleDrop}
-             className={`w-full border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-colors shadow-sm cursor-pointer group ${
+             className={`w-full border border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-colors shadow-sm cursor-pointer group ${
                isDragging ? 'border-blue-500 bg-blue-50/50' : stagedFile ? 'border-green-400 bg-green-50/30' : 'border-gray-200 hover:border-blue-400 bg-gray-50/30'
              }`}
            >

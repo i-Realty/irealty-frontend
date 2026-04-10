@@ -127,7 +127,7 @@ export default function SubscriptionSettings() {
           {PLANS.map((plan) => (
              <div 
                 key={plan.id}
-                className={`relative bg-white rounded-3xl p-6 flex flex-col border-2 transition-transform shadow-sm ${
+                className={`relative bg-white rounded-3xl p-6 flex flex-col border transition-transform shadow-sm ${
                    plan.isPopular ? 'border-blue-600 shadow-blue-100' : 'border-gray-100 hover:border-gray-200'
                 }`}
              >
@@ -160,7 +160,7 @@ export default function SubscriptionSettings() {
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : plan.isPopular
                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                         : 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-600 hover:text-blue-600'
+                         : 'bg-white border border-gray-200 text-gray-900 hover:border-blue-600 hover:text-blue-600'
                    }`}
                    disabled={activePlan === plan.id}
                 >

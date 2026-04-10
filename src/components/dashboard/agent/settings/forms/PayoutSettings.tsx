@@ -30,7 +30,7 @@ export default function PayoutSettings() {
                     : 'border-gray-200 hover:border-blue-200'
                  }`}
               >
-                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                     payout.activeMethod === 'Bank' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
                  }`}>
                     {payout.activeMethod === 'Bank' && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -49,7 +49,7 @@ export default function PayoutSettings() {
                     : 'border-gray-200 hover:border-blue-200'
                  }`}
               >
-                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                     payout.activeMethod === 'Crypto' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
                  }`}>
                     {payout.activeMethod === 'Crypto' && <div className="w-2 h-2 rounded-full bg-white" />}

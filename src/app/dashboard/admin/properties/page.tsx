@@ -205,7 +205,7 @@ export default function AdminPropertiesPage() {
                     type="checkbox"
                     checked={paginated.length > 0 && paginated.every((p) => selectedIds.has(p.id))}
                     onChange={() => toggleSelectAll(paginated.map((p) => p.id))}
-                    className="w-[18px] h-[18px] rounded-md border-2 border-gray-300 dark:border-gray-500 text-blue-600 accent-blue-600 cursor-pointer transition-colors hover:border-blue-400"
+                    className="w-[18px] h-[18px] rounded-md border border-gray-300 dark:border-gray-500 text-blue-600 accent-blue-600 cursor-pointer transition-colors hover:border-blue-400"
                   />
                 </th>
                 <th className="py-3.5 px-6 font-medium">Property</th>
@@ -227,7 +227,7 @@ export default function AdminPropertiesPage() {
                       type="checkbox"
                       checked={selectedIds.has(p.id)}
                       onChange={() => toggleSelect(p.id)}
-                      className="w-[18px] h-[18px] rounded-md border-2 border-gray-300 dark:border-gray-500 text-blue-600 accent-blue-600 cursor-pointer transition-colors hover:border-blue-400"
+                      className="w-[18px] h-[18px] rounded-md border border-gray-300 dark:border-gray-500 text-blue-600 accent-blue-600 cursor-pointer transition-colors hover:border-blue-400"
                     />
                   </td>
                   <td className="py-4 px-6">

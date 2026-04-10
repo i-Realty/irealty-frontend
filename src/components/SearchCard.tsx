@@ -129,9 +129,9 @@ function PropertyTypeRadios({ activeTab, selected, setSelected }: { activeTab: T
                 value={opt.id}
                 checked={isSelected}
                 onChange={() => setSelected(opt.id)}
-                className={`appearance-none w-6 h-6 rounded-full border-2 ${isSelected ? 'border-[#2563EB]' : 'border-[#CBD5E1]'} bg-transparent`}
+                className={`appearance-none w-6 h-6 rounded-full border ${isSelected ? 'border-[#2563EB]' : 'border-[#CBD5E1]'} bg-transparent`}
               />
-                <span className={`absolute w-3 h-3 rounded-full ${selected === opt.id ? (opt.primary ? 'border-2 border-[#2563EB]' : 'border-2 border-[#2563EB]') : 'hidden'}`} style={{ background: selected === opt.id ? '#fff' : 'transparent' }} />
+                <span className={`absolute w-3 h-3 rounded-full ${selected === opt.id ? (opt.primary ? 'border border-[#2563EB]' : 'border border-[#2563EB]') : 'hidden'}`} style={{ background: selected === opt.id ? '#fff' : 'transparent' }} />
             </span>
             <span className={`${isSelected ? 'text-[#2563EB]' : 'text-[#8E98A8] dark:text-gray-400'} font-lato text-[14px] leading-5`}>{opt.label}</span>
           </label>

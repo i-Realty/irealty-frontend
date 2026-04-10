@@ -106,7 +106,7 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
           {/* Party A */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-none flex flex-col items-center text-center">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3">Buyer / Client</p>
-            <Image src={tx.partyAAvatar} alt={tx.partyA} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-2" />
+            <Image src={tx.partyAAvatar} alt={tx.partyA} width={48} height={48} className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-700 mb-2" />
             <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{tx.partyA}</p>
             <button
               onClick={() => router.push('/dashboard/admin/messages')}
@@ -119,7 +119,7 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
           {/* Party B */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-none flex flex-col items-center text-center">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3">Seller / Agent</p>
-            <Image src={tx.partyBAvatar} alt={tx.partyB} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-2" />
+            <Image src={tx.partyBAvatar} alt={tx.partyB} width={48} height={48} className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-700 mb-2" />
             <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{tx.partyB}</p>
             <button
               onClick={() => router.push('/dashboard/admin/messages')}

@@ -50,7 +50,7 @@ export default function InspectionSetupModal({ isOpen, onClose }: InspectionSetu
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-xl font-bold text-blue-600 flex items-center gap-2">
-            <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full block"></span>
+            <span className="w-6 h-6 border border-blue-600 border-t-transparent rounded-full block"></span>
             i-REALTY
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
@@ -81,7 +81,7 @@ export default function InspectionSetupModal({ isOpen, onClose }: InspectionSetu
                        checked={feeType === 'percentage'}
                        onChange={() => setFeeType('percentage')}
                      />
-                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-blue-600 flex items-center justify-center transition-colors">
+                     <div className="w-5 h-5 rounded-full border border-gray-300 peer-checked:border-blue-600 flex items-center justify-center transition-colors">
                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 transition-transform scale-0 peer-checked:scale-100"></div>
                      </div>
                    </div>
@@ -97,7 +97,7 @@ export default function InspectionSetupModal({ isOpen, onClose }: InspectionSetu
                        checked={feeType === 'amount'}
                        onChange={() => setFeeType('amount')}
                      />
-                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-blue-600 flex items-center justify-center transition-colors">
+                     <div className="w-5 h-5 rounded-full border border-gray-300 peer-checked:border-blue-600 flex items-center justify-center transition-colors">
                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 transition-transform scale-0 peer-checked:scale-100"></div>
                      </div>
                    </div>

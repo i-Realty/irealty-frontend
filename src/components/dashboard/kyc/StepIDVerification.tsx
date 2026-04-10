@@ -73,7 +73,7 @@ export default function StepIDVerification() {
       {/* Upload Zone */}
       {!fileName ? (
         <div
-          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors ${attempted && !fileName ? 'border-red-300 bg-red-50/30' : 'border-gray-300'}`}
+          className={`border border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors ${attempted && !fileName ? 'border-red-300 bg-red-50/30' : 'border-gray-300'}`}
           onClick={() => fileInputRef.current?.click()}
         >
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm mb-3">

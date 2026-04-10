@@ -125,7 +125,7 @@ export default function MobileCalendarView() {
           <div className="flex flex-col gap-3 relative min-h-[150px]">
              {isLoadingEvents && (
                <div className="absolute inset-0 bg-gray-50/50 backdrop-blur-[1px] z-10 flex pt-8 justify-center">
-                  <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                </div>
              )}
 

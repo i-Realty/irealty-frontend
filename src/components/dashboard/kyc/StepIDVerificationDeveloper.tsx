@@ -118,7 +118,7 @@ export default function StepIDVerificationDeveloper() {
                 {data.completed ? (
                   <CheckCircle2 className="w-5 h-5 text-blue-600" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
+                  <div className="w-5 h-5 rounded-full border border-gray-200" />
                 )}
                 <span className="text-sm font-medium text-gray-900">
                   {section.label}
@@ -149,7 +149,7 @@ export default function StepIDVerificationDeveloper() {
                 {/* Upload Zone */}
                 {!data.fileName ? (
                   <div
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="border border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => handleFileClick(section.key)}
                   >
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm mb-2">
