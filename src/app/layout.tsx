@@ -32,7 +32,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${lato.variable} font-lato antialiased min-h-screen`}>
+      <body className={`${lato.variable} font-lato antialiased min-h-screen bg-white dark:bg-gray-900`}>
         <ThemeProvider>
           <OfflineIndicator />
           <main className="pt-0">

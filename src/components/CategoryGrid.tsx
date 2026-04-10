@@ -91,12 +91,12 @@ export default function CategoryGrid() {
               >
                 <div className="absolute inset-0">
                   <Image src={cat.image} alt={cat.title} fill className="object-cover w-full h-full" />
-                  <div className="absolute inset-0 bg-black/60 dark:bg-black/20" />
+                  <div className="absolute inset-0 bg-black/60 dark:bg-black/40" />
                 </div>
                 <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div className="text-white text-sm" style={{ fontFamily: 'Lato' }}>{cat.title}</div>
-                    <div className="bg-white text-[#111827] rounded-full px-3 py-1 font-bold text-sm flex-shrink-0" style={{ fontFamily: 'Lato' }}>{cat.count}</div>
+                    <div className="bg-white text-gray-900 rounded-full px-3 py-1 font-bold text-sm flex-shrink-0 shadow-sm" style={{ fontFamily: 'Lato' }}>{cat.count}</div>
                   </div>
                 </div>
               </div>

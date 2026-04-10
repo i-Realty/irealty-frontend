@@ -56,7 +56,7 @@ export default function SearchCard() {
       </div>
 
       {/* Search Input */}
-      <div className="flex flex-row justify-between items-center w-full bg-[#F5F5F5] dark:bg-gray-700 rounded-xl mt-4 px-3 sm:px-4" style={{ minHeight: 56 }}>
+      <div className="flex flex-row justify-between items-center w-full bg-[#F5F5F5] dark:bg-gray-800 rounded-xl mt-4 px-3 sm:px-4 dark:border dark:border-gray-600" style={{ minHeight: 56 }}>
         <div className="flex flex-row items-center gap-2" style={{ flex: 1 }}>
           {/* Location Icon from public folder */}
           <Image src="/icons/locationIcon.svg" alt="Location" width={20} height={20} className="object-contain" />
