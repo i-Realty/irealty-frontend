@@ -69,10 +69,10 @@ export default function CategoryGrid() {
     }
   };
   return (
-    <section className="w-full bg-white py-16">
+    <section className="w-full bg-white dark:bg-gray-900 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1100px] mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-6" style={{ fontFamily: 'Lato' }}>Explore Property by Category</h2>
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 dark:text-white" style={{ fontFamily: 'Lato' }}>Explore Property by Category</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat, i) => (
@@ -91,12 +91,12 @@ export default function CategoryGrid() {
               >
                 <div className="absolute inset-0">
                   <Image src={cat.image} alt={cat.title} fill className="object-cover w-full h-full" />
-                  <div style={{ background: 'rgba(4,12,16,0.6)' }} className="absolute inset-0" />
+                  <div className="absolute inset-0 bg-black/60 dark:bg-black/20" />
                 </div>
                 <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div className="text-white text-sm" style={{ fontFamily: 'Lato' }}>{cat.title}</div>
-                    <div className="bg-white text-[#111827] rounded-full px-3 py-1 font-bold text-sm" style={{ fontFamily: 'Lato' }}>{cat.count}</div>
+                    <div className="bg-white text-[#111827] rounded-full px-3 py-1 font-bold text-sm flex-shrink-0" style={{ fontFamily: 'Lato' }}>{cat.count}</div>
                   </div>
                 </div>
               </div>

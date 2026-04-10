@@ -23,15 +23,15 @@ export default function SearchCard() {
     `flex flex-row justify-center items-center px-4 h-10 gap-2 text-[14px] leading-5 tracking-[0.25px] ${
       activeTab === tab
         ? "border-b-4 border-[#2563EB] font-manrope font-bold text-[#2563EB]"
-        : "font-manrope font-semibold text-[#8E98A8]"
+        : "font-manrope font-semibold text-[#8E98A8] dark:text-gray-400"
     }`;
 
   return (
     <section
-      className="w-full max-w-[572px] bg-white rounded-2xl shadow-lg mx-auto flex flex-col items-center px-4 py-3"
+      className="w-full max-w-[572px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg mx-auto flex flex-col items-center px-4 py-3"
     >
       {/* Tabs */}
-      <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full border-b border-[#F1F1F1]" style={{ minHeight: 52 }}>
+      <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full border-b border-[#F1F1F1] dark:border-gray-700" style={{ minHeight: 52 }}>
         <button
           className={tabClass("buy")}
           aria-pressed={activeTab === "buy"}
@@ -56,7 +56,7 @@ export default function SearchCard() {
       </div>
 
       {/* Search Input */}
-      <div className="flex flex-row justify-between items-center w-full bg-[#F5F5F5] rounded-xl mt-4 px-3 sm:px-4" style={{ minHeight: 56 }}>
+      <div className="flex flex-row justify-between items-center w-full bg-[#F5F5F5] dark:bg-gray-700 rounded-xl mt-4 px-3 sm:px-4" style={{ minHeight: 56 }}>
         <div className="flex flex-row items-center gap-2" style={{ flex: 1 }}>
           {/* Location Icon from public folder */}
           <Image src="/icons/locationIcon.svg" alt="Location" width={20} height={20} className="object-contain" />
@@ -65,7 +65,7 @@ export default function SearchCard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('listings.searchByLocation')}
-            className="text-[#8E98A8] font-lato text-[14px] leading-5 bg-transparent outline-none w-full"
+            className="text-[#8E98A8] dark:text-gray-300 dark:placeholder:text-gray-500 font-lato text-[14px] leading-5 bg-transparent outline-none w-full"
             aria-label="Search by location"
           />
         </div>
@@ -133,7 +133,7 @@ function PropertyTypeRadios({ activeTab, selected, setSelected }: { activeTab: T
               />
                 <span className={`absolute w-3 h-3 rounded-full ${selected === opt.id ? (opt.primary ? 'border-2 border-[#2563EB]' : 'border-2 border-[#2563EB]') : 'hidden'}`} style={{ background: selected === opt.id ? '#fff' : 'transparent' }} />
             </span>
-            <span className={`${isSelected ? 'text-[#2563EB]' : 'text-[#8E98A8]'} font-lato text-[14px] leading-5`}>{opt.label}</span>
+            <span className={`${isSelected ? 'text-[#2563EB]' : 'text-[#8E98A8] dark:text-gray-400'} font-lato text-[14px] leading-5`}>{opt.label}</span>
           </label>
         );
       })}

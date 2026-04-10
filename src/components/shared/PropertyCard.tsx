@@ -32,7 +32,7 @@ export default function PropertyCard({ property: p, href }: Props) {
   const linkHref = href ?? `/listings/${p.id}`;
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] relative">
+    <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm border border-[#F1F1F1] dark:border-gray-700 relative">
       <div className="relative h-[200px] w-full">
         <Image
           src={p.image ?? "/images/property1.png"}
@@ -75,10 +75,10 @@ export default function PropertyCard({ property: p, href }: Props) {
       </div>
 
       <div className="p-4">
-        <div className="font-bold text-sm text-[#090202]">{p.title}</div>
-        <div className="text-xs text-gray-500 mb-2">{p.location}</div>
-        <div className="font-bold text-lg text-[#090202]">{p.price}</div>
-        <div className="text-xs text-gray-500 mt-2">
+        <div className="font-bold text-sm text-[#090202] dark:text-white">{p.title}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{p.location}</div>
+        <div className="font-bold text-lg text-[#090202] dark:text-white">{p.price}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           {p.beds} beds • {p.baths} baths • {p.area}
         </div>
         {p.agent && (

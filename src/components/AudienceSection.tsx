@@ -63,17 +63,17 @@ export default function AudienceSection() {
   const [active, setActive] = useState(0);
 
   return (
-    <section className="w-full bg-white py-12 sm:py-16">
+    <section className="w-full bg-white dark:bg-gray-900 py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1100px] mx-auto">
           {/* Heading block */}
           <div className="flex flex-col items-center justify-center gap-6 text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold" style={{ fontFamily: 'Lato', color: '#090202' }}>Made for Everyone in Real Estate</h2>
-            <p className="text-sm sm:text-base text-[#8E98A8] max-w-2xl">Whether you&apos;re buying, renting, selling, or investing from abroad — we give you the tools and trust you need to succeed.</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white" style={{ fontFamily: 'Lato' }}>Made for Everyone in Real Estate</h2>
+            <p className="text-sm sm:text-base text-[#8E98A8] dark:text-gray-400 max-w-2xl">Whether you&apos;re buying, renting, selling, or investing from abroad — we give you the tools and trust you need to succeed.</p>
           </div>
 
           {/* Tabs - scrollable on small screens */}
-          <div className="mx-auto border-b border-[#F1F1F1] overflow-x-auto">
+          <div className="mx-auto border-b border-[#F1F1F1] dark:border-gray-700 overflow-x-auto">
             <nav className="flex gap-2 sm:gap-4 items-center" style={{ height: 52 }}>
               {tabs.map((t, i) => (
                 <button

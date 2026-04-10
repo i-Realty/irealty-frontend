@@ -10,7 +10,7 @@ export default function AgentDiasporaPromo() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Agent Card */}
           <div
-            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col"
+            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col dark:bg-gray-800"
             style={{ background: "#FFF7ED" }}
             tabIndex={0}
             role="button"
@@ -19,8 +19,8 @@ export default function AgentDiasporaPromo() {
               <div className="mb-3">
                 <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#FDE68A", color: "#B45309", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Agent</span>
               </div>
-              <h3 className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: 'Lato', color: '#090202', marginBottom: 8 }}>Become a Verified Agent. Build Trust, Close Deals.</h3>
-              <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
+              <h3 className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white" style={{ fontFamily: 'Lato', marginBottom: 8 }}>Become a Verified Agent. Build Trust, Close Deals.</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
                 Join i-Realty to access verified clients, manage listings with ease, and grow your real estate business on a trusted platform.
               </p>
               <a href="/auth/signup?role=real-estate-agent" className="inline-block font-semibold mb-4" style={{ color: '#B45309', fontFamily: 'Lato' }}>
@@ -37,7 +37,7 @@ export default function AgentDiasporaPromo() {
 
           {/* Diaspora Investors Card */}
           <div
-            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col"
+            className="w-full rounded-2xl transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#DBEAFE] flex flex-col dark:bg-gray-800"
             style={{ background: "#F3F6FF" }}
             tabIndex={0}
             role="button"
@@ -46,8 +46,8 @@ export default function AgentDiasporaPromo() {
               <div className="mb-3">
                 <span className="uppercase font-bold text-xs px-3 py-1 rounded-full" style={{ background: "#DBEAFE", color: "#2563EB", fontFamily: 'Lato', letterSpacing: '0.08em' }}>Diaspora Investors</span>
               </div>
-              <h3 className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: 'Lato', color: '#090202', marginBottom: 8 }}>Invest From Anywhere, With Confidence</h3>
-              <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
+              <h3 className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white" style={{ fontFamily: 'Lato', marginBottom: 8 }}>Invest From Anywhere, With Confidence</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4" style={{ fontFamily: 'Lato', lineHeight: '1.6' }}>
                 Browse trusted listings, track ROI, and transact securely—wherever you are in the world.
               </p>
               <a href="/auth/signup?role=diaspora-investors" className="inline-block font-semibold mb-4" style={{ color: '#2563EB', fontFamily: 'Lato' }}>

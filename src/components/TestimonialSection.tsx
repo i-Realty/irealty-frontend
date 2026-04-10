@@ -103,11 +103,11 @@ export default function TestimonialSection() {
   };
 
   return (
-    <section className="w-full bg-white py-24">
+    <section className="w-full bg-white dark:bg-gray-900 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight" style={{ fontFamily: 'Lato' }}>Don’t Just Take Our Word For It</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Lato' }}>Don’t Just Take Our Word For It</h2>
             <p className="mt-3 text-sm sm:text-base text-gray-500 mx-auto" style={{ maxWidth: 720 }}>
               From first-time buyers to seasoned agents and diaspora investors — see how i-Realty is transforming real estate experiences across Nigeria and beyond.
             </p>

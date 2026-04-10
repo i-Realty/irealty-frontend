@@ -39,12 +39,12 @@ export default function FAQSection() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section className="w-full bg-white py-24">
+    <section className="w-full bg-white dark:bg-gray-900 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {/* Left: Heading */}
           <div className="md:pr-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight" style={{ fontFamily: 'Lato' }}>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Lato' }}>
               Frequently Asked
               <br />Questions
             </h2>

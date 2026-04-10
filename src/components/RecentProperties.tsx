@@ -11,10 +11,10 @@ export default function RecentProperties() {
     .slice(0, 6);
 
   return (
-    <section className="w-full bg-white py-16">
+    <section className="w-full bg-white dark:bg-gray-900 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1100px] mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-6" style={{ fontFamily: "Lato" }}>
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 dark:text-white" style={{ fontFamily: "Lato" }}>
             Explore Recent Properties
           </h2>
 
