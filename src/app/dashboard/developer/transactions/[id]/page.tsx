@@ -1,14 +1,87 @@
 'use client';
 
+'use client';
+
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useDeveloperTransactionsStore } from '@/lib/store/useDeveloperTransactionsStore';
 import DeveloperTransactionTimeline from '@/components/dashboard/developer/transactions/DeveloperTransactionTimeline';
-import { ArrowLeft, MessageCircle, Flag, CheckCircle2, BedDouble, Bath, Maximize2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, CheckCircle2, BedDouble, Bath, Maximize2, X } from 'lucide-react';
+
+const REPORT_REASONS = [
+  'Non-performance by buyer',
+  'Payment dispute',
+  'Property misrepresentation',
+  'Milestone not completed',
+  'Other',
+];
+
+function ReportModal({ txId, onClose }: { txId: string; onClose: () => void }) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason) return;
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    setIsSubmitting(false);
+    setDone(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center"><Flag className="w-4 h-4 text-red-500" /></div>
+            <h2 className="text-lg font-bold text-gray-900">Report Transaction</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+        </div>
+        {done ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h3 className="font-bold text-gray-900">Report Submitted</h3>
+            <p className="text-sm text-gray-500">Your report for <span className="font-semibold">{txId}</span> has been received.</p>
+            <button onClick={onClose} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Done</button>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-4">Transaction: <span className="font-semibold text-gray-900">{txId}</span></p>
+            <div className="space-y-3 mb-4">
+              {REPORT_REASONS.map((r) => (
+                <label key={r} className="flex items-center gap-3 cursor-pointer">
+                  <input type="radio" name="reason" value={r} checked={reason === r} onChange={() => setReason(r)} className="accent-blue-600 w-4 h-4" />
+                  <span className="text-sm text-gray-700">{r}</span>
+                </label>
+              ))}
+            </div>
+            <textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Additional details..." rows={3}
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300 mb-4" />
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+              <button onClick={handleSubmit} disabled={!reason || isSubmitting}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                {isSubmitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting…</> : 'Submit Report'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function DeveloperTransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
+  const [reportOpen, setReportOpen] = useState(false);
   const {
     selectedTransaction: tx,
     isLoading,
@@ -122,14 +195,20 @@ export default function DeveloperTransactionDetailPage({ params }: { params: Pro
                   <span className="text-sm font-bold text-gray-900">{tx.buyerName.replace('John', 'Sarah').replace('Doe', 'Homes')}</span>
                   {tx.buyerVerified && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
                 </div>
-                <button className="mt-3 w-full border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() => router.push('/dashboard/developer/messages')}
+                  className="mt-3 w-full border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
                   <MessageCircle className="w-4 h-4" /> Chat Client
                 </button>
               </div>
             </div>
 
             {/* Report */}
-            <button className="flex items-center gap-2 text-red-500 font-medium text-sm hover:text-red-600 transition-colors w-full justify-start px-1">
+            <button
+              onClick={() => setReportOpen(true)}
+              className="flex items-center gap-2 text-red-500 font-medium text-sm hover:text-red-600 transition-colors w-full justify-start px-1"
+            >
               <Flag className="w-4 h-4" /> Report Transaction
               <ArrowLeft className="w-4 h-4 ml-auto rotate-180" />
             </button>
@@ -156,6 +235,7 @@ export default function DeveloperTransactionDetailPage({ params }: { params: Pro
           </div>
         </div>
       )}
+      {reportOpen && <ReportModal txId={tx.id} onClose={() => setReportOpen(false)} />}
     </div>
   );
 }

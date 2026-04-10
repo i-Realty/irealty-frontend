@@ -19,6 +19,7 @@ export default function Step2ProjectDetails() {
   const store = useCreateProjectStore();
   const [showAmenities, setShowAmenities] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [extraLandmarks, setExtraLandmarks] = useState<string[]>([]);
 
   return (
     <div className="space-y-5">
@@ -231,11 +232,26 @@ export default function Step2ProjectDetails() {
 
       {/* Landmark */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Landmarks</label>
         <input type="text" placeholder="Enter Landmark" className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={store.landmark} onChange={(e) => store.setField('landmark', e.target.value)} />
-        <button className="text-blue-600 text-sm font-medium mt-2 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            if (store.landmark.trim()) {
+              setExtraLandmarks((prev) => [...prev, store.landmark]);
+              store.setField('landmark', '');
+            }
+          }}
+          className="text-blue-600 text-sm font-medium mt-2 flex items-center gap-1 hover:text-blue-700 transition-colors"
+        >
           <Plus className="w-4 h-4" /> Add Another
         </button>
+        {extraLandmarks.map((lm, i) => (
+          <div key={i} className="flex items-center gap-2 mt-2">
+            <input type="text" value={lm} readOnly className="flex-1 border border-gray-100 bg-gray-50 rounded-lg px-4 py-2 text-sm text-gray-700" />
+            <button type="button" onClick={() => setExtraLandmarks((prev) => prev.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500 transition-colors">✕</button>
+          </div>
+        ))}
       </div>
 
       {/* Navigation */}

@@ -310,7 +310,7 @@ export default function AdminPropertiesPage() {
           <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-400">
             <span>Page {propertyFilters.page} of {totalPages}</span>
             <div className="flex items-center gap-1.5">
-              {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => i + 1).map((pg) => (
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
                 <button key={pg} onClick={() => setPropertyFilters({ page: pg })} className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium ${propertyFilters.page === pg ? 'border border-blue-500 text-gray-900 bg-white' : 'text-gray-400 hover:text-gray-600'}`}>{pg}</button>
               ))}
               <div className="flex items-center ml-3">

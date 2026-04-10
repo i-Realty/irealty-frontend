@@ -1,14 +1,29 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useDeveloperDashboardStore } from '@/lib/store/useDeveloperDashboardStore';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
 import { PieChart, Pie, Cell } from 'recharts';
 import { Coins, ChevronDown } from 'lucide-react';
 
+type ChartFilter = 'All time' | 'This week' | 'This month' | 'This year';
+const CHART_FILTERS: ChartFilter[] = ['All time', 'This week', 'This month', 'This year'];
+
 const COLORS = ['#F59E0B', '#3B82F6'];
 
 export default function DeveloperRevenueCharts() {
   const { revenueData, escrowData, profile } = useDeveloperDashboardStore();
+  const [chartFilter, setChartFilter] = useState<ChartFilter>('All time');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const isVerified = profile?.kycStatus === 'verified';
 
@@ -44,9 +59,24 @@ export default function DeveloperRevenueCharts() {
               &#8358;{totalRevenue.toLocaleString()}
             </p>
           </div>
-          <button className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg">
-            All time <ChevronDown className="w-4 h-4" />
-          </button>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowDropdown((v) => !v)}
+              className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              {chartFilter} <ChevronDown className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            {showDropdown && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 w-40 z-20 animate-in fade-in slide-in-from-top-2">
+                {CHART_FILTERS.map((opt) => (
+                  <button key={opt} onClick={() => { setChartFilter(opt); setShowDropdown(false); }}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${chartFilter === opt ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'}`}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="h-72 w-full">

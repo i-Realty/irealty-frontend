@@ -1,10 +1,13 @@
 'use client';
 
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminHelpCenter() {
   const { helpTicket, updateHelpTicket, submitHelpTicketMock, isSaving } = useSettingsStore();
+  const user = useAuthStore((s) => s.user);
+  const usernameFromAuth = user?.name ?? user?.displayName ?? helpTicket.username;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +29,7 @@ export default function AdminHelpCenter() {
                  <label className="text-[12px] font-bold text-gray-900 ml-1">Username</label>
                  <input 
                     type="text"
-                    value={helpTicket.username}
+                    value={usernameFromAuth}
                     readOnly
                     className="w-full border border-gray-200 bg-gray-50/50 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-500 focus:outline-none focus:border-blue-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] cursor-not-allowed"
                  />

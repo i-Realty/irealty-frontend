@@ -12,7 +12,7 @@ export default function ProjectEmptyState() {
         <Building2 className="w-8 h-8 text-blue-300" />
       </div>
       <h3 className="text-xl font-bold text-gray-900 mb-2">No Listings Yet!</h3>
-      <p className="text-gray-500 text-sm mb-6">All recent transactions will be displayed here</p>
+      <p className="text-gray-500 text-sm mb-6">Your listed projects will appear here. Create your first project to get started.</p>
       <button
         onClick={openWizard}
         className="bg-blue-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"

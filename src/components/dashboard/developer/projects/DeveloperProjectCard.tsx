@@ -18,9 +18,10 @@ interface DeveloperProjectCardProps {
   };
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onViewDetails?: (id: string) => void;
 }
 
-export default function DeveloperProjectCard({ project, onDelete, onEdit }: DeveloperProjectCardProps) {
+export default function DeveloperProjectCard({ project, onDelete, onEdit, onViewDetails }: DeveloperProjectCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +59,7 @@ export default function DeveloperProjectCard({ project, onDelete, onEdit }: Deve
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-10 bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-40 z-20">
-              <button className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+              <button onClick={() => { onViewDetails?.(project.id); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                 <Eye className="w-4 h-4" /> View Details
               </button>
               <button onClick={() => { onEdit?.(project.id); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">

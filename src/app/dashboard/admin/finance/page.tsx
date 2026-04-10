@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
-import { Coins, Wallet, CreditCard, CheckCircle2, XCircle } from 'lucide-react';
+import { Coins, Wallet, CreditCard, CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+type ChartPeriod = 'This week' | 'This month' | 'This year' | 'All time';
+const CHART_PERIODS: ChartPeriod[] = ['This week', 'This month', 'This year', 'All time'];
 
 type FinanceTab = 'revenue' | 'escrow' | 'payouts';
 
@@ -15,6 +18,33 @@ export default function AdminFinancePage() {
   } = useAdminDashboardStore();
 
   const [activeTab, setActiveTab] = useState<FinanceTab>('revenue');
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('This week');
+  const [showChartDropdown, setShowChartDropdown] = useState(false);
+  const [payoutToast, setPayoutToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const chartDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (chartDropdownRef.current && !chartDropdownRef.current.contains(e.target as Node)) setShowChartDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setPayoutToast({ msg, type });
+    setTimeout(() => setPayoutToast(null), 3000);
+  };
+
+  const handleApprovePayout = async (id: string) => {
+    await approvePayoutMock(id);
+    showToast('Payout approved successfully.');
+  };
+
+  const handleRejectPayout = async (id: string) => {
+    await rejectPayoutMock(id);
+    showToast('Payout rejected.', 'error');
+  };
 
   useEffect(() => {
     fetchFinanceMock();
@@ -43,6 +73,7 @@ export default function AdminFinancePage() {
   }
 
   return (
+    <>
     <div className="space-y-6 pb-12">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -82,7 +113,25 @@ export default function AdminFinancePage() {
         <div className="space-y-6">
           {/* Chart */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 shadow-sm dark:shadow-none">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Revenue Trend</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Revenue Trend</h3>
+              <div className="relative" ref={chartDropdownRef}>
+                <button onClick={() => setShowChartDropdown((v) => !v)}
+                  className="flex items-center gap-1.5 text-sm text-gray-600 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  {chartPeriod} <ChevronDown className={`w-4 h-4 transition-transform ${showChartDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showChartDropdown && (
+                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 w-40 z-20 animate-in fade-in slide-in-from-top-2">
+                    {CHART_PERIODS.map((opt) => (
+                      <button key={opt} onClick={() => { setChartPeriod(opt); setShowChartDropdown(false); }}
+                        className={`w-full px-4 py-2 text-left text-sm transition-colors ${chartPeriod === opt ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
@@ -204,8 +253,8 @@ export default function AdminFinancePage() {
                       <td className="py-4 px-6">
                         {p.status === 'Pending' && (
                           <div className="flex items-center gap-2">
-                            <button onClick={() => approvePayoutMock(p.id)} disabled={isActionLoading} className="text-green-600 hover:text-green-800 disabled:opacity-50"><CheckCircle2 className="w-5 h-5" /></button>
-                            <button onClick={() => rejectPayoutMock(p.id)} disabled={isActionLoading} className="text-red-500 hover:text-red-700 disabled:opacity-50"><XCircle className="w-5 h-5" /></button>
+                            <button onClick={() => handleApprovePayout(p.id)} disabled={isActionLoading} className="text-green-600 hover:text-green-800 disabled:opacity-50"><CheckCircle2 className="w-5 h-5" /></button>
+                            <button onClick={() => handleRejectPayout(p.id)} disabled={isActionLoading} className="text-red-500 hover:text-red-700 disabled:opacity-50"><XCircle className="w-5 h-5" /></button>
                           </div>
                         )}
                       </td>
@@ -218,5 +267,13 @@ export default function AdminFinancePage() {
         </div>
       )}
     </div>
+
+    {/* Toast */}
+    {payoutToast && (
+      <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium text-white animate-in fade-in slide-in-from-bottom-2 ${payoutToast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+        {payoutToast.msg}
+      </div>
+    )}
+    </>
   );
 }

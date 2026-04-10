@@ -280,7 +280,7 @@ const MOCK_PAYOUTS: PayoutRequest[] = [
 
 // ── Store ──────────────────────────────────────────────────────────────
 
-export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => ({
+export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
   // Overview
   stats: { totalUsers: 0, activeListings: 0, pendingKyc: 0, totalRevenue: 0, escrowBalance: 0, pendingPayouts: 0 },
   revenueData: [],

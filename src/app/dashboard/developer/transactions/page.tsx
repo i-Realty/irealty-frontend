@@ -245,7 +245,7 @@ export default function DeveloperTransactionsPage() {
           <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
             <span>Page {store.currentPage} of {totalPages}</span>
             <div className="flex items-center gap-1.5">
-              {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => store.setCurrentPage(page)}

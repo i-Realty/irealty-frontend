@@ -1,6 +1,8 @@
 'use client';
 
-import { use, useEffect } from 'react';
+'use client';
+
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
@@ -10,6 +12,8 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
   const { id } = use(params);
   const router = useRouter();
   const { selectedTransaction: tx, isLoading, isActionLoading, fetchTransactionByIdMock, flagTransactionMock, refundTransactionMock } = useAdminDashboardStore();
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
 
   useEffect(() => {
     fetchTransactionByIdMock(id);
@@ -25,6 +29,7 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
   };
 
   return (
+    <>
     <div className="space-y-6 pb-12">
       <button onClick={() => router.push('/dashboard/admin/transactions')} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 transition-colors group">
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
@@ -103,7 +108,10 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3">Buyer / Client</p>
             <Image src={tx.partyAAvatar} alt={tx.partyA} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-2" />
             <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{tx.partyA}</p>
-            <button className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <button
+              onClick={() => router.push('/dashboard/admin/messages')}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
               <MessageCircle className="w-4 h-4" /> Message
             </button>
           </div>
@@ -113,7 +121,10 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3">Seller / Agent</p>
             <Image src={tx.partyBAvatar} alt={tx.partyB} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 mb-2" />
             <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{tx.partyB}</p>
-            <button className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <button
+              onClick={() => router.push('/dashboard/admin/messages')}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
               <MessageCircle className="w-4 h-4" /> Message
             </button>
           </div>
@@ -121,11 +132,19 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
           {/* Admin Actions */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-none space-y-3">
             <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Admin Actions</h4>
-            <button onClick={() => flagTransactionMock(tx.id)} disabled={isActionLoading} className="w-full flex items-center justify-center gap-2 border border-orange-200 text-orange-600 rounded-lg py-2.5 text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50">
+            <button
+              onClick={async () => { await flagTransactionMock(tx.id); showToast('Transaction flagged for review.'); }}
+              disabled={isActionLoading}
+              className="w-full flex items-center justify-center gap-2 border border-orange-200 text-orange-600 rounded-lg py-2.5 text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50"
+            >
               <Flag className="w-4 h-4" /> {isActionLoading ? 'Flagging...' : 'Flag for Review'}
             </button>
             {tx.status === 'Pending' && (
-              <button onClick={() => refundTransactionMock(tx.id)} disabled={isActionLoading} className="w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50">
+              <button
+                onClick={async () => { await refundTransactionMock(tx.id); showToast('Refund initiated successfully.'); }}
+                disabled={isActionLoading}
+                className="w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
                 {isActionLoading ? 'Processing...' : 'Initiate Refund'}
               </button>
             )}
@@ -133,5 +152,11 @@ export default function AdminTransactionDetailPage({ params }: { params: Promise
         </div>
       </div>
     </div>
+    {toast && (
+      <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium text-white bg-green-600 animate-in fade-in slide-in-from-bottom-2">
+        {toast}
+      </div>
+    )}
+    </>
   );
 }

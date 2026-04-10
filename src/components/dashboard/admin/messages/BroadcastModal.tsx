@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Send, Users, ChevronDown } from 'lucide-react';
+import { X, Send, Users } from 'lucide-react';
 import type { UserRole } from '@/lib/store/useAuthStore';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 

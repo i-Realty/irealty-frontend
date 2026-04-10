@@ -1,6 +1,7 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Check } from 'lucide-react';
 import { exportToCsv } from '@/lib/utils/csvExport';
 
 interface AuditEntry {
@@ -21,18 +22,26 @@ interface Props {
 }
 
 export default function AuditTrailExport({ type, data, columns, label }: Props) {
+  const [exported, setExported] = useState(false);
+
   const handleExport = () => {
     exportToCsv(`irealty_${type}`, data, columns as { key: keyof Record<string, unknown>; label: string }[]);
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
   };
 
   return (
     <button
       onClick={handleExport}
       disabled={data.length === 0}
-      className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+      className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+        exported
+          ? 'border-green-400 bg-green-50 text-green-700'
+          : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+      }`}
     >
-      <Download className="w-4 h-4" />
-      {label ?? 'Export CSV'}
+      {exported ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+      {exported ? 'Exported!' : (label ?? 'Export CSV')}
     </button>
   );
 }

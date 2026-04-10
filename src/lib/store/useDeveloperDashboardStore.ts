@@ -86,6 +86,7 @@ export const useDeveloperDashboardStore = create<DeveloperDashboardState>((set, 
 
   fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
+    try {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const { profile } = get();
@@ -111,6 +112,9 @@ export const useDeveloperDashboardStore = create<DeveloperDashboardState>((set, 
     }
 
     set({ stats, revenueData, escrowData, transactions, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to load dashboard', isLoading: false });
+    }
   },
 
   updateKycProgress: async (step: number) => {

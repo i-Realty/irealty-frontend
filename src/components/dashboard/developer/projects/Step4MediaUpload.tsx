@@ -13,7 +13,7 @@ const PLACEHOLDER_IMAGES = [
 ];
 
 export default function Step4MediaUpload() {
-  const { media, addMedia, removeMedia, virtualTourUrl, setField, prevStep, nextStep } = useCreateProjectStore();
+  const { media, addMedia, removeMedia, setField, prevStep, nextStep } = useCreateProjectStore();
 
   const handleUploadClick = () => {
     if (media.length < 10) {

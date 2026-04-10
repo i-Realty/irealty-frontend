@@ -37,6 +37,7 @@ export default function AdminPlatformFees() {
   const { platformFees, updatePlatformFees } = useAdminDashboardStore();
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +50,8 @@ export default function AdminPlatformFees() {
     setIsSaving(true);
     await new Promise((r) => setTimeout(r, 1200));
     setIsSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   const feeKeys = Object.keys(FEE_DESCRIPTIONS) as (keyof typeof platformFees)[];
@@ -144,11 +147,17 @@ export default function AdminPlatformFees() {
           </div>
         </div>
 
-        <div className="w-full flex justify-end mt-2">
+        <div className="w-full flex items-center justify-between mt-2">
+          {saved && (
+            <p className="text-sm text-green-600 font-medium flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              Fee configuration saved successfully.
+            </p>
+          )}
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full md:w-auto min-w-[200px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-4 md:py-3.5 px-8 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
+            className="ml-auto w-full md:w-auto min-w-[200px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-4 md:py-3.5 px-8 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Fee Configuration'}
           </button>

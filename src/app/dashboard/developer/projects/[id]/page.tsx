@@ -188,7 +188,18 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                   {doc.format}
                 </span>
-                <button className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                <button
+                  onClick={() => {
+                    const content = `Document: ${doc.name}\nFormat: ${doc.format}\nSize: ${doc.size}\nProject: ${project.projectName}`;
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `${doc.name}.txt`;
+                    document.body.appendChild(a); a.click();
+                    document.body.removeChild(a); URL.revokeObjectURL(url);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
                   <Download className="w-4 h-4" />
                   Download
                 </button>

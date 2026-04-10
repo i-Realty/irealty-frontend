@@ -329,7 +329,7 @@ const MOCK_THREADS: SupportThread[] = [
 
 // ── Store ────────────────────────────────────────────────────────────────
 
-export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
+export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
   threads: [],
   activeThreadId: null,
   searchQuery: '',
@@ -370,7 +370,7 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
               messages: [...t.messages, newMessage],
               lastMessage: content,
               lastMessageTime: 'Just now',
-              status: t.status === 'Open' ? ('In Progress' as const) : t.status,
+              status: t.status, // Status must be changed explicitly via resolveThreadMock/escalateThreadMock
             }
           : t
       ),
