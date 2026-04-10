@@ -6,10 +6,13 @@ import SavedSearchesList from "@/components/listings/SavedSearchesList";
 import type { SavedSearch } from "@/lib/store/useSavedSearchesStore";
 import { getStateNames, getLGAsForState } from "@/lib/data/nigeriaLocations";
 
-function formatCurrency(v: number): string {
-  try {
-    return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
-  } catch { return `₦${v.toLocaleString()}`; }
+function formatMillion(v: number): string {
+  if (v === 0) return '₦0';
+  if (v >= 1_000_000) {
+    const m = v / 1_000_000;
+    return `₦${m % 1 === 0 ? m : m.toFixed(1)}M`;
+  }
+  return `₦${(v / 1_000).toFixed(0)}K`;
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -36,7 +39,6 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     selectedStatuses, toggleStatus,
     selectedState, setSelectedState,
     selectedLGA, setSelectedLGA,
-    activeThumb, setActiveThumb,
     resetFilters,
   } = config.useStore();
 
@@ -69,39 +71,85 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     </div>
   );
 
+  const PRICE_STEP = 100_000;
+  const leftPct  = ((priceMin - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  const rightPct = ((priceMax - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  // When min thumb is at/near max, keep it on top so the user can drag it left
+  const minZ = priceMin >= priceMax - PRICE_STEP ? 5 : 3;
+
   const priceFilterContent = (
     <div className="mt-3 text-sm text-gray-600">
-      <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-        <div>{formatCurrency(priceMin)}</div><div>{formatCurrency(priceMax)}</div>
+      {/* Thumb styles — pointer-events: none on the track, all on the thumb */}
+      <style>{`
+        .price-slider { pointer-events: none; -webkit-appearance: none; appearance: none; background: transparent; }
+        .price-slider::-webkit-slider-thumb {
+          pointer-events: all; -webkit-appearance: none; appearance: none;
+          width: 18px; height: 18px; border-radius: 50%;
+          background: #2563eb; border: 2px solid #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.28); cursor: grab; transition: transform 0.1s;
+        }
+        .price-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.2); }
+        .price-slider::-moz-range-thumb {
+          pointer-events: all; width: 16px; height: 16px; border-radius: 50%;
+          background: #2563eb; border: 2px solid #fff; cursor: grab;
+        }
+        .price-slider::-webkit-slider-runnable-track { background: transparent; }
+        .price-slider::-moz-range-track { background: transparent; }
+      `}</style>
+
+      {/* Live labels */}
+      <div className="flex items-center justify-between text-xs font-semibold text-blue-600 mb-3">
+        <span>{formatMillion(priceMin)}</span>
+        <span>{formatMillion(priceMax)}</span>
       </div>
-      <div className="relative h-6">
-        <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-2 bg-gray-200 rounded" />
-        {(() => {
-          const lp = ((priceMin - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
-          const rp = ((priceMax - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
-          return <div className="absolute top-1/2 transform -translate-y-1/2 h-2 bg-blue-500 rounded"
-            style={{ left: `${lp}%`, width: `${Math.max(0, rp - lp)}%` }} />;
-        })()}
-        <input aria-label="Minimum price" type="range" min={PRICE_MIN} max={PRICE_MAX} step={100000} value={priceMin}
-          onFocus={() => setActiveThumb("min")} onBlur={() => setActiveThumb(null)}
-          onMouseDown={() => setActiveThumb("min")} onMouseUp={() => setActiveThumb(null)}
-          onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax - 1000))}
-          className="absolute left-0 right-0 w-full appearance-none h-6 bg-transparent"
-          style={{ zIndex: activeThumb === "min" ? 4 : 3 }} />
-        <input aria-label="Maximum price" type="range" min={PRICE_MIN} max={PRICE_MAX} step={100000} value={priceMax}
-          onFocus={() => setActiveThumb("max")} onBlur={() => setActiveThumb(null)}
-          onMouseDown={() => setActiveThumb("max")} onMouseUp={() => setActiveThumb(null)}
-          onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin + 1000))}
-          className="absolute left-0 right-0 w-full appearance-none h-6 bg-transparent"
-          style={{ zIndex: activeThumb === "max" ? 4 : 2 }} />
+
+      {/* Dual-range track */}
+      <div className="relative h-5">
+        {/* Grey base track */}
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 bg-gray-200 rounded-full" />
+        {/* Blue fill between thumbs */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 h-1.5 bg-blue-500 rounded-full"
+          style={{ left: `${leftPct}%`, width: `${Math.max(0, rightPct - leftPct)}%` }}
+        />
+        {/* Min thumb */}
+        <input
+          aria-label="Minimum price"
+          type="range"
+          className="price-slider absolute inset-0 w-full h-full"
+          min={PRICE_MIN} max={PRICE_MAX} step={PRICE_STEP} value={priceMin}
+          style={{ zIndex: minZ }}
+          onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax - PRICE_STEP))}
+        />
+        {/* Max thumb */}
+        <input
+          aria-label="Maximum price"
+          type="range"
+          className="price-slider absolute inset-0 w-full h-full"
+          min={PRICE_MIN} max={PRICE_MAX} step={PRICE_STEP} value={priceMax}
+          style={{ zIndex: 2 }}
+          onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin + PRICE_STEP))}
+        />
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <input type="number" min={PRICE_MIN} max={PRICE_MAX} value={priceMin}
-          onChange={(e) => setPriceMin(Math.max(PRICE_MIN, Math.min(Number(e.target.value) || 0, priceMax - 1000)))}
-          className="w-full border rounded px-2 py-1 text-sm" placeholder="Min" />
-        <input type="number" min={PRICE_MIN} max={PRICE_MAX} value={priceMax}
-          onChange={(e) => setPriceMax(Math.min(PRICE_MAX, Math.max(Number(e.target.value) || 0, priceMin + 1000)))}
-          className="w-full border rounded px-2 py-1 text-sm" placeholder="Max" />
+
+      {/* Number inputs — step 100,000 */}
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">Min (₦)</label>
+          <input
+            type="number" min={PRICE_MIN} max={PRICE_MAX} step={100000} value={priceMin}
+            onChange={(e) => setPriceMin(Math.max(PRICE_MIN, Math.min(Number(e.target.value) || 0, priceMax - PRICE_STEP)))}
+            className="w-full border rounded px-2 py-1.5 text-sm"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">Max (₦)</label>
+          <input
+            type="number" min={PRICE_MIN} max={PRICE_MAX} step={100000} value={priceMax}
+            onChange={(e) => setPriceMax(Math.min(PRICE_MAX, Math.max(Number(e.target.value) || 0, priceMin + PRICE_STEP)))}
+            className="w-full border rounded px-2 py-1.5 text-sm"
+          />
+        </div>
       </div>
     </div>
   );
@@ -139,7 +187,10 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
       </div>
       <SavedSearchesList onApply={handleApplySavedSearch} />
 
-      {/* State filter */}
+      {/* ── Price Range (first) ── */}
+      <FilterSection id="price" label="Price Range">{priceFilterContent}</FilterSection>
+
+      {/* ── State ── */}
       <FilterSection id="state" label="State">
         <div className="mt-3">
           <select
@@ -156,7 +207,7 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
         </div>
       </FilterSection>
 
-      {/* LGA filter (only active when a state is selected) */}
+      {/* ── LGA (shown only when a state is selected) ── */}
       {selectedState && (
         <FilterSection id="lga" label="Local Government Area">
           <div className="mt-3">
@@ -175,7 +226,6 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
         </FilterSection>
       )}
 
-      <FilterSection id="price" label="Price Range">{priceFilterContent}</FilterSection>
       <FilterSection id="type" label="Property Type">
         <div className="mt-3 text-sm text-gray-700 space-y-2">
           {config.propertyTypes.map((type) => (
