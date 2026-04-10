@@ -30,4 +30,9 @@ export type PropertyWithCoords = Property & {
   originalPrice?: string;
   priceLabel?: string; // pre-formatted e.g. "₦1.5M"
   sizeSqm?: number;
+  // Location hierarchy
+  state?: string;
+  lga?: string;
+  // Amenities list
+  amenities?: string[];
 };

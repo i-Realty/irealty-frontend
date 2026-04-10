@@ -10,6 +10,8 @@ export interface ListingsState {
   selectedAmenities: Set<string>;
   selectedBedrooms: Set<string>;
   selectedStatuses: Set<string>;
+  selectedState: string;
+  selectedLGA: string;
   priceMin: number;
   priceMax: number;
   activeThumb: 'min' | 'max' | null;
@@ -25,6 +27,8 @@ export interface ListingsState {
   toggleAmenity: (a: string) => void;
   toggleBedroom: (b: string) => void;
   toggleStatus: (s: string) => void;
+  setSelectedState: (s: string) => void;
+  setSelectedLGA: (l: string) => void;
   setPriceMin: (v: number) => void;
   setPriceMax: (v: number) => void;
   setActiveThumb: (t: 'min' | 'max' | null) => void;
@@ -49,6 +53,8 @@ export function createListingsStore(): UseBoundStore<StoreApi<ListingsState>> {
     selectedAmenities: new Set(),
     selectedBedrooms: new Set(),
     selectedStatuses: new Set(),
+    selectedState: '',
+    selectedLGA: '',
     priceMin: PRICE_MIN,
     priceMax: PRICE_MAX,
     activeThumb: null,
@@ -89,6 +95,9 @@ export function createListingsStore(): UseBoundStore<StoreApi<ListingsState>> {
         return { selectedStatuses: next };
       }),
 
+    setSelectedState: (s) => set({ selectedState: s, selectedLGA: '' }),
+    setSelectedLGA: (l) => set({ selectedLGA: l }),
+
     setPriceMin: (v) => set({ priceMin: v }),
     setPriceMax: (v) => set({ priceMax: v }),
     setActiveThumb: (t) => set({ activeThumb: t }),
@@ -108,6 +117,8 @@ export function createListingsStore(): UseBoundStore<StoreApi<ListingsState>> {
       selectedAmenities: new Set(),
       selectedBedrooms: new Set(),
       selectedStatuses: new Set(),
+      selectedState: '',
+      selectedLGA: '',
       priceMin: PRICE_MIN,
       priceMax: PRICE_MAX,
     }),

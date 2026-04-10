@@ -4,6 +4,7 @@ import type { ListingsPageConfig } from "./ClientListingsContent";
 import SaveSearchButton from "@/components/listings/SaveSearchButton";
 import SavedSearchesList from "@/components/listings/SavedSearchesList";
 import type { SavedSearch } from "@/lib/store/useSavedSearchesStore";
+import { getStateNames, getLGAsForState } from "@/lib/data/nigeriaLocations";
 
 function formatCurrency(v: number): string {
   try {
@@ -33,9 +34,14 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     priceMax, setPriceMax,
     selectedBedrooms, toggleBedroom,
     selectedStatuses, toggleStatus,
+    selectedState, setSelectedState,
+    selectedLGA, setSelectedLGA,
     activeThumb, setActiveThumb,
     resetFilters,
   } = config.useStore();
+
+  const allStates = React.useMemo(() => getStateNames(), []);
+  const lgasForState = React.useMemo(() => selectedState ? getLGAsForState(selectedState) : [], [selectedState]);
 
   // Auto-expand sections that have active filter selections
   const [openSections, setOpenSections] = React.useState<Set<string>>(new Set());
@@ -108,6 +114,8 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     selectedBedrooms: Array.from(selectedBedrooms),
     priceMin,
     priceMax,
+    selectedState: selectedState || undefined,
+    selectedLGA: selectedLGA || undefined,
   };
 
   const handleApplySavedSearch = (filters: SavedSearch['filters']) => {
@@ -119,6 +127,8 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
     filters.selectedBedrooms.forEach((b) => toggleBedroom(b));
     setPriceMin(filters.priceMin);
     setPriceMax(filters.priceMax);
+    if (filters.selectedState) setSelectedState(filters.selectedState);
+    if (filters.selectedLGA) setSelectedLGA(filters.selectedLGA);
   };
 
   return (
@@ -128,6 +138,43 @@ export default function FilterSidebar({ config, displayedAmenities }: FilterSide
         <button className="text-sm text-blue-600" onClick={resetFilters}>Reset Filters</button>
       </div>
       <SavedSearchesList onApply={handleApplySavedSearch} />
+
+      {/* State filter */}
+      <FilterSection id="state" label="State">
+        <div className="mt-3">
+          <select
+            value={selectedState}
+            onChange={(e) => setSelectedState(e.target.value)}
+            className="w-full border rounded px-2 py-2 text-sm text-gray-700"
+            aria-label="Filter by state"
+          >
+            <option value="">All States</option>
+            {allStates.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+      </FilterSection>
+
+      {/* LGA filter (only active when a state is selected) */}
+      {selectedState && (
+        <FilterSection id="lga" label="Local Government Area">
+          <div className="mt-3">
+            <select
+              value={selectedLGA}
+              onChange={(e) => setSelectedLGA(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm text-gray-700"
+              aria-label="Filter by LGA"
+            >
+              <option value="">All LGAs in {selectedState}</option>
+              {lgasForState.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+        </FilterSection>
+      )}
+
       <FilterSection id="price" label="Price Range">{priceFilterContent}</FilterSection>
       <FilterSection id="type" label="Property Type">
         <div className="mt-3 text-sm text-gray-700 space-y-2">

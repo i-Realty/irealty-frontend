@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
 import { ChevronDown, X, Plus } from 'lucide-react';
 import AmenitiesModal from './AmenitiesModal';
 import { propertyStep2Schema, extractErrors } from '@/lib/validations/wizard';
+import { getStateNames, getLGAsForState } from '@/lib/data/nigeriaLocations';
 
 export default function Step2PropertyDetails() {
   const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const [landmarkInput, setLandmarkInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const { 
-    propertyType, 
-    title, description, stateGeo, city, address, 
+  const {
+    propertyType,
+    title, description, stateGeo, lga, city, address,
     bedrooms, bathrooms, sizeSqm, landmarks,
     unitsFloors, parkingCapacity, floorAreaSqm,
     documentTypes, zoningType, landSizeSqm,
@@ -23,6 +24,15 @@ export default function Step2PropertyDetails() {
     addLandmark, removeLandmark, toggleDocumentType,
     removeAmenity
   } = useCreatePropertyStore();
+
+  const allStates = useMemo(() => getStateNames(), []);
+  const lgasForState = useMemo(() => stateGeo ? getLGAsForState(stateGeo) : [], [stateGeo]);
+
+  // Clear LGA when state changes
+  const handleStateChange = (newState: string) => {
+    setField('stateGeo' as any, newState);
+    setField('lga' as any, '');
+  };
 
   const handleLandmarkAdd = () => {
     if (landmarkInput.trim()) {
@@ -86,9 +96,38 @@ export default function Step2PropertyDetails() {
 
         {/* Location Row */}
         <div className="flex flex-col sm:flex-row gap-4">
-          {renderSelect('State', 'stateGeo', stateGeo, ['Lagos', 'Abuja', 'Enugu', 'Rivers'])}
-          {renderSelect('City', 'city', city, ['Lekki', 'Ikeja', 'Wuse', 'Garki', 'Independence Layout'])}
+          <div className="flex flex-col flex-1">
+            <label className="text-sm font-semibold text-gray-800 mb-2">State</label>
+            <div className="relative">
+              <select
+                value={stateGeo}
+                onChange={(e) => handleStateChange(e.target.value)}
+                className="w-full appearance-none px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-blue-500 cursor-pointer"
+              >
+                <option value="" disabled>Select State</option>
+                {allStates.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+          <div className="flex flex-col flex-1">
+            <label className="text-sm font-semibold text-gray-800 mb-2">LGA</label>
+            <div className="relative">
+              <select
+                value={lga}
+                onChange={(e) => setField('lga', e.target.value)}
+                disabled={!stateGeo}
+                className="w-full appearance-none px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:border-blue-500 cursor-pointer disabled:bg-gray-50 disabled:text-gray-400"
+              >
+                <option value="">{stateGeo ? 'Select LGA' : 'Select state first'}</option>
+                {lgasForState.map((l) => <option key={l} value={l}>{l}</option>)}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          {renderInput('City / Area', 'city', city, 'e.g. Lekki Phase 1, GRA, Bodija')}</div>
         
         {renderInput('Full Address', 'address', address, 'Enter Complete Property Address')}
 

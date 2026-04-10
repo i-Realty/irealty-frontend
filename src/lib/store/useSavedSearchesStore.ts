@@ -12,6 +12,8 @@ export interface SavedSearch {
     selectedBedrooms: string[];
     priceMin: number;
     priceMax: number;
+    selectedState?: string;
+    selectedLGA?: string;
   };
 }
 

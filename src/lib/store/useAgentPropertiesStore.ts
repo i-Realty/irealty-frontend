@@ -17,6 +17,7 @@ export interface AgentProperty {
   title: string;
   description: string;
   state: string;
+  lga?: string;
   city: string;
   address: string;
   landmarks: string[];

@@ -25,6 +25,7 @@ interface CreatePropertyState {
   title: string;
   description: string;
   stateGeo: string;
+  lga: string;
   city: string;
   address: string;
 
@@ -97,6 +98,7 @@ const initialState = {
   title: '',
   description: '',
   stateGeo: '',
+  lga: '',
   city: '',
   address: '',
   
@@ -211,6 +213,7 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
       title: state.title,
       description: state.description,
       state: state.stateGeo,
+      lga: state.lga,
       city: state.city,
       address: state.address,
       landmarks: state.landmarks,
@@ -270,6 +273,7 @@ export const useCreatePropertyStore = create<CreatePropertyState>((set, get) => 
       title: property.title,
       description: property.description,
       stateGeo: property.state,
+      lga: property.lga ?? '',
       city: property.city,
       address: property.address,
       landmarks: property.landmarks ?? [],

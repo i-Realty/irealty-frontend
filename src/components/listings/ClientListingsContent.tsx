@@ -49,6 +49,9 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     priceMax,
     selectedBedrooms,
     selectedStatuses,
+    selectedAmenities,
+    selectedState,
+    selectedLGA,
     mapMode, setMapMode,
     mapStyle, setMapStyle,
     filtersOpen, setFiltersOpen,
@@ -120,16 +123,29 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
         if (!selectedStatuses.has(s)) return false;
       }
 
+      // State filter
+      if (selectedState && p.state !== selectedState) return false;
+
+      // LGA filter
+      if (selectedLGA && p.lga !== selectedLGA) return false;
+
+      // Amenities filter — show properties that have ANY of the selected amenities
+      if (selectedAmenities.size > 0) {
+        if (!p.amenities || p.amenities.length === 0) return false;
+        const hasAny = [...selectedAmenities].some((a) => p.amenities!.includes(a));
+        if (!hasAny) return false;
+      }
+
       const numPrice = p.priceValue ?? parseInt(p.price.replace(/[^\d]/g, ''), 10);
       if (!isNaN(numPrice) && (numPrice < priceMin || numPrice > priceMax)) return false;
 
-      // Amenities filter omitted since sample data lacks amenities
-      
       return true;
     });
   }, [
-    activeTab, query, selectedPropertyTypes, 
-    selectedBedrooms, selectedStatuses, priceMin, priceMax
+    activeTab, query, selectedPropertyTypes,
+    selectedBedrooms, selectedStatuses,
+    selectedAmenities, selectedState, selectedLGA,
+    priceMin, priceMax
   ]);
 
   const ITEMS_PER_PAGE = 6;
@@ -267,7 +283,10 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
 
           {/* Results header */}
           <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-600">Showing {filteredProperties.length} {config.resultsLabel} in Lagos</div>
+            <div className="text-sm text-gray-600">
+              Showing {filteredProperties.length} {config.resultsLabel}
+              {selectedLGA ? ` in ${selectedLGA}, ${selectedState}` : selectedState ? ` in ${selectedState}` : ' across Nigeria'}
+            </div>
             <div className="text-sm text-gray-500">Page {page} of {totalPages}</div>
           </div>
 
