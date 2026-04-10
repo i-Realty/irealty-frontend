@@ -35,16 +35,12 @@ export default function TopNavBar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { notifications, isOpen: isNotifOpen, toggleDropdown: toggleNotif, fetchNotificationsMock } = useNotificationStore();
+  const { notifications, isOpen: isNotifOpen, toggleDropdown: toggleNotif } = useNotificationStore();
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   const { theme, setTheme, resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme() === 'dark';
   const { t } = useI18n();
-
-  useEffect(() => {
-    fetchNotificationsMock();
-  }, [fetchNotificationsMock]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

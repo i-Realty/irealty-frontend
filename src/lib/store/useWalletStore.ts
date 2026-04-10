@@ -11,6 +11,9 @@ export type WalletTransaction = {
   sourceTransactionId?: string;
 };
 
+/** @deprecated use WalletTransaction */
+export type Transaction = WalletTransaction;
+
 export type BankDetailsPayload = {
   bankName: string;
   accountName: string;
