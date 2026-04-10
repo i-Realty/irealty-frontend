@@ -46,7 +46,7 @@ export default function NotificationDropdown() {
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-12 w-[360px] max-h-[480px] bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl z-50 flex flex-col animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute right-0 top-12 w-[360px] max-w-[calc(100vw-1rem)] max-h-[480px] bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl z-50 flex flex-col animate-in fade-in slide-in-from-top-2 duration-200"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">

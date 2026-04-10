@@ -32,7 +32,8 @@ export default function SavedSearchesList({ onApply }: Props) {
             </button>
             <button
               onClick={() => deleteSearch(s.id)}
-              className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all ml-2"
+              aria-label="Delete saved search"
+              className="text-gray-400 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 transition-all ml-2 shrink-0"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
