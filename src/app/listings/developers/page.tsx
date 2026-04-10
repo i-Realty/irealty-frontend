@@ -7,7 +7,7 @@ export default function ListingsDevelopersPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen mt-20 bg-gray-50 py-10">
+      <div className="min-h-screen mt-20 bg-gray-50 pt-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Only the interactive client part (which reads searchParams) is wrapped in Suspense */}
