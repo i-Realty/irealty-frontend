@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
 import { useNotificationStore } from './useNotificationStore';
 import { useTransactionLedger } from './useTransactionLedger';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -74,13 +77,22 @@ interface DiasporaDashboardState {
   setInvoiceModalOpen: (open: boolean) => void;
   setSelectedInvoice: (invoice: DiasporaInvoice | null) => void;
 
-  fetchDashboardDataMock: () => Promise<void>;
-  fetchTransactionByIdMock: (id: string) => Promise<void>;
-  advanceTimelineStepMock: (txId: string, stepIndex: number) => Promise<void>;
+  fetchDashboardData: () => Promise<void>;
+  fetchTransactionById: (id: string) => Promise<void>;
+  advanceTimelineStep: (txId: string, stepIndex: number) => Promise<void>;
   /**
    * Diaspora pays a service invoice — creates a ledger entry in escrow and
    * advances the timeline to step 1 (Funds Held In Escrow).
    */
+  payInvoice: (invoiceId: string, diasporaUserId: string, diasporaUserName: string) => Promise<void>;
+
+  /** @deprecated Use fetchDashboardData() */
+  fetchDashboardDataMock: () => Promise<void>;
+  /** @deprecated Use fetchTransactionById() */
+  fetchTransactionByIdMock: (id: string) => Promise<void>;
+  /** @deprecated Use advanceTimelineStep() */
+  advanceTimelineStepMock: (txId: string, stepIndex: number) => Promise<void>;
+  /** @deprecated Use payInvoice() */
   payInvoiceMock: (invoiceId: string, diasporaUserId: string, diasporaUserName: string) => Promise<void>;
 }
 
@@ -134,113 +146,133 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
   setInvoiceModalOpen: (open) => set({ isInvoiceModalOpen: open }),
   setSelectedInvoice: (invoice) => set({ selectedInvoice: invoice, isInvoiceModalOpen: !!invoice }),
 
-  fetchDashboardDataMock: async () => {
+  fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      set({
-        activePlan: {
-          tier: 'Premium',
-          scopeOfService: 'Property search, architectural design, contractor management',
-          amount: '$15,000 (10% of construction cost)',
-          status: 'Active',
-          careRepId: 'USR-001',
-          careRepName: 'Sarah Homes',
-          careRepAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
-        },
-        invoices: MOCK_INVOICES,
-        payments: MOCK_PAYMENTS,
-        isLoading: false,
-      });
+      if (USE_API) {
+        const data = await apiGet<{ activePlan: DiasporaActivePlan; invoices: DiasporaInvoice[]; payments: DiasporaPayment[] }>('/api/diaspora/dashboard');
+        set({ activePlan: data.activePlan, invoices: data.invoices, payments: data.payments, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+        set({
+          activePlan: {
+            tier: 'Premium',
+            scopeOfService: 'Property search, architectural design, contractor management',
+            amount: '$15,000 (10% of construction cost)',
+            status: 'Active',
+            careRepId: 'USR-001',
+            careRepName: 'Sarah Homes',
+            careRepAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+          },
+          invoices: MOCK_INVOICES,
+          payments: MOCK_PAYMENTS,
+          isLoading: false,
+        });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load dashboard', isLoading: false });
     }
   },
 
-  fetchTransactionByIdMock: async (id) => {
+  fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((r) => setTimeout(r, 400));
-      const payments = get().payments.length > 0 ? get().payments : MOCK_PAYMENTS;
-      const payment = payments.find((p) => p.id === id);
-      const activeStep = payment?.status === 'Completed' ? 7 : payment?.status === 'In-progress' ? 2 : 1;
-      set({
-        selectedTransaction: {
-          id,
-          status: payment?.status ?? 'Pending',
-          transactionDate: 'December 13, 2024',
-          amount: payment?.amount ?? 625000,
-          serviceType: payment?.serviceType ?? 'Premium Plan',
-          planTier: 'Premium',
-          timeline: buildMockTimeline(activeStep),
-          repName: 'Sarah Homes',
-          repAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
-        },
-        isLoading: false,
-      });
+      if (USE_API) {
+        const data = await apiGet<{ transaction: DiasporaTransactionDetail }>(`/api/diaspora/transactions/${id}`);
+        set({ selectedTransaction: data.transaction, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 400));
+        const payments = get().payments.length > 0 ? get().payments : MOCK_PAYMENTS;
+        const payment = payments.find((p) => p.id === id);
+        const activeStep = payment?.status === 'Completed' ? 7 : payment?.status === 'In-progress' ? 2 : 1;
+        set({
+          selectedTransaction: {
+            id,
+            status: payment?.status ?? 'Pending',
+            transactionDate: 'December 13, 2024',
+            amount: payment?.amount ?? 625000,
+            serviceType: payment?.serviceType ?? 'Premium Plan',
+            planTier: 'Premium',
+            timeline: buildMockTimeline(activeStep),
+            repName: 'Sarah Homes',
+            repAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+          },
+          isLoading: false,
+        });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load transaction', isLoading: false });
     }
   },
 
-  payInvoiceMock: async (invoiceId, diasporaUserId, diasporaUserName) => {
+  payInvoice: async (invoiceId, diasporaUserId, diasporaUserName) => {
     set({ isLoading: true });
     try {
-      await new Promise((r) => setTimeout(r, 800));
+      if (USE_API) {
+        await apiPost(`/api/diaspora/invoices/${invoiceId}/pay`, { diasporaUserId, diasporaUserName });
+      } else {
+        await new Promise((r) => setTimeout(r, 800));
+        const invoice = useDiasporaDashboardStore.getState().invoices.find((i) => i.id === invoiceId);
+        const plan = useDiasporaDashboardStore.getState().activePlan;
+
+        if (invoice) {
+          useTransactionLedger.getState().createEntry({
+            type: 'service',
+            status: 'in_escrow',
+            payerId: diasporaUserId,
+            payerName: diasporaUserName,
+            payeeId: plan?.careRepId ?? 'agent-unknown',
+            payeeName: plan?.careRepName ?? 'Care Representative',
+            amount: invoice.amountDue,
+            platformFee: invoice.amountDue,
+            netAmount: 0,
+            propertyId: 'diaspora_service',
+            propertyTitle: `Diaspora Service — ${invoice.serviceType}`,
+            notes: invoice.scopeOfService,
+          });
+        }
+      }
+
       const invoice = useDiasporaDashboardStore.getState().invoices.find((i) => i.id === invoiceId);
       const plan = useDiasporaDashboardStore.getState().activePlan;
 
+      set((s) => ({
+        invoices: s.invoices.map((i) =>
+          i.id === invoiceId ? { ...i, status: 'Paid' as InvoiceStatus, escrowStatus: 'Active' as EscrowStatus } : i
+        ),
+        isLoading: false,
+      }));
+
       if (invoice) {
-        // Create ledger entry in escrow
-        useTransactionLedger.getState().createEntry({
-          type: 'service',
-          status: 'in_escrow',
-          payerId: diasporaUserId,
-          payerName: diasporaUserName,
-          payeeId: plan?.careRepId ?? 'agent-unknown',
-          payeeName: plan?.careRepName ?? 'Care Representative',
-          amount: invoice.amountDue,
-          platformFee: invoice.amountDue, // Diaspora service fee is 100%
-          netAmount: 0,
-          propertyId: 'diaspora_service',
-          propertyTitle: `Diaspora Service — ${invoice.serviceType}`,
-          notes: invoice.scopeOfService,
-        });
-
-        // Mark invoice as paid
-        set((s) => ({
-          invoices: s.invoices.map((i) =>
-            i.id === invoiceId ? { ...i, status: 'Paid' as InvoiceStatus, escrowStatus: 'Active' as EscrowStatus } : i
-          ),
-          isLoading: false,
-        }));
-
         useNotificationStore.getState().emit(
           'payment',
           'Invoice paid — funds held in escrow',
           `₦${invoice.amountDue.toLocaleString()} for "${invoice.serviceType}" is held in escrow. Your Care Rep has been notified.`,
           '/dashboard/diaspora/transactions'
         );
-
-        // Notify care rep
         useNotificationStore.getState().emit(
           'payment',
           'Diaspora client paid invoice',
           `${diasporaUserName} paid ₦${invoice.amountDue.toLocaleString()} for "${invoice.serviceType}". Funds are in escrow.`,
           '/dashboard/agent'
         );
-      } else {
-        set({ isLoading: false });
       }
+
+      void plan; // referenced for mock ledger only
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Payment failed', isLoading: false });
     }
   },
 
-  advanceTimelineStepMock: async (_txId, stepIndex) => {
+  advanceTimelineStep: async (txId, stepIndex) => {
     set({ isLoading: true });
     try {
-      await new Promise((r) => setTimeout(r, 600));
+      if (USE_API) {
+        await apiPost(`/api/diaspora/transactions/${txId}/advance-step`, { stepIndex });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+
       set((s) => {
         if (!s.selectedTransaction) return { isLoading: false };
         const timeline = s.selectedTransaction.timeline.map((step, i) => {
@@ -251,7 +283,6 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
         const allDone = timeline.every((t) => t.status === 'completed');
         const completedStep = s.selectedTransaction.timeline[stepIndex];
 
-        // Notify diaspora client that a step was completed
         useNotificationStore.getState().emit(
           'property',
           `Timeline update: ${completedStep?.label ?? 'Step'} completed`,
@@ -274,4 +305,10 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
       set({ error: err instanceof Error ? err.message : 'Action failed', isLoading: false });
     }
   },
+
+  // Backward-compatible aliases
+  fetchDashboardDataMock: async () => get().fetchDashboardData(),
+  fetchTransactionByIdMock: async (id) => get().fetchTransactionById(id),
+  advanceTimelineStepMock: async (txId, stepIndex) => get().advanceTimelineStep(txId, stepIndex),
+  payInvoiceMock: async (invoiceId, diasporaUserId, diasporaUserName) => get().payInvoice(invoiceId, diasporaUserId, diasporaUserName),
 }));

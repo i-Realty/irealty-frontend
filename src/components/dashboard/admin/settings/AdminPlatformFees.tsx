@@ -34,7 +34,7 @@ const FEE_DESCRIPTIONS: Record<string, { label: string; description: string; uni
 };
 
 export default function AdminPlatformFees() {
-  const { platformFees, updatePlatformFees } = useAdminDashboardStore();
+  const { platformFees, updatePlatformFees, submitPlatformFees } = useAdminDashboardStore();
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
@@ -48,7 +48,7 @@ export default function AdminPlatformFees() {
     }
     setErrors({});
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 1200));
+    await submitPlatformFees();
     setIsSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

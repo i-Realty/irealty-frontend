@@ -1,12 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 import {
   Users, Home, ShieldCheck, Coins, Wallet, CreditCard,
   ChevronDown, ArrowUpRight,
 } from 'lucide-react';
+
+type ChartPeriod = 'This week' | 'This month' | 'This year' | 'All time';
+const CHART_PERIODS: ChartPeriod[] = ['This week', 'This month', 'This year', 'All time'];
+const PERIOD_MAP: Record<ChartPeriod, string> = { 'This week': 'week', 'This month': 'month', 'This year': 'year', 'All time': 'all' };
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -18,8 +22,20 @@ export default function AdminDashboardPage() {
   const {
     stats, revenueData, transactionVolumeData,
     recentTransactions, pendingKycUsers,
-    isLoading, fetchDashboardDataMock,
+    isLoading, fetchDashboardDataMock, setPeriod,
   } = useAdminDashboardStore();
+
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('This week');
+  const [showChartDropdown, setShowChartDropdown] = useState(false);
+  const chartDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (chartDropdownRef.current && !chartDropdownRef.current.contains(e.target as Node)) setShowChartDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchDashboardDataMock();
@@ -87,9 +103,22 @@ export default function AdminDashboardPage() {
               <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
               <p className="text-2xl font-bold text-gray-900 mt-1">₦{(stats.totalRevenue / 1000000).toFixed(0)}M</p>
             </div>
-            <button className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg">
-              This week <ChevronDown className="w-4 h-4" />
-            </button>
+            <div className="relative" ref={chartDropdownRef}>
+              <button onClick={() => setShowChartDropdown((v) => !v)}
+                className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                {chartPeriod} <ChevronDown className={`w-4 h-4 transition-transform ${showChartDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showChartDropdown && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 w-36 z-20 animate-in fade-in slide-in-from-top-2">
+                  {CHART_PERIODS.map((opt) => (
+                    <button key={opt} onClick={() => { setChartPeriod(opt); setShowChartDropdown(false); setPeriod(PERIOD_MAP[opt]); }}
+                      className={`w-full px-4 py-2 text-left text-sm transition-colors ${chartPeriod === opt ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'}`}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">

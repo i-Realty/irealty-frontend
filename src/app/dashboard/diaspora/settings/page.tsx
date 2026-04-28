@@ -22,10 +22,10 @@ const DIASPORA_TABS: { id: DiasporaTab; icon: LucideIcon }[] = [
 
 export default function DiasporaSettingsPage() {
   const { activeTab, setActiveTab } = useSettingsStore();
-  const [localTab, setLocalTab] = useState<DiasporaTab>('Profile');
-
-  const validSettingsTab = DIASPORA_TABS.find((t) => t.id === activeTab) ? activeTab as DiasporaTab : null;
-  const activeLocalTab = validSettingsTab ?? localTab;
+  const [localTab, setLocalTab] = useState<DiasporaTab>(() => {
+    const found = DIASPORA_TABS.find((t) => t.id === activeTab);
+    return found ? (activeTab as DiasporaTab) : 'Profile';
+  });
 
   const handleTabChange = (tab: DiasporaTab) => {
     setLocalTab(tab);
@@ -45,7 +45,7 @@ export default function DiasporaSettingsPage() {
         <div className="hidden md:flex flex-col w-56 shrink-0 relative border-r border-gray-100 pr-4">
           <div className="sticky top-24 flex flex-col space-y-2">
             {DIASPORA_TABS.map((tab) => {
-              const isActive = activeLocalTab === tab.id;
+              const isActive = localTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
@@ -69,7 +69,7 @@ export default function DiasporaSettingsPage() {
         {/* Mobile Horizontal Tabs */}
         <div className="md:hidden w-[calc(100%+2rem)] -ml-4 px-4 overflow-x-auto no-scrollbar border-b border-gray-200 mb-6 flex space-x-6 sticky top-0 bg-gray-50/30 z-10 font-bold backdrop-blur-md">
           {DIASPORA_TABS.map((tab) => {
-            const isActive = activeLocalTab === tab.id;
+            const isActive = localTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -87,11 +87,11 @@ export default function DiasporaSettingsPage() {
 
         {/* Content */}
         <div className="flex-1 w-full max-w-4xl min-h-[500px]">
-          {activeLocalTab === 'Profile'       && <ProfileSettings />}
-          {activeLocalTab === 'Payout'        && <PayoutSettings />}
-          {activeLocalTab === 'FX & Currency' && <DiasporaFXSettings />}
-          {activeLocalTab === 'Account'       && <AccountSettings />}
-          {activeLocalTab === 'Help Center'   && <HelpCenterSettings />}
+          {localTab === 'Profile'       && <ProfileSettings />}
+          {localTab === 'Payout'        && <PayoutSettings />}
+          {localTab === 'FX & Currency' && <DiasporaFXSettings />}
+          {localTab === 'Account'       && <AccountSettings />}
+          {localTab === 'Help Center'   && <HelpCenterSettings />}
         </div>
       </div>
 

@@ -99,7 +99,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
            </div>
            
            <div className="absolute top-4 right-4 flex gap-2">
-             <button className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors">
+             <button
+               onClick={() => property.virtualTourUrl ? window.open(property.virtualTourUrl, '_blank') : undefined}
+               disabled={!property.virtualTourUrl}
+               className="bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors"
+             >
                <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span> Virtual Tour
              </button>
              <button onClick={() => setShowMapModal(true)} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm text-sm font-medium flex items-center gap-2 transition-colors">

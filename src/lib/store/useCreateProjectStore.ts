@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { apiPost, apiPut } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export type DeveloperProjectType = 'Residential' | 'Commercial' | 'Off-Plan';
 
@@ -178,7 +181,7 @@ export const useCreateProjectStore = create<CreateProjectState>((set, get) => ({
 
   submitProject: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 1500));
+    if (!USE_API) await new Promise((r) => setTimeout(r, 1500));
 
     const s = get();
     if (!s.projectType || !s.projectName) {
@@ -214,6 +217,15 @@ export const useCreateProjectStore = create<CreateProjectState>((set, get) => ({
       tag: 'For Sale',
       image: s.media[0] || '/images/property-placeholder.jpg',
     };
+
+    if (USE_API) {
+      const s2 = get();
+      if (s2.isEditMode && s2.editingProjectId) {
+        await apiPut(`/api/developer/projects/${s2.editingProjectId}`, project);
+      } else {
+        await apiPost('/api/developer/projects', project);
+      }
+    }
 
     set({ isLoading: false, isOpen: false });
     get().resetForm();

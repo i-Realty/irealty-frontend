@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export type DeveloperTabKey = 'all' | 'pending' | 'in-progress' | 'completed' | 'declined';
 export type DeveloperTransactionStatus = 'Pending' | 'Completed' | 'Declined' | 'In-progress';
@@ -56,10 +59,21 @@ interface DeveloperTransactionsState {
   setPropertyTypeFilter: (filter: string) => void;
   setCurrentPage: (page: number) => void;
 
+  fetchTransactions: () => Promise<void>;
+  fetchTransactionById: (id: string) => Promise<void>;
+  acceptTransaction: (id: string) => Promise<void>;
+  declineTransaction: (id: string) => Promise<void>;
+  uploadMilestoneDocs: (id: string, milestoneIndex: number) => Promise<void>;
+
+  /** @deprecated Use fetchTransactions() */
   fetchTransactionsMock: () => Promise<void>;
+  /** @deprecated Use fetchTransactionById() */
   fetchTransactionByIdMock: (id: string) => Promise<void>;
+  /** @deprecated Use acceptTransaction() */
   acceptTransactionMock: (id: string) => Promise<void>;
+  /** @deprecated Use declineTransaction() */
   declineTransactionMock: (id: string) => Promise<void>;
+  /** @deprecated Use uploadMilestoneDocs() */
   uploadMilestoneDocsMock: (id: string, milestoneIndex: number) => Promise<void>;
 }
 
@@ -392,54 +406,74 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
   setPropertyTypeFilter: (filter) => set({ propertyTypeFilter: filter, currentPage: 1 }),
   setCurrentPage: (page) => set({ currentPage: page }),
 
-  fetchTransactionsMock: async () => {
+  fetchTransactions: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ transactions: generateMockTransactions(), isLoading: false });
+    try {
+      if (USE_API) {
+        const data = await apiGet<{ transactions: DeveloperTransactionDetail[] }>('/api/developer/transactions');
+        set({ transactions: data.transactions, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+        set({ transactions: generateMockTransactions(), isLoading: false });
+      }
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+    }
   },
 
-  fetchTransactionByIdMock: async (id) => {
+  fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 400));
-    const { transactions } = get();
-    const found = transactions.find((t) => t.id === id) || generateMockTransactions()[0];
-    set({ selectedTransaction: { ...found, id }, isLoading: false });
+    try {
+      if (USE_API) {
+        const data = await apiGet<{ transaction: DeveloperTransactionDetail }>(`/api/developer/transactions/${id}`);
+        set({ selectedTransaction: data.transaction, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 400));
+        const { transactions } = get();
+        const found = transactions.find((t) => t.id === id) || generateMockTransactions()[0];
+        set({ selectedTransaction: { ...found, id }, isLoading: false });
+      }
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+    }
   },
 
-  acceptTransactionMock: async (_id) => {
+  acceptTransaction: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
+    if (USE_API) {
+      await apiPost(`/api/developer/transactions/${id}/accept`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
     set((s) => {
       if (!s.selectedTransaction) return { isActionLoading: false };
       const milestones = s.selectedTransaction.milestones.map((m, i) =>
         i === 0 ? { ...m, status: 'active' as const } : m
       );
-      return {
-        selectedTransaction: {
-          ...s.selectedTransaction,
-          status: 'In-progress',
-          currentStep: 2,
-          milestones,
-        },
-        isActionLoading: false,
-      };
+      return { selectedTransaction: { ...s.selectedTransaction, status: 'In-progress', currentStep: 2, milestones }, isActionLoading: false };
     });
   },
 
-  declineTransactionMock: async (_id) => {
+  declineTransaction: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
+    if (USE_API) {
+      await apiPost(`/api/developer/transactions/${id}/decline`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
     set((s) => ({
-      selectedTransaction: s.selectedTransaction
-        ? { ...s.selectedTransaction, status: 'Declined' }
-        : null,
+      selectedTransaction: s.selectedTransaction ? { ...s.selectedTransaction, status: 'Declined' } : null,
       isActionLoading: false,
     }));
   },
 
-  uploadMilestoneDocsMock: async (_id, milestoneIndex) => {
+  uploadMilestoneDocs: async (id, milestoneIndex) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
+    if (USE_API) {
+      await apiPost(`/api/developer/transactions/${id}/milestones/${milestoneIndex}/docs`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
     set((s) => {
       if (!s.selectedTransaction) return { isActionLoading: false };
       const milestones = s.selectedTransaction.milestones.map((m, i) => {
@@ -449,14 +483,16 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
       });
       const allDone = milestones.every((m) => m.status === 'completed');
       return {
-        selectedTransaction: {
-          ...s.selectedTransaction,
-          milestones,
-          currentStep: allDone ? 5 : s.selectedTransaction.currentStep + 1,
-          status: allDone ? 'Completed' : s.selectedTransaction.status,
-        },
+        selectedTransaction: { ...s.selectedTransaction, milestones, currentStep: allDone ? 5 : s.selectedTransaction.currentStep + 1, status: allDone ? 'Completed' : s.selectedTransaction.status },
         isActionLoading: false,
       };
     });
   },
+
+  // Backward-compatible aliases
+  fetchTransactionsMock: async () => get().fetchTransactions(),
+  fetchTransactionByIdMock: async (id) => get().fetchTransactionById(id),
+  acceptTransactionMock: async (id) => get().acceptTransaction(id),
+  declineTransactionMock: async (id) => get().declineTransaction(id),
+  uploadMilestoneDocsMock: async (id, milestoneIndex) => get().uploadMilestoneDocs(id, milestoneIndex),
 }));

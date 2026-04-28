@@ -1,5 +1,8 @@
 import { create } from 'zustand';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api/client';
 import { DeveloperProject } from './useCreateProjectStore';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // --- Mock Data ---
 export const mockDeveloperProjects: DeveloperProject[] = Array.from({ length: 8 }, (_, i) => ({
@@ -38,10 +41,15 @@ interface DeveloperProjectsState {
 
   // Actions
   fetchProjects: () => Promise<void>;
-  addProjectLocally: (project: DeveloperProject) => void;
-  updateProjectLocally: (project: DeveloperProject) => void;
+  addProject: (project: DeveloperProject) => Promise<void>;
+  updateProject: (project: DeveloperProject) => Promise<void>;
   deleteProject: (id: string) => Promise<boolean>;
   getProjectById: (id: string) => DeveloperProject | undefined;
+
+  /** @deprecated Use addProject() */
+  addProjectLocally: (project: DeveloperProject) => void;
+  /** @deprecated Use updateProject() */
+  updateProjectLocally: (project: DeveloperProject) => void;
 }
 
 export const useDeveloperProjectsStore = create<DeveloperProjectsState>((set, get) => ({
@@ -51,18 +59,30 @@ export const useDeveloperProjectsStore = create<DeveloperProjectsState>((set, ge
 
   fetchProjects: async () => {
     set({ isLoading: true, error: null });
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    set({ projects: mockDeveloperProjects, isLoading: false });
+    try {
+      if (USE_API) {
+        const data = await apiGet<{ projects: DeveloperProject[] }>('/api/developer/projects');
+        set({ projects: data.projects, isLoading: false });
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        set({ projects: mockDeveloperProjects, isLoading: false });
+      }
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+    }
   },
 
-  addProjectLocally: (project) => {
-    set((state) => ({
-      projects: [project, ...state.projects],
-    }));
+  addProject: async (project) => {
+    if (USE_API) {
+      await apiPost('/api/developer/projects', project);
+    }
+    set((state) => ({ projects: [project, ...state.projects] }));
   },
 
-  updateProjectLocally: (project) => {
+  updateProject: async (project) => {
+    if (USE_API) {
+      await apiPut(`/api/developer/projects/${project.id}`, project);
+    }
     set((state) => ({
       projects: state.projects.map((p) => (p.id === project.id ? project : p)),
     }));
@@ -70,15 +90,23 @@ export const useDeveloperProjectsStore = create<DeveloperProjectsState>((set, ge
 
   deleteProject: async (id) => {
     set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    set((state) => ({
-      projects: state.projects.filter((p) => p.id !== id),
-      isLoading: false,
-    }));
-    return true;
+    try {
+      if (USE_API) {
+        await apiDelete(`/api/developer/projects/${id}`);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+      set((state) => ({ projects: state.projects.filter((p) => p.id !== id), isLoading: false }));
+      return true;
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+      return false;
+    }
   },
 
-  getProjectById: (id) => {
-    return get().projects.find((p) => p.id === id);
-  },
+  getProjectById: (id) => get().projects.find((p) => p.id === id),
+
+  // Backward-compatible aliases
+  addProjectLocally: (project) => { void get().addProject(project); },
+  updateProjectLocally: (project) => { void get().updateProject(project); },
 }));

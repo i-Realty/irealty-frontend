@@ -17,9 +17,9 @@ export default function CreatePropertyModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center overflow-y-auto p-4 sm:p-6 pb-20" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit property' : 'Create new property'}>
+    <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center overflow-y-auto p-4 sm:p-6 pb-20" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit property' : 'Create new property'}>
       {/* Main Container */}
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl flex flex-col relative my-auto">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl flex flex-col relative my-auto overflow-hidden">
         
         {/* Absolute Close Button */}
         <button 

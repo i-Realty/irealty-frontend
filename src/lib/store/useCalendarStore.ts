@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { apiGet, apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -13,7 +16,7 @@ export type CalendarEvent = {
   dateISO: string; // "YYYY-MM-DD"
   startTime: string;
   endTime: string;
-  bookingId?: string; // links back to useTourBookingStore
+  bookingId?: string;
 };
 
 export type AvailabilityPayload = {
@@ -31,14 +34,19 @@ interface CalendarStore {
   selectedDate: Date;
   isAvailabilityModalOpen: boolean;
 
-  fetchEventsMock: (month: Date) => Promise<void>;
-  saveAvailabilityMock: (availabilities: AvailabilityPayload[]) => Promise<void>;
+  fetchEvents: (month: Date) => Promise<void>;
+  saveAvailability: (availabilities: AvailabilityPayload[]) => Promise<void>;
   addTourEvent: (event: CalendarEvent) => void;
   removeEvent: (id: string) => void;
 
   setCurrentMonth: (date: Date) => void;
   setSelectedDate: (date: Date) => void;
   setAvailabilityModalOpen: (isOpen: boolean) => void;
+
+  /** @deprecated Use fetchEvents() */
+  fetchEventsMock: (month: Date) => Promise<void>;
+  /** @deprecated Use saveAvailability() */
+  saveAvailabilityMock: (availabilities: AvailabilityPayload[]) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,30 +56,9 @@ const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
   const year = baseMonth.getFullYear();
   const month = String(baseMonth.getMonth() + 1).padStart(2, '0');
   return [
-    {
-      id: 'e1',
-      type: 'Inspection',
-      clientName: 'John Doe',
-      dateISO: `${year}-${month}-14`,
-      startTime: '1am',
-      endTime: '4pm',
-    },
-    {
-      id: 'e2',
-      type: 'Inspection',
-      clientName: 'John Doe',
-      dateISO: `${year}-${month}-16`,
-      startTime: '1am',
-      endTime: '4pm',
-    },
-    {
-      id: 'e3',
-      type: 'Inspection',
-      clientName: 'John Doe',
-      dateISO: `${year}-${month}-21`,
-      startTime: '1am',
-      endTime: '4pm',
-    },
+    { id: 'e1', type: 'Inspection', clientName: 'John Doe', dateISO: `${year}-${month}-14`, startTime: '1am', endTime: '4pm' },
+    { id: 'e2', type: 'Inspection', clientName: 'John Doe', dateISO: `${year}-${month}-16`, startTime: '1am', endTime: '4pm' },
+    { id: 'e3', type: 'Inspection', clientName: 'John Doe', dateISO: `${year}-${month}-21`, startTime: '1am', endTime: '4pm' },
   ];
 };
 
@@ -80,7 +67,7 @@ const generateBaseMockEvents = (baseMonth: Date): CalendarEvent[] => {
 // ---------------------------------------------------------------------------
 export const useCalendarStore = create<CalendarStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       events: [],
       isLoadingEvents: false,
       isSavingAvailability: false,
@@ -90,26 +77,39 @@ export const useCalendarStore = create<CalendarStore>()(
       selectedDate: new Date(),
       isAvailabilityModalOpen: false,
 
-      fetchEventsMock: async (month) => {
+      fetchEvents: async (month) => {
         set({ isLoadingEvents: true, error: null });
-        await new Promise((resolve) => setTimeout(resolve, 600));
         try {
-          const base = generateBaseMockEvents(month);
-          set((s) => {
-            // Merge seed events with any real tour events already stored
-            const tourEvents = s.events.filter((e) => e.type === 'Tour' || e.bookingId);
-            const merged = [...base, ...tourEvents];
-            return { events: merged, isLoadingEvents: false };
-          });
+          if (USE_API) {
+            const ym = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+            const data = await apiGet<{ events: CalendarEvent[] }>(`/api/agent/calendar/events?month=${ym}`);
+            set((s) => {
+              const tourEvents = s.events.filter((e) => e.type === 'Tour' || e.bookingId);
+              const merged = [...data.events, ...tourEvents];
+              return { events: merged, isLoadingEvents: false };
+            });
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            const base = generateBaseMockEvents(month);
+            set((s) => {
+              const tourEvents = s.events.filter((e) => e.type === 'Tour' || e.bookingId);
+              const merged = [...base, ...tourEvents];
+              return { events: merged, isLoadingEvents: false };
+            });
+          }
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isLoadingEvents: false });
         }
       },
 
-      saveAvailabilityMock: async () => {
+      saveAvailability: async (availabilities) => {
         set({ isSavingAvailability: true, error: null });
-        await new Promise((resolve) => setTimeout(resolve, 800));
         try {
+          if (USE_API) {
+            await apiPost('/api/agent/calendar/availability', { availabilities });
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+          }
           set({ isSavingAvailability: false, isAvailabilityModalOpen: false });
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isSavingAvailability: false });
@@ -129,19 +129,18 @@ export const useCalendarStore = create<CalendarStore>()(
       setCurrentMonth: (date) => set({ currentMonth: date }),
       setSelectedDate: (date) => set({ selectedDate: date }),
       setAvailabilityModalOpen: (isOpen) => set({ isAvailabilityModalOpen: isOpen }),
+
+      // Backward-compatible aliases
+      fetchEventsMock: async (month) => get().fetchEvents(month),
+      saveAvailabilityMock: async (availabilities) => get().saveAvailability(availabilities),
     }),
     {
       name: 'irealty-calendar',
       storage: createJSONStorage(() => localStorage),
-      // Dates are serialised as ISO strings — revive them as Date objects
       onRehydrateStorage: () => (state) => {
         if (state) {
-          if (typeof state.currentMonth === 'string') {
-            state.currentMonth = new Date(state.currentMonth);
-          }
-          if (typeof state.selectedDate === 'string') {
-            state.selectedDate = new Date(state.selectedDate);
-          }
+          if (typeof state.currentMonth === 'string') state.currentMonth = new Date(state.currentMonth);
+          if (typeof state.selectedDate === 'string') state.selectedDate = new Date(state.selectedDate);
         }
       },
     }

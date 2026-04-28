@@ -10,6 +10,7 @@ import {
   InvoiceStatus,
   PaymentStatus,
 } from '@/lib/store/useDiasporaDashboardStore';
+import { InvoiceDetailModal } from '@/components/dashboard/diaspora/InvoiceDetailModal';
 
 type MainTab = 'invoices' | 'payments';
 type InvoiceFilter = 'All' | InvoiceStatus;
@@ -412,6 +413,8 @@ export default function DiasporaTransactionsPage() {
           </div>
         )}
       </div>
+
+      <InvoiceDetailModal />
     </div>
   );
 }

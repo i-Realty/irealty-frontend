@@ -1,27 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useSettingsStore } from '@/lib/store/useSettingsStore';
 
 const CURRENCIES = ['USD', 'GBP', 'EUR', 'CAD', 'AUD', 'NGN'];
 const FX_PROVIDERS = ['i-Realty Rate', 'CBN Official Rate', 'Black Market Rate'];
 
 export default function DiasporaFXSettings() {
-  const [baseCurrency, setBaseCurrency] = useState('USD');
-  const [displayCurrency, setDisplayCurrency] = useState('NGN');
-  const [fxProvider, setFxProvider] = useState('i-Realty Rate');
-  const [autoConvert, setAutoConvert] = useState(true);
-  const [rateAlerts, setRateAlerts] = useState(true);
-  const [alertThreshold, setAlertThreshold] = useState('5');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { diasporaFX, updateDiasporaFX, submitDiasporaFX, isSaving } = useSettingsStore();
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setIsSaving(false);
-    setSaved(true);
-  };
+  const { baseCurrency, displayCurrency, fxProvider, autoConvert, rateAlerts, alertThreshold } = diasporaFX;
 
   return (
     <div className="flex flex-col gap-8 w-full animate-in slide-in-from-right-4 fade-in duration-300">
@@ -41,7 +29,7 @@ export default function DiasporaFXSettings() {
             <label className="text-[12px] font-bold text-gray-900 ml-1">Your Home Currency</label>
             <select
               value={baseCurrency}
-              onChange={(e) => { setBaseCurrency(e.target.value); setSaved(false); }}
+              onChange={(e) => updateDiasporaFX({ baseCurrency: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors bg-white"
             >
               {CURRENCIES.filter((c) => c !== 'NGN').map((c) => (
@@ -55,7 +43,7 @@ export default function DiasporaFXSettings() {
             <label className="text-[12px] font-bold text-gray-900 ml-1">Display Currency</label>
             <select
               value={displayCurrency}
-              onChange={(e) => { setDisplayCurrency(e.target.value); setSaved(false); }}
+              onChange={(e) => updateDiasporaFX({ displayCurrency: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors bg-white"
             >
               {CURRENCIES.map((c) => (
@@ -75,7 +63,7 @@ export default function DiasporaFXSettings() {
                   type="radio"
                   name="fxProvider"
                   checked={fxProvider === p}
-                  onChange={() => { setFxProvider(p); setSaved(false); }}
+                  onChange={() => updateDiasporaFX({ fxProvider: p })}
                   className="accent-blue-600 w-4 h-4"
                 />
                 <div>
@@ -101,7 +89,7 @@ export default function DiasporaFXSettings() {
           </div>
           <button
             type="button"
-            onClick={() => { setAutoConvert((v) => !v); setSaved(false); }}
+            onClick={() => updateDiasporaFX({ autoConvert: !autoConvert })}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${autoConvert ? 'bg-blue-600' : 'bg-gray-200'}`}
             role="switch" aria-checked={autoConvert}
           >
@@ -116,7 +104,7 @@ export default function DiasporaFXSettings() {
           </div>
           <button
             type="button"
-            onClick={() => { setRateAlerts((v) => !v); setSaved(false); }}
+            onClick={() => updateDiasporaFX({ rateAlerts: !rateAlerts })}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${rateAlerts ? 'bg-blue-600' : 'bg-gray-200'}`}
             role="switch" aria-checked={rateAlerts}
           >
@@ -131,7 +119,7 @@ export default function DiasporaFXSettings() {
               type="number"
               min="1" max="50"
               value={alertThreshold}
-              onChange={(e) => { setAlertThreshold(e.target.value); setSaved(false); }}
+              onChange={(e) => updateDiasporaFX({ alertThreshold: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors"
             />
             <p className="text-xs text-gray-400 ml-1">
@@ -141,12 +129,11 @@ export default function DiasporaFXSettings() {
         )}
       </div>
 
-      <div className="flex items-center justify-between">
-        {saved && <p className="text-sm text-green-600 font-medium">Preferences saved.</p>}
+      <div className="flex items-center justify-end">
         <button
-          onClick={handleSave}
+          onClick={submitDiasporaFX}
           disabled={isSaving}
-          className="ml-auto min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-2.5 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+          className="min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-2.5 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
         >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
         </button>

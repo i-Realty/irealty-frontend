@@ -1,5 +1,8 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
 import type { UserRole } from './useAuthStore';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -58,11 +61,22 @@ interface AdminMessagesState {
   // Mobile UI
   isMobileDetailOpen: boolean;
 
-  // Actions
+  // API-ready actions
+  fetchThreads: () => Promise<void>;
+  sendReply: (threadId: string, content: string) => Promise<void>;
+  resolveThread: (threadId: string) => Promise<void>;
+  escalateThread: (threadId: string) => Promise<void>;
+  reopenThread: (threadId: string) => Promise<void>;
+
+  /** @deprecated Use fetchThreads() */
   fetchThreadsMock: () => Promise<void>;
+  /** @deprecated Use sendReply() */
   sendReplyMock: (threadId: string, content: string) => Promise<void>;
+  /** @deprecated Use resolveThread() */
   resolveThreadMock: (threadId: string) => Promise<void>;
+  /** @deprecated Use escalateThread() */
   escalateThreadMock: (threadId: string) => Promise<void>;
+  /** @deprecated Use reopenThread() */
   reopenThreadMock: (threadId: string) => Promise<void>;
 
   setActiveThreadId: (id: string | null) => void;
@@ -329,7 +343,7 @@ const MOCK_THREADS: SupportThread[] = [
 
 // ── Store ────────────────────────────────────────────────────────────────
 
-export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
+export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
   threads: [],
   activeThreadId: null,
   searchQuery: '',
@@ -343,13 +357,22 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
 
   isMobileDetailOpen: false,
 
-  fetchThreadsMock: async () => {
+  fetchThreads: async () => {
     set({ isLoading: true, error: null });
-    await new Promise((r) => setTimeout(r, 600));
-    set({ threads: MOCK_THREADS, isLoading: false });
+    try {
+      if (USE_API) {
+        const d = await apiGet<{ threads: SupportThread[] }>('/api/admin/support-tickets');
+        set({ threads: d.threads, isLoading: false });
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 600));
+      set({ threads: MOCK_THREADS, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+    }
   },
 
-  sendReplyMock: async (threadId, content) => {
+  sendReply: async (threadId, content) => {
     set({ isSending: true, error: null });
     await new Promise((r) => setTimeout(r, 500));
 
@@ -378,7 +401,7 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
     }));
   },
 
-  resolveThreadMock: async (threadId) => {
+  resolveThread: async (threadId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 400));
     set((s) => ({
@@ -389,7 +412,7 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
     }));
   },
 
-  escalateThreadMock: async (threadId) => {
+  escalateThread: async (threadId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 400));
     set((s) => ({
@@ -400,7 +423,7 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
     }));
   },
 
-  reopenThreadMock: async (threadId) => {
+  reopenThread: async (threadId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 400));
     set((s) => ({
@@ -416,4 +439,11 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set) => ({
   setCategoryFilter: (category) => set({ categoryFilter: category }),
   setStatusFilter: (status) => set({ statusFilter: status }),
   toggleMobileDetail: (open) => set({ isMobileDetailOpen: open }),
+
+  // Backward-compatible aliases
+  fetchThreadsMock: async () => get().fetchThreads(),
+  sendReplyMock: async (threadId, content) => get().sendReply(threadId, content),
+  resolveThreadMock: async (threadId) => get().resolveThread(threadId),
+  escalateThreadMock: async (threadId) => get().escalateThread(threadId),
+  reopenThreadMock: async (threadId) => get().reopenThread(threadId),
 }));

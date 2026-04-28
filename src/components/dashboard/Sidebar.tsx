@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
-  Home,
   MessageSquare,
   FileText,
   Wallet,
@@ -71,9 +70,8 @@ export default function Sidebar() {
       `}>
         {/* Logo Area */}
         <div className="h-16 flex flex-shrink-0 items-center justify-between px-6 border-b border-gray-100">
-          <Link href="/" className="font-bold text-xl text-blue-600 flex items-center gap-2 tracking-tight">
-            <Home className="w-6 h-6 text-blue-600" />
-            i-Realty
+          <Link href="/">
+            <Image src="/logo.png" alt="i-Realty" width={110} height={36} className="object-contain" priority />
           </Link>
           <button onClick={close} className="md:hidden p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
             <X className="w-5 h-5" />

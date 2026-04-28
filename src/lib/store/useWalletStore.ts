@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { apiGet, apiPost, apiPut } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export type WalletTransaction = {
   id: string;
@@ -54,8 +57,15 @@ interface WalletStore {
   setActiveModal: (modal: ModalType) => void;
   setWithdrawMethod: (method: WithdrawalMethod) => void;
 
+  fetchLedger: () => Promise<void>;
+  processWithdrawal: (amount: number) => Promise<void>;
+  updateFiatDetails: (details: BankDetailsPayload) => Promise<void>;
+
+  /** @deprecated Use fetchLedger() */
   fetchLedgerMock: () => Promise<void>;
+  /** @deprecated Use processWithdrawal() */
   processWithdrawalMock: (amount: number) => Promise<void>;
+  /** @deprecated Use updateFiatDetails() */
   updateFiatDetailsMock: (details: BankDetailsPayload) => Promise<void>;
 
   /** Credit wallet after escrow release or payment received */
@@ -100,49 +110,68 @@ export const useWalletStore = create<WalletStore>()(
       setActiveModal: (modal) => set({ activeModal: modal }),
       setWithdrawMethod: (method) => set({ currentWithdrawMethod: method }),
 
-      fetchLedgerMock: async () => {
+      fetchLedger: async () => {
         set({ isLoadingLedger: true, error: null });
         try {
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          const { transactions } = get();
-          if (transactions.length === 0) {
-            set({
-              transactions: [
-                { id: 'tx1', type: 'Deposit', amount: 24000, status: 'Completed', date: '15 Dec, 2023' },
-                { id: 'tx2', type: 'Deposit', amount: 24000, status: 'Completed', date: '15 Dec, 2023' },
-                { id: 'tx3', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
-                { id: 'tx4', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
-                { id: 'tx5', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
-              ],
-              isLoadingLedger: false,
-            });
+          if (USE_API) {
+            const data = await apiGet<{ transactions: WalletTransaction[]; walletBalance: number; escrowBalance: number }>('/api/wallet/ledger');
+            set({ transactions: data.transactions, walletBalance: data.walletBalance, escrowBalance: data.escrowBalance, isLoadingLedger: false });
           } else {
-            set({ isLoadingLedger: false });
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            const { transactions } = get();
+            if (transactions.length === 0) {
+              set({
+                transactions: [
+                  { id: 'tx1', type: 'Deposit', amount: 24000, status: 'Completed', date: '15 Dec, 2023' },
+                  { id: 'tx2', type: 'Deposit', amount: 24000, status: 'Completed', date: '15 Dec, 2023' },
+                  { id: 'tx3', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
+                  { id: 'tx4', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
+                  { id: 'tx5', type: 'Withdrawal', amount: 24000, status: 'Pending', date: '15 Dec, 2023' },
+                ],
+                isLoadingLedger: false,
+              });
+            } else {
+              set({ isLoadingLedger: false });
+            }
           }
         } catch (err) {
           set({ error: err instanceof Error ? err.message : 'Failed to load ledger', isLoadingLedger: false });
         }
       },
 
-      processWithdrawalMock: async (_amount: number) => {
+      processWithdrawal: async (amount: number) => {
         set({ isProcessingAction: true, error: null });
         try {
-          await new Promise((resolve) => setTimeout(resolve, 1500));
+          if (USE_API) {
+            const { currentWithdrawMethod, fiatDetails, cryptoDetails } = get();
+            await apiPost('/api/wallet/withdraw', { amount, method: currentWithdrawMethod, fiatDetails, cryptoDetails });
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          }
           set({ isProcessingAction: false, activeModal: 'withdrawSuccess' });
         } catch (err) {
           set({ error: err instanceof Error ? err.message : 'Withdrawal failed', isProcessingAction: false });
         }
       },
 
-      updateFiatDetailsMock: async (details: BankDetailsPayload) => {
+      updateFiatDetails: async (details: BankDetailsPayload) => {
         set({ isProcessingAction: true, error: null });
         try {
-          await new Promise((resolve) => setTimeout(resolve, 600));
+          if (USE_API) {
+            await apiPut('/api/wallet/fiat-details', details);
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+          }
           set({ fiatDetails: details, isProcessingAction: false, activeModal: 'withdraw' });
         } catch (err) {
           set({ error: err instanceof Error ? err.message : 'Update failed', isProcessingAction: false });
         }
       },
+
+      // Backward-compatible aliases
+      fetchLedgerMock: async () => get().fetchLedger(),
+      processWithdrawalMock: async (amount) => get().processWithdrawal(amount),
+      updateFiatDetailsMock: async (details) => get().updateFiatDetails(details),
 
       credit: (amount, sourceTransactionId, description) => {
         const entry: WalletTransaction = {

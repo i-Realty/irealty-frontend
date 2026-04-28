@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useSettingsStore, SettingsTab } from '@/lib/store/useSettingsStore';
 import { User, CreditCard, ShieldCheck, Map, HelpCircle, FileText, type LucideIcon } from 'lucide-react';
 
@@ -12,8 +13,18 @@ import HelpCenterSettings from '@/components/dashboard/agent/settings/forms/Help
 
 import AddAccountModal from '@/components/dashboard/agent/settings/AddAccountModal';
 
+const AGENT_TABS: SettingsTab[] = ['Profile', 'Payout', 'Subscription Plans', 'Commissions', 'Account', 'Help Center'];
+
 export default function SettingsPage() {
   const { activeTab, setActiveTab } = useSettingsStore();
+  const [localTab, setLocalTab] = useState<SettingsTab>(() =>
+    AGENT_TABS.includes(activeTab) ? activeTab : 'Profile'
+  );
+
+  const handleTabChange = (tab: SettingsTab) => {
+    setLocalTab(tab);
+    setActiveTab(tab);
+  };
 
   const TABS: { id: SettingsTab; icon: LucideIcon; iconMobileHidden?: boolean }[] = [
     { id: 'Profile', icon: User },
@@ -38,12 +49,12 @@ export default function SettingsPage() {
          <div className="hidden md:flex flex-col w-56 shrink-0 relative border-r border-gray-100 pr-4">
             <div className="sticky top-24 flex flex-col space-y-2">
                {TABS.map((tab) => {
-                  const isActive = activeTab === tab.id;
+                  const isActive = localTab === tab.id;
                   const Icon = tab.icon;
                   return (
                      <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => handleTabChange(tab.id)}
                         className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all font-bold text-[14px] text-left relative ${
                            isActive 
                            ? 'bg-blue-50/50 text-blue-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]' 
@@ -65,11 +76,11 @@ export default function SettingsPage() {
          {/* Mobile Horizontal Tabbing List */}
          <div className="md:hidden w-[calc(100%+2rem)] -ml-4 px-4 overflow-x-auto no-scrollbar border-b border-gray-200 mb-6 flex space-x-6 sticky top-0 bg-gray-50/30 z-10 font-bold backdrop-blur-md">
              {TABS.map((tab) => {
-                 const isActive = activeTab === tab.id;
+                 const isActive = localTab === tab.id;
                  return (
                     <button
                        key={tab.id}
-                       onClick={() => setActiveTab(tab.id)}
+                       onClick={() => handleTabChange(tab.id)}
                        className={`pb-3 pt-2 text-[14px] whitespace-nowrap transition-colors relative flex items-center gap-2 ${
                          isActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
                        }`}
@@ -85,12 +96,12 @@ export default function SettingsPage() {
 
          {/* Content View Boundary */}
          <div className="flex-1 w-full max-w-4xl min-h-[500px]">
-            {activeTab === 'Profile' && <ProfileSettings />}
-            {activeTab === 'Payout' && <PayoutSettings />}
-            {activeTab === 'Subscription Plans' && <SubscriptionSettings />}
-            {activeTab === 'Commissions' && <CommissionSettings />}
-            {activeTab === 'Account' && <AccountSettings />}
-            {activeTab === 'Help Center' && <HelpCenterSettings />}
+            {localTab === 'Profile' && <ProfileSettings />}
+            {localTab === 'Payout' && <PayoutSettings />}
+            {localTab === 'Subscription Plans' && <SubscriptionSettings />}
+            {localTab === 'Commissions' && <CommissionSettings />}
+            {localTab === 'Account' && <AccountSettings />}
+            {localTab === 'Help Center' && <HelpCenterSettings />}
          </div>
 
       </div>

@@ -1,5 +1,8 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
 import type { TransactionStatus } from '@/lib/store/useTransactionsStore';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -23,7 +26,7 @@ export interface SeekerTransactionDetail {
   date: string;
   propertyName: string;
   propertyType: string;
-  clientName: string;       // The counterpart: agent / developer / landlord name
+  clientName: string;
   clientAvatar: string;
   clientVerified: boolean;
   clientLabel: 'Client' | 'Developer';
@@ -32,24 +35,14 @@ export interface SeekerTransactionDetail {
   amount: number;
   status: TransactionStatus;
   currentStep: number;
-
-  // Financial
   escrowAmount: number;
   irealtyFee: number;
   propertyPrice: number;
-
-  // Schedule (inspection)
   scheduledDate?: string;
   scheduledTime?: string;
-
-  // Developer milestones
   developerMilestones?: DeveloperMilestone[];
-
-  // Feedback
-  reviewRating?: number;    // 1–5, set on submit
+  reviewRating?: number;
   reviewComment?: string;
-
-  // Property detail tab
   propertyImage: string;
   propertyTag: 'For Sale' | 'For Rent';
   propertyLocation: string;
@@ -66,7 +59,6 @@ interface SeekerTransactionsState {
   isActionLoading: boolean;
   error: string | null;
 
-  // Filters
   activeTab: SeekerTabKey;
   statusFilter: SeekerStatusFilter;
   searchQuery: string;
@@ -79,12 +71,27 @@ interface SeekerTransactionsState {
   setPropertyTypeFilter: (f: string) => void;
   setCurrentPage: (p: number) => void;
 
+  fetchTransactions: () => Promise<void>;
+  fetchTransactionById: (id: string) => Promise<void>;
+  confirmInspection: (id: string) => Promise<void>;
+  confirmHandover: (id: string) => Promise<void>;
+  approveMilestone: (id: string) => Promise<void>;
+  makePayment: (id: string) => Promise<void>;
+  submitReview: (id: string, rating: number, comment: string) => Promise<void>;
+
+  /** @deprecated Use fetchTransactions() */
   fetchTransactionsMock: () => Promise<void>;
+  /** @deprecated Use fetchTransactionById() */
   fetchTransactionByIdMock: (id: string) => Promise<void>;
+  /** @deprecated Use confirmInspection() */
   confirmInspectionMock: (id: string) => Promise<void>;
+  /** @deprecated Use confirmHandover() */
   confirmHandoverMock: (id: string) => Promise<void>;
+  /** @deprecated Use approveMilestone() */
   approveMilestoneMock: (id: string) => Promise<void>;
+  /** @deprecated Use makePayment() */
   makePaymentMock: (id: string) => Promise<void>;
+  /** @deprecated Use submitReview() */
   submitReviewMock: (id: string, rating: number, comment: string) => Promise<void>;
 }
 
@@ -259,6 +266,23 @@ const mockSeekerTransactions: SeekerTransactionDetail[] = [
   },
 ];
 
+// ── Helpers for mock action updates ─────────────────────────────────────
+
+function updateTx(
+  state: SeekerTransactionsState,
+  id: string,
+  patch: Partial<SeekerTransactionDetail>,
+) {
+  const transactions = state.transactions.map((t) =>
+    t.id !== id ? t : { ...t, ...patch },
+  );
+  const selectedTransaction =
+    state.selectedTransaction?.id === id
+      ? { ...state.selectedTransaction, ...patch }
+      : state.selectedTransaction;
+  return { transactions, selectedTransaction, isActionLoading: false };
+}
+
 // ── Store ──────────────────────────────────────────────────────────────
 
 export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, get) => ({
@@ -280,101 +304,118 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
   setPropertyTypeFilter: (f) => set({ propertyTypeFilter: f, currentPage: 1 }),
   setCurrentPage: (p) => set({ currentPage: p }),
 
-  fetchTransactionsMock: async () => {
+  // ── Fetch all ─────────────────────────────────────────────────────
+
+  fetchTransactions: async () => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      set({ transactions: mockSeekerTransactions, isLoading: false });
+      if (USE_API) {
+        const data = await apiGet<{ transactions: SeekerTransactionDetail[] }>('/api/seeker/transactions');
+        set({ transactions: data.transactions, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+        set({ transactions: mockSeekerTransactions, isLoading: false });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load transactions', isLoading: false });
     }
   },
 
-  fetchTransactionByIdMock: async (id) => {
+  // ── Fetch by ID ───────────────────────────────────────────────────
+
+  fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((r) => setTimeout(r, 400));
-      const tx =
-        get().transactions.find((t) => t.id === id) ??
-        mockSeekerTransactions.find((t) => t.id === id) ??
-        null;
-      set({ selectedTransaction: tx, isLoading: false });
+      if (USE_API) {
+        const data = await apiGet<{ transaction: SeekerTransactionDetail }>(`/api/seeker/transactions/${id}`);
+        set({ selectedTransaction: data.transaction, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 400));
+        const tx =
+          get().transactions.find((t) => t.id === id) ??
+          mockSeekerTransactions.find((t) => t.id === id) ??
+          null;
+        set({ selectedTransaction: tx, isLoading: false });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load transaction', isLoading: false });
     }
   },
 
-  confirmInspectionMock: async (id) => {
+  // ── Actions ───────────────────────────────────────────────────────
+
+  confirmInspection: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
-    set((state) => {
-      const updated = state.transactions.map((t) =>
-        t.id !== id ? t : { ...t, status: 'Completed' as TransactionStatus, currentStep: 3 }
-      );
-      const sel = state.selectedTransaction?.id === id
-        ? { ...state.selectedTransaction, status: 'Completed' as TransactionStatus, currentStep: 3 }
-        : state.selectedTransaction;
-      return { transactions: updated, selectedTransaction: sel, isActionLoading: false };
+    if (USE_API) {
+      await apiPost(`/api/seeker/transactions/${id}/confirm-inspection`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    set((s) => updateTx(s, id, { status: 'Completed' as TransactionStatus, currentStep: 3 }));
+  },
+
+  confirmHandover: async (id) => {
+    set({ isActionLoading: true });
+    if (USE_API) {
+      await apiPost(`/api/seeker/transactions/${id}/confirm-handover`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    set((s) => updateTx(s, id, { status: 'Completed' as TransactionStatus, currentStep: 3 }));
+  },
+
+  approveMilestone: async (id) => {
+    set({ isActionLoading: true });
+    if (USE_API) {
+      await apiPost(`/api/seeker/transactions/${id}/approve-milestone`);
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    set((s) => {
+      const tx = s.transactions.find((t) => t.id === id);
+      const nextStep = tx ? Math.min(tx.currentStep + 1, 5) : 3;
+      return updateTx(s, id, { currentStep: nextStep });
     });
   },
 
-  confirmHandoverMock: async (id) => {
+  makePayment: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
-    set((state) => {
-      const updated = state.transactions.map((t) =>
-        t.id !== id ? t : { ...t, status: 'Completed' as TransactionStatus, currentStep: 3 }
-      );
-      const sel = state.selectedTransaction?.id === id
-        ? { ...state.selectedTransaction, status: 'Completed' as TransactionStatus, currentStep: 3 }
-        : state.selectedTransaction;
-      return { transactions: updated, selectedTransaction: sel, isActionLoading: false };
+    if (USE_API) {
+      await apiPost(`/api/seeker/transactions/${id}/make-payment`);
+    } else {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    set((s) => {
+      const tx = s.transactions.find((t) => t.id === id);
+      const nextStep = tx ? Math.min(tx.currentStep + 1, 5) : 3;
+      return updateTx(s, id, { currentStep: nextStep });
     });
   },
 
-  approveMilestoneMock: async (id) => {
+  submitReview: async (id, rating, comment) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
-    set((state) => {
-      const updated = state.transactions.map((t) => {
-        if (t.id !== id) return t;
-        const nextStep = Math.min(t.currentStep + 1, 5);
-        return { ...t, currentStep: nextStep };
+    if (USE_API) {
+      await apiPost(`/api/seeker/transactions/${id}/submit-review`, { rating, comment });
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    set((s) => {
+      const tx = s.transactions.find((t) => t.id === id);
+      return updateTx(s, id, {
+        reviewRating: rating,
+        reviewComment: comment,
+        currentStep: tx ? tx.currentStep + 1 : 5,
       });
-      const sel = state.selectedTransaction?.id === id
-        ? { ...state.selectedTransaction, currentStep: Math.min(state.selectedTransaction.currentStep + 1, 5) }
-        : state.selectedTransaction;
-      return { transactions: updated, selectedTransaction: sel, isActionLoading: false };
     });
   },
 
-  makePaymentMock: async (id) => {
-    set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 1000));
-    set((state) => {
-      const updated = state.transactions.map((t) => {
-        if (t.id !== id) return t;
-        const nextStep = Math.min(t.currentStep + 1, 5);
-        return { ...t, currentStep: nextStep };
-      });
-      const sel = state.selectedTransaction?.id === id
-        ? { ...state.selectedTransaction, currentStep: Math.min(state.selectedTransaction.currentStep + 1, 5) }
-        : state.selectedTransaction;
-      return { transactions: updated, selectedTransaction: sel, isActionLoading: false };
-    });
-  },
+  // ── Backward-compatible aliases ───────────────────────────────────
 
-  submitReviewMock: async (id, rating, comment) => {
-    set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
-    set((state) => {
-      const updated = state.transactions.map((t) =>
-        t.id !== id ? t : { ...t, reviewRating: rating, reviewComment: comment, currentStep: t.currentStep + 1 }
-      );
-      const sel = state.selectedTransaction?.id === id
-        ? { ...state.selectedTransaction, reviewRating: rating, reviewComment: comment }
-        : state.selectedTransaction;
-      return { transactions: updated, selectedTransaction: sel, isActionLoading: false };
-    });
-  },
+  fetchTransactionsMock: async () => get().fetchTransactions(),
+  fetchTransactionByIdMock: async (id) => get().fetchTransactionById(id),
+  confirmInspectionMock: async (id) => get().confirmInspection(id),
+  confirmHandoverMock: async (id) => get().confirmHandover(id),
+  approveMilestoneMock: async (id) => get().approveMilestone(id),
+  makePaymentMock: async (id) => get().makePayment(id),
+  submitReviewMock: async (id, rating, comment) => get().submitReview(id, rating, comment),
 }));

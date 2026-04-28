@@ -8,6 +8,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 type ChartPeriod = 'This week' | 'This month' | 'This year' | 'All time';
 const CHART_PERIODS: ChartPeriod[] = ['This week', 'This month', 'This year', 'All time'];
 
+const PERIOD_MAP: Record<ChartPeriod, string> = {
+  'This week': 'week',
+  'This month': 'month',
+  'This year': 'year',
+  'All time': 'all',
+};
+
 type FinanceTab = 'revenue' | 'escrow' | 'payouts';
 
 export default function AdminFinancePage() {
@@ -15,6 +22,7 @@ export default function AdminFinancePage() {
     revenueBreakdown, revenueData, escrowItems, payouts,
     isLoading, isActionLoading, fetchFinanceMock, fetchDashboardDataMock,
     approvePayoutMock, rejectPayoutMock, payoutFilter, setPayoutFilter,
+    setPeriod,
   } = useAdminDashboardStore();
 
   const [activeTab, setActiveTab] = useState<FinanceTab>('revenue');
@@ -123,7 +131,7 @@ export default function AdminFinancePage() {
                 {showChartDropdown && (
                   <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 w-40 z-20 animate-in fade-in slide-in-from-top-2">
                     {CHART_PERIODS.map((opt) => (
-                      <button key={opt} onClick={() => { setChartPeriod(opt); setShowChartDropdown(false); }}
+                      <button key={opt} onClick={() => { setChartPeriod(opt); setShowChartDropdown(false); setPeriod(PERIOD_MAP[opt]); }}
                         className={`w-full px-4 py-2 text-left text-sm transition-colors ${chartPeriod === opt ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'}`}>
                         {opt}
                       </button>

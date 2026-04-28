@@ -61,7 +61,7 @@ export default function ChatModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Chat with agent">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Chat with agent">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       <div className="relative max-w-6xl w-full mx-4 bg-white rounded-lg shadow-lg overflow-hidden flex">

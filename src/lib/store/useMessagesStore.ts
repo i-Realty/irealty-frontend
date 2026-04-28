@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { apiGet, apiPost } from '@/lib/api/client';
 import type { UserRole } from './useAuthStore';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -103,7 +106,12 @@ interface MessagesStore {
   stagedFiles: StagedFile[];
 
   // Actions
+  fetchThreads: () => Promise<void>;
+  sendMessage: (chatId: string, content: string, type: MessageContentType, files?: FilePayload[]) => Promise<void>;
+
+  /** @deprecated Use fetchThreads() */
   fetchThreadsMock: () => Promise<void>;
+  /** @deprecated Use sendMessage() */
   sendMessageMock: (chatId: string, content: string, type: MessageContentType, files?: FilePayload[]) => Promise<void>;
 
   /**
@@ -278,40 +286,62 @@ export const useMessagesStore = create<MessagesStore>()(
       uploadModalState: 'none',
       stagedFiles: [],
 
-      fetchThreadsMock: async () => {
+      fetchThreads: async () => {
         set({ isLoadingChats: true, error: null });
-        await new Promise((resolve) => setTimeout(resolve, 800));
         try {
-          const { threads } = get();
-          // Only seed if no threads exist (so real threads persist)
-          if (threads.length === 0) {
-            set({ threads: generateMockThreads(), isLoadingChats: false });
+          if (USE_API) {
+            const data = await apiGet<{ threads: ChatThread[] }>('/api/messages/threads');
+            set({ threads: data.threads, isLoadingChats: false });
           } else {
-            set({ isLoadingChats: false });
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            const { threads } = get();
+            // Only seed if no threads exist (so real threads persist)
+            if (threads.length === 0) {
+              set({ threads: generateMockThreads(), isLoadingChats: false });
+            } else {
+              set({ isLoadingChats: false });
+            }
           }
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isLoadingChats: false });
         }
       },
 
-      sendMessageMock: async (chatId, content, type, files) => {
+      sendMessage: async (chatId, content, type, files) => {
         set({ isSendingMessage: true, error: null });
-        await new Promise((resolve) => setTimeout(resolve, 600));
         try {
-          const newMessage: Message = {
-            id: Math.random().toString(36).substring(7),
-            chatId,
-            senderId: 'ME',
-            content,
-            contentType: type,
-            files: files || [],
-            createdAt: new Date().toISOString(),
-            timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-          };
-
-          set((state) => ({
-            threads: state.threads.map((thread) => {
-              if (thread.id === chatId) {
+          if (USE_API) {
+            const data = await apiPost<{ message: Message }>(`/api/messages/${chatId}/send`, { content, type, files });
+            set((state) => ({
+              threads: state.threads.map((thread) => {
+                if (thread.id !== chatId) return thread;
+                return {
+                  ...thread,
+                  messages: [...thread.messages, data.message],
+                  lastMessage: type === 'text' ? content : `[${type} attachment]`,
+                  lastMessageTime: 'Just now',
+                  unreadCount: 0,
+                };
+              }),
+              isSendingMessage: false,
+              uploadModalState: 'none',
+              stagedFiles: [],
+            }));
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            const newMessage: Message = {
+              id: Math.random().toString(36).substring(7),
+              chatId,
+              senderId: 'ME',
+              content,
+              contentType: type,
+              files: files || [],
+              createdAt: new Date().toISOString(),
+              timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+            };
+            set((state) => ({
+              threads: state.threads.map((thread) => {
+                if (thread.id !== chatId) return thread;
                 return {
                   ...thread,
                   messages: [...thread.messages, newMessage],
@@ -319,17 +349,20 @@ export const useMessagesStore = create<MessagesStore>()(
                   lastMessageTime: 'Just now',
                   unreadCount: 0,
                 };
-              }
-              return thread;
-            }),
-            isSendingMessage: false,
-            uploadModalState: 'none',
-            stagedFiles: [],
-          }));
+              }),
+              isSendingMessage: false,
+              uploadModalState: 'none',
+              stagedFiles: [],
+            }));
+          }
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isSendingMessage: false });
         }
       },
+
+      // Backward-compatible aliases
+      fetchThreadsMock: async () => get().fetchThreads(),
+      sendMessageMock: async (chatId, content, type, files) => get().sendMessage(chatId, content, type, files),
 
       startThread: (fromRole, participant, propertyContext, contextType = 'general', contextId) => {
         if (participant.role && !canMessage(fromRole, participant.role)) {

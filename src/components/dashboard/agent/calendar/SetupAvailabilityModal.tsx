@@ -42,7 +42,7 @@ export default function SetupAvailabilityModal() {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden">
        
-       <div className="bg-white w-full h-full md:max-w-xl md:h-auto md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
+       <div className="bg-white w-full h-full md:max-w-xl md:h-auto md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
            
            <div className="p-6 md:p-8 flex-shrink-0 z-10 w-full bg-white relative">
               <h2 className="text-[22px] font-bold text-gray-900 tracking-tight leading-tight">
@@ -62,16 +62,13 @@ export default function SetupAvailabilityModal() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        <div className="flex flex-col gap-1.5">
                           <label className="text-[14px] font-medium text-gray-900">Date</label>
-                          <select
+                          <input
+                            type="date"
                             value={row.date}
+                            min={new Date().toISOString().split('T')[0]}
                             onChange={(e) => updateRow(row.id, 'date', e.target.value)}
-                            className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[15px] text-gray-500 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                          >
-                             <option value="" disabled>Select Date</option>
-                             <option value="2024-08-14">August 14, 2024</option>
-                             <option value="2024-08-16">August 16, 2024</option>
-                             <option value="2024-08-21">August 21, 2024</option>
-                          </select>
+                            className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[15px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                          />
                           {errors[`${idx}.date`] && <p className="text-red-500 text-xs mt-1">{errors[`${idx}.date`]}</p>}
                        </div>
 

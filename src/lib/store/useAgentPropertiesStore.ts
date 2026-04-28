@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api/client';
 import { usePropertyStore } from './usePropertyStore';
 import { useAuthStore } from './useAuthStore';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // --- Types ---
 export type PropertyCategory = 'Residential' | 'Commercial' | 'Plots/Lands' | 'Service Apartments & Short Lets' | 'PG/Hostel';
@@ -13,7 +16,7 @@ export interface AgentProperty {
   propertyCategory: PropertyCategory;
   listingType: ListingType;
   propertyStatus: PropertyStatus;
-  
+
   title: string;
   description: string;
   state: string;
@@ -21,35 +24,29 @@ export interface AgentProperty {
   city: string;
   address: string;
   landmarks: string[];
-  
-  // High level stats for cards
+
   price: number;
   bedrooms?: number | string;
   bathrooms?: number | string;
   sizeSqm?: number | string;
-  
-  // Specifics
+
   amenities: string[];
   media: string[];
   virtualTourUrl?: string;
 
-  // Rent Pricing specifics
   priceType?: 'Per Month' | 'Every 6 Months' | 'Per Year';
   securityDeposit?: number;
   agencyFee?: number;
   legalFee?: number;
   cautionFee?: number;
-  
-  // Land specifics
+
   documentTypes?: string[];
   zoningType?: string;
-  
-  // Commercial specifics
+
   unitsFloors?: number | string;
   parkingCapacity?: number | string;
   floorAreaSqm?: number | string;
-  
-  // PG specifics
+
   roomType?: string;
   utilitiesIncluded?: string;
 }
@@ -76,7 +73,7 @@ export const mockAgentProperties: AgentProperty[] = [
     media: [
       'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1600607687931-cebf0046d4e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1600607687931-cebf0046d4e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ],
     documentTypes: ['C of O'],
     zoningType: 'Residential',
@@ -99,9 +96,7 @@ export const mockAgentProperties: AgentProperty[] = [
     bathrooms: 2,
     sizeSqm: 120,
     amenities: ['Swampy Soil'],
-    media: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    ],
+    media: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
   },
   {
     id: 'prop-003',
@@ -120,32 +115,33 @@ export const mockAgentProperties: AgentProperty[] = [
     bathrooms: 5,
     sizeSqm: 350,
     amenities: ['POP Ceiling', 'Kitchen-Fitted', 'En-suite', 'Security Access / CCTV'],
-    media: [
-      'https://images.unsplash.com/photo-1600607687931-cebf0046d4e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    ],
-  }
+    media: ['https://images.unsplash.com/photo-1600607687931-cebf0046d4e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
+  },
 ];
 
 interface AgentPropertiesState {
   properties: AgentProperty[];
   isLoading: boolean;
   error: string | null;
-  
-  // Filters
+
   activeTab: 'For Sale' | 'For Rent';
   activeFilter: 'All' | PropertyCategory;
   searchQuery: string;
   page: number;
 
-  // Actions
   fetchProperties: () => Promise<void>;
   setActiveTab: (tab: 'For Sale' | 'For Rent') => void;
   setActiveFilter: (filter: 'All' | PropertyCategory) => void;
   setSearchQuery: (query: string) => void;
   setPage: (page: number) => void;
   deleteProperty: (id: string) => Promise<boolean>;
-  addPropertyLocally: (prop: AgentProperty) => void;
+  addProperty: (prop: AgentProperty) => Promise<void>;
   getPropertyById: (id: string) => AgentProperty | undefined;
+  updateProperty: (prop: AgentProperty) => Promise<void>;
+
+  /** @deprecated Use addProperty() */
+  addPropertyLocally: (prop: AgentProperty) => void;
+  /** @deprecated Use updateProperty() */
   updatePropertyLocally: (prop: AgentProperty) => void;
 }
 
@@ -153,7 +149,7 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   properties: [],
   isLoading: false,
   error: null,
-  
+
   activeTab: 'For Sale',
   activeFilter: 'All',
   searchQuery: '',
@@ -162,9 +158,13 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   fetchProperties: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      set({ properties: mockAgentProperties, isLoading: false });
+      if (USE_API) {
+        const data = await apiGet<{ properties: AgentProperty[] }>('/api/agent/properties');
+        set({ properties: data.properties, isLoading: false });
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        set({ properties: mockAgentProperties, isLoading: false });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
     }
@@ -178,12 +178,12 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   deleteProperty: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      set((state) => ({
-        properties: state.properties.filter(p => p.id !== id),
-        isLoading: false
-      }));
+      if (USE_API) {
+        await apiDelete(`/api/agent/properties/${id}`);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+      set((state) => ({ properties: state.properties.filter(p => p.id !== id), isLoading: false }));
       return true;
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'An error occurred', isLoading: false });
@@ -191,14 +191,16 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
     }
   },
 
-  addPropertyLocally: (prop) => {
+  addProperty: async (prop) => {
+    if (USE_API) {
+      await apiPost('/api/agent/properties', prop);
+    }
     set((state) => ({
       properties: [prop, ...state.properties],
       activeTab: prop.listingType,
       activeFilter: 'All',
       page: 1,
     }));
-
     // Submit to unified property store for admin moderation
     const user = useAuthStore.getState().user;
     usePropertyStore.getState().submitForReview({
@@ -226,16 +228,21 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
     });
   },
 
-  getPropertyById: (id) => {
-    return get().properties.find(p => p.id === id);
-  },
+  getPropertyById: (id) => get().properties.find(p => p.id === id),
 
-  updatePropertyLocally: (prop) => {
+  updateProperty: async (prop) => {
+    if (USE_API) {
+      await apiPut(`/api/agent/properties/${prop.id}`, prop);
+    }
     set((state) => ({
       properties: state.properties.map(p => p.id === prop.id ? prop : p),
       activeTab: prop.listingType,
       activeFilter: 'All',
-      page: 1
+      page: 1,
     }));
   },
+
+  // Backward-compatible aliases
+  addPropertyLocally: (prop) => { void get().addProperty(prop); },
+  updatePropertyLocally: (prop) => { void get().updateProperty(prop); },
 }));

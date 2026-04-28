@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export type SeekerPropertyStatus = 'Active' | 'Expired' | 'Completed';
 export type SeekerPropertyType = 'Rented' | 'Owned';
@@ -33,8 +36,13 @@ interface SeekerPropertiesState {
   error: string | null;
   activeTab: SeekerPropertyTab;
   setActiveTab: (tab: SeekerPropertyTab) => void;
+  fetchProperties: () => Promise<void>;
+  payRent: (propertyId: string) => Promise<boolean>;
+  /** @deprecated Use fetchProperties() */
   fetchPropertiesMock: () => Promise<void>;
 }
+
+// ── Mock data ───────────────────────────────────────────────────────────
 
 const mockSeekerProperties: SeekerProperty[] = [
   {
@@ -72,7 +80,9 @@ const mockSeekerProperties: SeekerProperty[] = [
   },
 ];
 
-export const useSeekerPropertiesStore = create<SeekerPropertiesState>((set) => ({
+// ── Store ───────────────────────────────────────────────────────────────
+
+export const useSeekerPropertiesStore = create<SeekerPropertiesState>((set, get) => ({
   properties: [],
   isLoading: false,
   error: null,
@@ -80,13 +90,37 @@ export const useSeekerPropertiesStore = create<SeekerPropertiesState>((set) => (
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
-  fetchPropertiesMock: async () => {
+  fetchProperties: async () => {
     set({ isLoading: true, error: null });
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      set({ properties: mockSeekerProperties, isLoading: false });
+      if (USE_API) {
+        const data = await apiGet<{ properties: SeekerProperty[] }>('/api/seeker/properties');
+        set({ properties: data.properties, isLoading: false });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+        set({ properties: mockSeekerProperties, isLoading: false });
+      }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load properties', isLoading: false });
     }
+  },
+
+  payRent: async (propertyId) => {
+    try {
+      if (USE_API) {
+        await apiPost(`/api/seeker/properties/${propertyId}/pay-rent`);
+        return true;
+      } else {
+        await new Promise((r) => setTimeout(r, 1200));
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  },
+
+  // Backward-compatible alias
+  fetchPropertiesMock: async () => {
+    return get().fetchProperties();
   },
 }));

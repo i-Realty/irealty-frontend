@@ -22,7 +22,7 @@ function RejectReasonModal({ propertyId, propertyTitle, onClose }: { propertyId:
   const [reason, setReason] = useState('');
 
   const handleReject = async () => {
-    await rejectPropertyMock(propertyId);
+    await rejectPropertyMock(propertyId, reason);
     onClose();
   };
 

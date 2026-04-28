@@ -101,18 +101,13 @@ export default function KYCModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0" role="dialog" aria-modal="true" aria-label="KYC verification">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-0" role="dialog" aria-modal="true" aria-label="KYC verification">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setKycModalOpen(false)}></div>
 
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden my-auto sm:my-8 h-full sm:h-auto max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-xl font-bold text-blue-600 flex items-center gap-2">
-            {/* Logo placeholder */}
-            <span className="w-6 h-6 border border-blue-600 border-t-transparent rounded-full block"></span>
-            i-REALTY
-          </h2>
-          <button 
+        <div className="flex justify-end p-4 border-b border-gray-100 flex-shrink-0">
+          <button
             onClick={() => setKycModalOpen(false)}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
           >

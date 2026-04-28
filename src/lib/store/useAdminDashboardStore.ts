@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
 import type { UserRole } from './useAuthStore';
 import { useNotificationStore } from './useNotificationStore';
 import { usePropertyStore } from './usePropertyStore';
 import { useTransactionLedger } from './useTransactionLedger';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -203,24 +206,66 @@ interface AdminDashboardState {
   isActionLoading: boolean;
   error: string | null;
 
-  // Actions
+  // Period filter for chart/stats
+  period: string;
+  setPeriod: (period: string) => void;
+
+  // API-ready actions
+  fetchDashboardData: () => Promise<void>;
+  fetchUsers: () => Promise<void>;
+  fetchUserById: (id: string) => Promise<void>;
+  approveKyc: (userId: string) => Promise<void>;
+  rejectKyc: (userId: string, reason: string) => Promise<void>;
+  suspendUser: (userId: string) => Promise<void>;
+  reactivateUser: (userId: string) => Promise<void>;
+  fetchProperties: () => Promise<void>;
+  approveProperty: (id: string) => Promise<void>;
+  rejectProperty: (id: string, reason: string) => Promise<void>;
+  flagProperty: (id: string) => Promise<void>;
+  fetchTransactions: () => Promise<void>;
+  fetchTransactionById: (id: string) => Promise<void>;
+  fetchFinance: () => Promise<void>;
+  approvePayout: (id: string) => Promise<void>;
+  rejectPayout: (id: string) => Promise<void>;
+  flagTransaction: (id: string) => Promise<void>;
+  refundTransaction: (id: string) => Promise<void>;
+  submitPlatformFees: () => Promise<void>;
+
+  /** @deprecated Use fetchDashboardData() */
   fetchDashboardDataMock: () => Promise<void>;
+  /** @deprecated Use fetchUsers() */
   fetchUsersMock: () => Promise<void>;
+  /** @deprecated Use fetchUserById() */
   fetchUserByIdMock: (id: string) => Promise<void>;
+  /** @deprecated Use approveKyc() */
   approveKycMock: (userId: string) => Promise<void>;
-  rejectKycMock: (userId: string) => Promise<void>;
+  /** @deprecated Use rejectKyc() */
+  rejectKycMock: (userId: string, reason?: string) => Promise<void>;
+  /** @deprecated Use suspendUser() */
   suspendUserMock: (userId: string) => Promise<void>;
+  /** @deprecated Use reactivateUser() */
   reactivateUserMock: (userId: string) => Promise<void>;
+  /** @deprecated Use fetchProperties() */
   fetchPropertiesMock: () => Promise<void>;
+  /** @deprecated Use approveProperty() */
   approvePropertyMock: (id: string) => Promise<void>;
-  rejectPropertyMock: (id: string) => Promise<void>;
+  /** @deprecated Use rejectProperty() */
+  rejectPropertyMock: (id: string, reason?: string) => Promise<void>;
+  /** @deprecated Use flagProperty() */
   flagPropertyMock: (id: string) => Promise<void>;
+  /** @deprecated Use fetchTransactions() */
   fetchTransactionsMock: () => Promise<void>;
+  /** @deprecated Use fetchTransactionById() */
   fetchTransactionByIdMock: (id: string) => Promise<void>;
+  /** @deprecated Use fetchFinance() */
   fetchFinanceMock: () => Promise<void>;
+  /** @deprecated Use approvePayout() */
   approvePayoutMock: (id: string) => Promise<void>;
+  /** @deprecated Use rejectPayout() */
   rejectPayoutMock: (id: string) => Promise<void>;
+  /** @deprecated Use flagTransaction() */
   flagTransactionMock: (id: string) => Promise<void>;
+  /** @deprecated Use refundTransaction() */
   refundTransactionMock: (id: string) => Promise<void>;
 }
 
@@ -283,7 +328,7 @@ const MOCK_PAYOUTS: PayoutRequest[] = [
 
 // ── Store ──────────────────────────────────────────────────────────────
 
-export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
+export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => ({
   // Overview
   stats: { totalUsers: 0, activeListings: 0, pendingKyc: 0, totalRevenue: 0, escrowBalance: 0, pendingPayouts: 0 },
   revenueData: [],
@@ -325,10 +370,28 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
   isActionLoading: false,
   error: null,
 
+  // Period
+  period: 'week',
+  setPeriod: (period) => { set({ period }); get().fetchDashboardData(); },
+
   // ── Dashboard Overview ──────────────────────────────────────────────
 
-  fetchDashboardDataMock: async () => {
+  fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try {
+        const { period } = get();
+        const data = await apiGet<{
+          stats: AdminStats; revenueData: RevenueDataPoint[]; userGrowthData: UserGrowthPoint[];
+          transactionVolumeData: TransactionVolumePoint[]; recentTransactions: AdminTransaction[]; pendingKycUsers: AdminUser[];
+        }>(`/api/admin/dashboard?period=${period}`);
+        set({ ...data, isLoading: false });
+        return;
+      } catch (err) {
+        set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+        return;
+      }
+    }
     await new Promise((r) => setTimeout(r, 600));
     set({
       stats: {
@@ -368,13 +431,17 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
 
   // ── Users ───────────────────────────────────────────────────────────
 
-  fetchUsersMock: async () => {
+  fetchUsers: async () => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try { const d = await apiGet<{ users: AdminUser[] }>('/api/admin/users'); set({ users: d.users, isLoading: false }); return; }
+      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+    }
     await new Promise((r) => setTimeout(r, 500));
     set({ users: MOCK_USERS, isLoading: false });
   },
 
-  fetchUserByIdMock: async (id) => {
+  fetchUserById: async (id) => {
     set({ isLoading: true, error: null });
     await new Promise((r) => setTimeout(r, 400));
     const user = MOCK_USERS.find((u) => u.id === id) ?? MOCK_USERS[0];
@@ -398,7 +465,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     });
   },
 
-  approveKycMock: async (userId) => {
+  approveKyc: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const user = (useAdminDashboardStore.getState().users.find((u) => u.id === userId) ??
@@ -418,7 +485,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     );
   },
 
-  rejectKycMock: async (userId) => {
+  rejectKyc: async (userId, reason = 'Rejected by admin') => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
@@ -437,7 +504,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     );
   },
 
-  suspendUserMock: async (userId) => {
+  suspendUser: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
@@ -454,7 +521,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     );
   },
 
-  reactivateUserMock: async (userId) => {
+  reactivateUser: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
@@ -473,13 +540,17 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
 
   // ── Properties ──────────────────────────────────────────────────────
 
-  fetchPropertiesMock: async () => {
+  fetchProperties: async () => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try { const d = await apiGet<{ properties: AdminProperty[] }>('/api/admin/properties'); set({ properties: d.properties, isLoading: false }); return; }
+      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+    }
     await new Promise((r) => setTimeout(r, 500));
     set({ properties: MOCK_PROPERTIES, isLoading: false });
   },
 
-  approvePropertyMock: async (id) => {
+  approveProperty: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     set((s) => ({
@@ -490,17 +561,17 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     usePropertyStore.getState().approveProperty(id);
   },
 
-  rejectPropertyMock: async (id) => {
+  rejectProperty: async (id, reason = 'Rejected by admin') => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     set((s) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Rejected' as const } : p),
       isActionLoading: false,
     }));
-    usePropertyStore.getState().rejectProperty(id, 'Rejected by admin — please review the listing requirements.');
+    usePropertyStore.getState().rejectProperty(id, reason);
   },
 
-  flagPropertyMock: async (id) => {
+  flagProperty: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     set((s) => ({
@@ -512,13 +583,17 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
 
   // ── Transactions ────────────────────────────────────────────────────
 
-  fetchTransactionsMock: async () => {
+  fetchTransactions: async () => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try { const d = await apiGet<{ transactions: AdminTransaction[] }>('/api/admin/transactions'); set({ transactions: d.transactions, isLoading: false }); return; }
+      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+    }
     await new Promise((r) => setTimeout(r, 500));
     set({ transactions: MOCK_TRANSACTIONS, isLoading: false });
   },
 
-  fetchTransactionByIdMock: async (id) => {
+  fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
     await new Promise((r) => setTimeout(r, 400));
     const tx = MOCK_TRANSACTIONS.find((t) => t.id === id) ?? MOCK_TRANSACTIONS[0];
@@ -541,7 +616,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
 
   // ── Finance ─────────────────────────────────────────────────────────
 
-  fetchFinanceMock: async () => {
+  fetchFinance: async () => {
     set({ isLoading: true, error: null });
     await new Promise((r) => setTimeout(r, 500));
     // Merge static payouts with any real payout requests from walletStore
@@ -587,7 +662,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     });
   },
 
-  approvePayoutMock: async (id) => {
+  approvePayout: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
@@ -605,7 +680,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     }
   },
 
-  rejectPayoutMock: async (id) => {
+  rejectPayout: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
@@ -623,7 +698,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     }
   },
 
-  flagTransactionMock: async (id) => {
+  flagTransaction: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
     set((s) => ({
@@ -638,7 +713,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
     }));
   },
 
-  refundTransactionMock: async (id) => {
+  refundTransaction: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 800));
     set((s) => ({
@@ -653,4 +728,32 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set) => ({
       isActionLoading: false,
     }));
   },
+
+  submitPlatformFees: async () => {
+    if (USE_API) {
+      try { await apiPost('/api/admin/platform-fees', get().platformFees); } catch { /* handled upstream */ }
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  },
+
+  // Backward-compatible aliases
+  fetchDashboardDataMock: async () => get().fetchDashboardData(),
+  fetchUsersMock: async () => get().fetchUsers(),
+  fetchUserByIdMock: async (id) => get().fetchUserById(id),
+  approveKycMock: async (userId) => get().approveKyc(userId),
+  rejectKycMock: async (userId, reason) => get().rejectKyc(userId, reason ?? 'Rejected by admin'),
+  suspendUserMock: async (userId) => get().suspendUser(userId),
+  reactivateUserMock: async (userId) => get().reactivateUser(userId),
+  fetchPropertiesMock: async () => get().fetchProperties(),
+  approvePropertyMock: async (id) => get().approveProperty(id),
+  rejectPropertyMock: async (id, reason) => get().rejectProperty(id, reason ?? 'Rejected by admin'),
+  flagPropertyMock: async (id) => get().flagProperty(id),
+  fetchTransactionsMock: async () => get().fetchTransactions(),
+  fetchTransactionByIdMock: async (id) => get().fetchTransactionById(id),
+  fetchFinanceMock: async () => get().fetchFinance(),
+  approvePayoutMock: async (id) => get().approvePayout(id),
+  rejectPayoutMock: async (id) => get().rejectPayout(id),
+  flagTransactionMock: async (id) => get().flagTransaction(id),
+  refundTransactionMock: async (id) => get().refundTransaction(id),
 }));

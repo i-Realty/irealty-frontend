@@ -20,7 +20,7 @@ export default function DeveloperProjectsPage() {
   const router = useRouter();
   const openWizard = useCreateProjectStore((s) => s.openWizard);
   const loadProjectForEdit = useCreateProjectStore((s) => s.loadProjectForEdit);
-  const { projects, fetchProjects } = useDeveloperProjectsStore();
+  const { projects, fetchProjects, deleteProject } = useDeveloperProjectsStore();
 
   const [activeTab, setActiveTab] = useState<TabKey>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,8 +28,11 @@ export default function DeveloperProjectsPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All time');
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateFrom, setDateFrom] = useState('2023-12-12');
-  const [dateTo, setDateTo] = useState('2023-12-14');
+  const today = new Date().toISOString().split('T')[0];
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const [dateFrom, setDateFrom] = useState(thirtyDaysAgo);
+  const [dateTo, setDateTo] = useState(today);
+  const [dateRangeApplied, setDateRangeApplied] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
@@ -49,13 +52,33 @@ export default function DeveloperProjectsPage() {
 
   const filtered = useMemo(() => {
     let result = projects;
+
     if (activeTab !== 'All') result = result.filter((p) => p.projectType === activeTab);
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.projectName.toLowerCase().includes(q) || p.fullAddress.toLowerCase().includes(q));
     }
+
+    if (timeFilter !== 'All time') {
+      const now = new Date();
+      const cutoff = new Date(now);
+      if (timeFilter === 'This week')  cutoff.setDate(now.getDate() - 7);
+      else if (timeFilter === 'This month') cutoff.setMonth(now.getMonth() - 1);
+      else if (timeFilter === 'This year')  cutoff.setFullYear(now.getFullYear() - 1);
+      result = result.filter((p) => new Date(p.createdAt) >= cutoff);
+    } else if (dateRangeApplied) {
+      const from = new Date(dateFrom);
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter((p) => {
+        const d = new Date(p.createdAt);
+        return d >= from && d <= to;
+      });
+    }
+
     return result;
-  }, [projects, activeTab, searchQuery]);
+  }, [projects, activeTab, searchQuery, timeFilter, dateFrom, dateTo, dateRangeApplied]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -102,7 +125,7 @@ export default function DeveloperProjectsPage() {
               {showTimeDropdown && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 w-40 z-20 animate-in fade-in slide-in-from-top-2">
                   {TIME_OPTIONS.map((opt) => (
-                    <button key={opt} onClick={() => { setTimeFilter(opt); setShowTimeDropdown(false); }}
+                    <button key={opt} onClick={() => { setTimeFilter(opt); setShowTimeDropdown(false); setDateRangeApplied(false); setCurrentPage(1); }}
                       className={`w-full px-4 py-2 text-left text-sm transition-colors ${timeFilter === opt ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'}`}>
                       {opt}
                     </button>
@@ -133,7 +156,7 @@ export default function DeveloperProjectsPage() {
                       <input type="date" value={dateTo} min={dateFrom} onChange={(e) => setDateTo(e.target.value)}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                     </div>
-                    <button onClick={() => setShowDatePicker(false)}
+                    <button onClick={() => { setShowDatePicker(false); setTimeFilter('All time'); setDateRangeApplied(true); setCurrentPage(1); }}
                       className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">Apply</button>
                   </div>
                 </div>
@@ -157,7 +180,7 @@ export default function DeveloperProjectsPage() {
                 project={project}
                 onViewDetails={(id) => router.push(`/dashboard/developer/projects/${id}`)}
                 onEdit={(id) => { const proj = projects.find((p) => p.id === id); if (proj) loadProjectForEdit(proj); }}
-                onDelete={() => {}}
+                onDelete={(id) => deleteProject(id)}
               />
             ))}
           </div>

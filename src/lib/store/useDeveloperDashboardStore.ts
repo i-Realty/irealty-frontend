@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { apiGet, apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export interface DeveloperProfile {
   id: string;
@@ -49,13 +52,21 @@ interface DeveloperDashboardState {
   isKycModalOpen: boolean;
   currentKycStep: number;
 
+  period: string;
+  dateFrom: string;
+  dateTo: string;
+  setPeriod: (period: string) => void;
+  setDateRange: (from: string, to: string) => void;
   fetchDashboardData: () => Promise<void>;
   updateKycProgress: (step: number) => Promise<void>;
   setKycModalOpen: (isOpen: boolean) => void;
   setCurrentKycStep: (step: number) => void;
-  mockSubmitKycForVerification: () => Promise<boolean>;
+  submitKycForVerification: () => Promise<boolean>;
   resetDashboard: () => void;
   verifyProfileLocally: () => void;
+
+  /** @deprecated Use submitKycForVerification() */
+  mockSubmitKycForVerification: () => Promise<boolean>;
 }
 
 export const mockDeveloperTransactions: DeveloperTransaction[] = [
@@ -84,9 +95,32 @@ export const useDeveloperDashboardStore = create<DeveloperDashboardState>((set, 
   isKycModalOpen: false,
   currentKycStep: 1,
 
+  period: 'all',
+  dateFrom: '',
+  dateTo: '',
+
+  setPeriod: (period) => { set({ period }); get().fetchDashboardData(); },
+  setDateRange: (from, to) => { set({ dateFrom: from, dateTo: to }); get().fetchDashboardData(); },
+
   fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
     try {
+    if (USE_API) {
+      const { period, dateFrom, dateTo } = get();
+      const params = new URLSearchParams();
+      if (period && period !== 'all') params.set('period', period);
+      if (dateFrom) params.set('from', dateFrom);
+      if (dateTo) params.set('to', dateTo);
+      const data = await apiGet<{
+        profile: DeveloperProfile;
+        stats: DeveloperDashboardStats;
+        revenueData: DeveloperRevenueData[];
+        escrowData: EscrowData;
+        transactions: DeveloperTransaction[];
+      }>(`/api/developer/dashboard?${params}`);
+      set({ ...data, isLoading: false });
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const { profile } = get();
@@ -129,16 +163,28 @@ export const useDeveloperDashboardStore = create<DeveloperDashboardState>((set, 
   setKycModalOpen: (isOpen: boolean) => set({ isKycModalOpen: isOpen }),
   setCurrentKycStep: (step: number) => set({ currentKycStep: step }),
 
-  mockSubmitKycForVerification: async () => {
+  submitKycForVerification: async () => {
     set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    set((state) => ({
-      profile: state.profile ? { ...state.profile, kycStatus: 'verified', kycProgress: 100 } : null,
-      isKycModalOpen: false,
-      isLoading: false,
-    }));
-    return true;
+    try {
+      if (USE_API) {
+        await apiPost('/api/developer/kyc/submit', {});
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      set((state) => ({
+        profile: state.profile ? { ...state.profile, kycStatus: 'verified', kycProgress: 100 } : null,
+        isKycModalOpen: false,
+        isLoading: false,
+      }));
+      return true;
+    } catch (err) {
+      set({ isLoading: false, error: err instanceof Error ? err.message : 'Verification failed' });
+      return false;
+    }
   },
+
+  // Backward-compatible alias
+  mockSubmitKycForVerification: async () => get().submitKycForVerification(),
 
   resetDashboard: () => {
     set({

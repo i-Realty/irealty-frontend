@@ -43,7 +43,7 @@ export default function InspectionSetupModal({ isOpen, onClose }: InspectionSetu
   const isStep1Valid = (feeType === 'percentage' && percentage !== '') || (feeType === 'amount' && amount !== '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
       
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden my-auto h-auto max-h-[90vh] flex flex-col">

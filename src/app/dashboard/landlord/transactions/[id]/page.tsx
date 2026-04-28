@@ -1,6 +1,5 @@
 'use client';
 
-'use client';
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -103,7 +102,7 @@ function ReportModal({ transactionId, onClose }: { transactionId: string; onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">

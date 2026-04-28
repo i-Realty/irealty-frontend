@@ -1,8 +1,9 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useDeveloperProjectsStore } from '@/lib/store/useDeveloperProjectsStore';
 import { ArrowLeft, Play, MapPin, BedDouble, Bath, Maximize2, Calendar, CheckCircle2, FileText, Download, MapPinned } from 'lucide-react';
 import MapModal from '@/components/MapModal';
 
@@ -53,7 +54,29 @@ const MOCK_PROJECT = {
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const project = MOCK_PROJECT;
+  const { getProjectById, fetchProjects, projects } = useDeveloperProjectsStore();
+
+  useEffect(() => {
+    if (projects.length === 0) fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const storeProject = getProjectById(id);
+  // Merge store data into MOCK_PROJECT shape — store project overrides where available
+  const project = storeProject ? {
+    ...MOCK_PROJECT,
+    id: storeProject.id,
+    projectName: storeProject.projectName,
+    fullAddress: storeProject.fullAddress,
+    price: storeProject.price,
+    description: storeProject.description,
+    bedrooms: storeProject.bedrooms,
+    plotSizeSqm: storeProject.plotSizeSqm,
+    virtualTourUrl: storeProject.virtualTourUrl,
+    milestones: storeProject.milestones.length > 0 ? storeProject.milestones.map(m => ({ name: m.name, percentage: m.percentageOfTotal, amount: Math.round(storeProject.price * m.percentageOfTotal / 100) })) : MOCK_PROJECT.milestones,
+    images: storeProject.media.length > 0 ? storeProject.media : MOCK_PROJECT.images,
+    amenities: storeProject.amenities.length > 0 ? storeProject.amenities : DEFAULT_AMENITIES,
+  } : MOCK_PROJECT;
 
   const tabs = ['Description', 'Amenities', 'Documents', 'Landmarks'];
   const [activeTab, setActiveTab] = useState('Description');
@@ -73,7 +96,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         <div className="relative col-span-1 row-span-2 h-80">
           <Image src={project.images[0]} alt="Main" fill className="object-cover" />
           <div className="absolute top-3 left-3 flex gap-2">
-            <button className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1">
+            <button
+              onClick={() => project.virtualTourUrl ? window.open(project.virtualTourUrl, '_blank') : undefined}
+              disabled={!project.virtualTourUrl}
+              className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors"
+            >
               <Play className="w-3 h-3" /> Virtual Tour
             </button>
             <button onClick={() => setShowMapModal(true)} className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1">

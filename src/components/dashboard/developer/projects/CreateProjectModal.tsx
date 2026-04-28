@@ -30,7 +30,7 @@ export default function CreateProjectModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-0">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeWizard} />
 
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden my-auto sm:my-8 h-full sm:h-auto max-h-[90vh] flex flex-col">

@@ -12,7 +12,7 @@ function KycRejectModal({ userId, userName, onClose }: { userId: string; userNam
   const [reason, setReason] = useState('');
 
   const handleReject = async () => {
-    await rejectKycMock(userId);
+    await rejectKycMock(userId, reason);
     onClose();
   };
 

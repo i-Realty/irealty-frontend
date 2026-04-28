@@ -76,7 +76,7 @@ export default function BookTourModal({ onClose }: Props) {
   const propertyImage = property?.media?.[0] ?? '/images/property1.png';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Book a tour">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Book a tour">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40"

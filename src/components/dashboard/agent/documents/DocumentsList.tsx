@@ -11,7 +11,7 @@ type DocItem = { id: string; title: string; type: string; dateUpdated: string; p
 
 function DocumentPreviewModal({ doc, onClose }: { doc: DocItem; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function DocumentsList() {
                                  <button onClick={() => setPreviewDoc(doc)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 transition-all shadow-sm">
                                     <Eye className="w-4 h-4" />
                                  </button>
-                                 <button onClick={() => alert('Edit requires backend integration.')} className="text-gray-400 hover:text-gray-900 p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 transition-all shadow-sm">
+                                 <button onClick={() => {}} className="text-gray-400 hover:text-gray-900 p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 transition-all shadow-sm">
                                     <Edit3 className="w-4 h-4" />
                                  </button>
                                  <button
@@ -211,7 +211,7 @@ export default function DocumentsList() {
                          <button onClick={() => setPreviewDoc(doc)} className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100/50">
                             <Eye className="w-4 h-4" /> Preview
                          </button>
-                         <button onClick={() => alert('Edit requires backend integration.')} className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100/50">
+                         <button onClick={() => {}} className="flex-1 flex justify-center items-center gap-2 py-2 text-[13px] font-medium text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100/50">
                             <Edit3 className="w-4 h-4" /> Edit
                          </button>
                          <button
