@@ -499,7 +499,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     useNotificationStore.getState().emit(
       'kyc',
       'KYC verification rejected',
-      `Identity verification for ${user?.name ?? 'user'} was rejected. Please re-submit with correct documents.`,
+      `Identity verification for ${user?.name ?? 'user'} was rejected: ${reason}`,
       '/dashboard/agent/settings'
     );
   },

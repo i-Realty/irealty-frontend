@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiGet, apiPost } from '@/lib/api/client';
+import { apiGet } from '@/lib/api/client';
 import type { UserRole } from './useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';

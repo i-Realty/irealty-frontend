@@ -69,6 +69,7 @@ export default function StepFaceMatch() {
       <div className="relative w-full h-[260px] bg-gray-900 rounded-xl overflow-hidden flex items-center justify-center border-4 border-gray-100">
         {capturedImage ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={capturedImage} alt="Selfie preview" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
               <CheckCircle2 className="w-16 h-16 text-green-400 drop-shadow-lg" />
