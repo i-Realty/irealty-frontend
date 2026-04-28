@@ -44,6 +44,7 @@ const MOCK_PROJECT = {
     { name: 'Roofing/Structure', percentage: 30, amount: 19000000 },
     { name: 'Handover/Finishing', percentage: 20, amount: 19000000 },
   ],
+  virtualTourUrl: '',
   images: [
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop',
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop',
