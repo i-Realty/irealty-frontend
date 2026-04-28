@@ -4,11 +4,14 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useThemeStore } from '@/lib/store/useThemeStore';
 import { useI18n } from '@/lib/i18n';
 
  export default function Navbar(){
   const [open, setOpen] = useState(false);
   const { isLoggedIn, user, logout } = useAuthStore();
+  const { theme, setTheme, resolvedTheme } = useThemeStore();
+  const isDark = resolvedTheme() === 'dark';
   const { t } = useI18n();
 
   return (
@@ -31,8 +34,27 @@ import { useI18n } from '@/lib/i18n';
           <NavLink href="/listings/developers" isLarge>{t('nav.developers')}</NavLink>
         </div>
 
-        {/* Auth Buttons */}
+        {/* Theme Toggle + Auth Buttons */}
         <div className="hidden lg:flex items-center gap-4">
+          <button
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {isDark ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
           {isLoggedIn ? (
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -57,23 +79,44 @@ import { useI18n } from '@/lib/i18n';
           )}
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile: theme toggle + hamburger */}
+        <div className="lg:hidden flex items-center gap-1">
+          <button
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {isDark ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
         <button
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((s) => !s)}
-          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           {open ? (
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className="w-6 h-6 dark:text-gray-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           )}
         </button>
+        </div>
       </div>
 
       {/* Mobile menu overlay */}

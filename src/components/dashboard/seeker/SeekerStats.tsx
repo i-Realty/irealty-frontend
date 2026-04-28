@@ -7,13 +7,22 @@ import { useSeekerDashboardStore } from '@/lib/store/useSeekerDashboardStore';
 type TimeFilter = 'All time' | 'This week' | 'This month' | 'This year';
 const TIME_OPTIONS: TimeFilter[] = ['All time', 'This week', 'This month', 'This year'];
 
+const PERIOD_MAP: Record<TimeFilter, string> = {
+  'All time': 'all',
+  'This week': 'week',
+  'This month': 'month',
+  'This year': 'year',
+};
+
 export default function SeekerStats() {
-  const { stats } = useSeekerDashboardStore();
+  const { stats, setPeriod, setDateRange } = useSeekerDashboardStore();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All time');
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateFrom, setDateFrom] = useState('2023-12-12');
-  const [dateTo, setDateTo] = useState('2023-12-14');
+  const today = new Date().toISOString().split('T')[0];
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const [dateFrom, setDateFrom] = useState(thirtyDaysAgo);
+  const [dateTo, setDateTo] = useState(today);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
@@ -61,7 +70,7 @@ export default function SeekerStats() {
               {TIME_OPTIONS.map((opt) => (
                 <button
                   key={opt}
-                  onClick={() => { setTimeFilter(opt); setShowTimeDropdown(false); }}
+                  onClick={() => { setTimeFilter(opt); setShowTimeDropdown(false); setPeriod(PERIOD_MAP[opt]); }}
                   className={`w-full px-4 py-2 text-left text-sm transition-colors ${
                     timeFilter === opt
                       ? 'text-blue-600 font-semibold bg-blue-50'
@@ -112,7 +121,7 @@ export default function SeekerStats() {
                   />
                 </div>
                 <button
-                  onClick={() => setShowDatePicker(false)}
+                  onClick={() => { setShowDatePicker(false); setDateRange(dateFrom, dateTo); }}
                   className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   Apply

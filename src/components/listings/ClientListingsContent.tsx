@@ -1,39 +1,49 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 import { defaultAmenities, amenitiesByType } from "@/lib/data/amenities";
-import type { PropertyWithCoords } from "@/lib/types";
+import type { PropertyWithCoords, BBox } from "@/lib/types";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { point as turfPoint } from "@turf/helpers";
 
 import PropertyCard from "@/components/shared/PropertyCard";
 import dynamic from "next/dynamic";
 const MapMarkers = dynamic(() => import("@/components/map/MapMarkers"), { ssr: false });
 import ClusterPanel from "@/components/map/ClusterPanel";
-import MapStyleSwitcher from "@/components/map/MapStyleSwitcher";
+import MapToolbar from "@/components/map/MapToolbar";
 import FilterSidebar from "@/components/listings/FilterSidebar";
 import ComparisonBar from "@/components/listings/ComparisonBar";
 import ComparisonModal from "@/components/listings/ComparisonModal";
 import type { ListingsState } from "@/lib/store/useListingsStore";
+import { useMapStore } from "@/lib/store/useMapStore";
 import Image from 'next/image';
+
+const StreetViewModal = dynamic(() => import("@/components/map/StreetViewModal"), { ssr: false });
+const HeatmapLayer = dynamic(() => import("@/components/map/HeatmapLayer"), { ssr: false });
+const NeighbourhoodLayer = dynamic(() => import("@/components/map/NeighbourhoodLayer"), { ssr: false });
+const IsochroneControl = dynamic(() => import("@/components/map/IsochroneControl"), { ssr: false });
+const MobilePropertySheet = dynamic(() => import("@/components/map/MobilePropertySheet"), { ssr: false });
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-
-
-// ── Configuration props that vary between standard and developer listings ────
+// ── Configuration props ─────────────────────────────────────────────────────
 
 export interface ListingsPageConfig {
-  /** Zustand hook for the page's filter/map state */
   useStore: () => ListingsState;
-  /** Property type names shown in the filter sidebar */
   propertyTypes: string[];
-  /** Prefix for listing detail hrefs, e.g. "/listings" or "/listings/developers" */
   hrefPrefix: string;
-  /** Label shown in the results header, e.g. "properties" or "developer listings" */
   resultsLabel: string;
-  /** The property dataset to display and filter */
   properties: PropertyWithCoords[];
+}
+
+// ── Bbox filter helper ──────────────────────────────────────────────────────
+
+function propertyInBBox(p: PropertyWithCoords, bbox: BBox): boolean {
+  if (typeof p.lat !== "number" || typeof p.lng !== "number") return true; // include properties without coords
+  const [west, south, east, north] = bbox;
+  return p.lng >= west && p.lng <= east && p.lat >= south && p.lat <= north;
 }
 
 // ── Main unified component ──────────────────────────────────────────────────
@@ -58,14 +68,39 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     resetFilters,
   } = config.useStore();
 
-  // ── MapLibre refs ─────────────────────────────────────────────────────────
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
-  // ── URL param sync ────────────────────────────────────────────────────────
-  // Runs on mount AND whenever searchParams change (e.g. client-side nav from
-  // homepage CategoryGrid). Always resets first so stale filters are cleared
-  // (e.g. navigating from Off-Plan → Diaspora clears the Off-Plan toggle).
+  // Map store
+  const {
+    searchAreaVisible,
+    hideSearchArea,
+    viewportBounds,
+    streetViewOpen,
+    streetViewCoords,
+    closeStreetView,
+    showHeatmap,
+    showBoundaries,
+    showIsochrone,
+    isochronePolygon,
+  } = useMapStore();
+
+  // Search area bbox filter state
+  const [searchBBox, setSearchBBox] = React.useState<BBox | null>(null);
+
+  // Street View click-on-map mode
+  const [streetViewMode, setStreetViewMode] = React.useState(false);
+
+  // Mobile bottom sheet popup state
+  const [mobilePopupProp, setMobilePopupProp] = React.useState<PropertyWithCoords | null>(null);
+  const [mobilePopupLandmarks, setMobilePopupLandmarks] = React.useState<import("@/lib/types").Landmark[]>([]);
+
+  const handleMobilePopup = React.useCallback((property: PropertyWithCoords, landmarks: import("@/lib/types").Landmark[]) => {
+    setMobilePopupProp(property);
+    setMobilePopupLandmarks(landmarks);
+  }, []);
+
+  // ── URL param sync ────────────────────────────────────────────────────
   useEffect(() => {
     try {
       const param = searchParams?.get?.("propertyType");
@@ -81,11 +116,11 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // ── Filter properties ──────────────────────────────────────────────────
+  // ── Filter properties ──────────────────────────────────────────────
   const filteredProperties = React.useMemo(() => {
     return config.properties.filter(p => {
       if (activeTab !== "all" && p.category !== activeTab) return false;
-      
+
       if (query) {
         const q = query.toLowerCase();
         const tSearch = p.title.toLowerCase().includes(q);
@@ -93,9 +128,8 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
         const nSearch = p.neighbourhood?.toLowerCase().includes(q);
         if (!tSearch && !lSearch && !nSearch) return false;
       }
-      
+
       if (selectedPropertyTypes.size > 0) {
-        // Simple mock matching for title keywords (e.g. "Flat", "Duplex", "Apartment")
         let matched = false;
         for (const type of selectedPropertyTypes) {
            const kw = type.split(' ')[0].toLowerCase();
@@ -118,18 +152,13 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
       }
 
       if (selectedStatuses.size > 0) {
-        // mock status based on ID being even or odd
         const s = (p.id % 2 === 0) ? "Ready" : "Under Construction";
         if (!selectedStatuses.has(s)) return false;
       }
 
-      // State filter
       if (selectedState && p.state !== selectedState) return false;
-
-      // LGA filter
       if (selectedLGA && p.lga !== selectedLGA) return false;
 
-      // Amenities filter — show properties that have ANY of the selected amenities
       if (selectedAmenities.size > 0) {
         if (!p.amenities || p.amenities.length === 0) return false;
         const hasAny = [...selectedAmenities].some((a) => p.amenities!.includes(a));
@@ -139,13 +168,24 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
       const numPrice = p.priceValue ?? parseInt(p.price.replace(/[^\d]/g, ''), 10);
       if (!isNaN(numPrice) && (numPrice < priceMin || numPrice > priceMax)) return false;
 
+      // Bbox filter (Search This Area)
+      if (searchBBox && !propertyInBBox(p, searchBBox)) return false;
+
+      // Isochrone filter — only show properties within travel-time polygon
+      if (isochronePolygon && typeof p.lat === "number" && typeof p.lng === "number") {
+        try {
+          const pt = turfPoint([p.lng, p.lat]);
+          if (!booleanPointInPolygon(pt, isochronePolygon as GeoJSON.Feature<GeoJSON.Polygon>)) return false;
+        } catch { /* if geometry is invalid, don't filter */ }
+      }
+
       return true;
     });
   }, [
     activeTab, query, selectedPropertyTypes,
     selectedBedrooms, selectedStatuses,
     selectedAmenities, selectedState, selectedLGA,
-    priceMin, priceMax
+    priceMin, priceMax, searchBBox, isochronePolygon, config.properties,
   ]);
 
   const ITEMS_PER_PAGE = 6;
@@ -155,7 +195,7 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     setPage(n);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   useEffect(() => {
     if (page > totalPages) setPage(1);
   }, [filteredProperties.length, page, totalPages, setPage]);
@@ -165,7 +205,7 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     return filteredProperties.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredProperties, page]);
 
-  // ── Amenity pruning ──────────────────────────────────────────────────────
+  // ── Amenity pruning ──────────────────────────────────────────────────
   const displayedAmenities = React.useMemo(() => {
     if (selectedPropertyTypes.size === 0) return defaultAmenities;
     const union = new Set<string>();
@@ -176,7 +216,20 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
     return Array.from(union);
   }, [selectedPropertyTypes]);
 
-  // ── Map init ─────────────────────────────────────────────────────────────
+  // ── Handle "Search This Area" click ──────────────────────────────────
+  const handleSearchArea = useCallback(() => {
+    if (viewportBounds) {
+      setSearchBBox(viewportBounds);
+    }
+    hideSearchArea();
+  }, [viewportBounds, hideSearchArea]);
+
+  const handleClearSearchArea = useCallback(() => {
+    setSearchBBox(null);
+    hideSearchArea();
+  }, [hideSearchArea]);
+
+  // ── Map init ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapMode || !mapContainerRef.current || mapRef.current) return;
 
@@ -192,7 +245,7 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
       pitch: 60,
       minPitch: 45,
       bearing: 0,
-      attributionControl: false,
+      attributionControl: true,
     });
 
     mapRef.current = map;
@@ -208,7 +261,7 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapMode]);
 
-  // ── Map style switcher ────────────────────────────────────────────────────
+  // ── Map style switcher ────────────────────────────────────────────────
   function handleMapStyleChange(style: 'light' | 'satellite') {
     setMapStyle(style);
     if (!mapRef.current) return;
@@ -217,6 +270,27 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
       : 'mapbox://styles/mapbox/standard';
     mapRef.current.setStyle(url);
   }
+
+  // ── Street View click-on-map mode ────────────────────────────────────
+  const { openStreetView } = useMapStore();
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !streetViewMode) return;
+
+    map.getCanvas().style.cursor = "crosshair";
+
+    const onClick = (e: mapboxgl.MapMouseEvent) => {
+      openStreetView(e.lngLat.lat, e.lngLat.lng);
+      setStreetViewMode(false);
+    };
+
+    map.on("click", onClick);
+    return () => {
+      map.off("click", onClick);
+      if (map.getCanvas()) map.getCanvas().style.cursor = "";
+    };
+  }, [streetViewMode, mapRef, openStreetView]);
 
   return (
     <>
@@ -290,27 +364,88 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
           <div className="flex items-center justify-between gap-2 mb-4 min-w-0">
             <div className="text-sm text-gray-600 truncate min-w-0">
               Showing {filteredProperties.length} {config.resultsLabel}
-              {selectedLGA ? ` in ${selectedLGA}, ${selectedState}` : selectedState ? ` in ${selectedState}` : ' across Nigeria'}
+              {searchBBox ? " in this area" : selectedLGA ? ` in ${selectedLGA}, ${selectedState}` : selectedState ? ` in ${selectedState}` : ' across Nigeria'}
+              {searchBBox && (
+                <button onClick={handleClearSearchArea} className="ml-2 text-blue-600 underline text-xs">
+                  Clear area filter
+                </button>
+              )}
             </div>
             <div className="text-sm text-gray-500 shrink-0">Page {page} of {totalPages}</div>
           </div>
 
           {/* Grid or Map */}
           {mapMode ? (
-            <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm" style={{ height: 600 }}>
+            <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm"
+              style={{ height: "calc(100vh - 260px)", minHeight: 400, maxHeight: 800 }}>
+              {/* Map skeleton shown while map initializes */}
+              {!mapRef.current && (
+                <div className="absolute inset-0 irealty-map-skeleton flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">Loading map...</span>
+                </div>
+              )}
+
               <div ref={mapContainerRef} className="absolute inset-0" style={{ height: "100%" }} />
 
-              <MapStyleSwitcher mapStyle={mapStyle} onStyleChange={handleMapStyleChange} />
+              {/* Viewport loading indicator */}
+              {useMapStore.getState().isLoadingProperties && (
+                <div className="absolute top-0 left-0 right-0 z-30 h-1">
+                  <div className="h-full bg-blue-600 rounded-full animate-pulse" style={{ width: "60%" }} />
+                </div>
+              )}
+
+              {/* Map toolbar (replaces MapStyleSwitcher) */}
+              <MapToolbar
+                mapStyle={mapStyle}
+                onStyleChange={handleMapStyleChange}
+                streetViewMode={streetViewMode}
+                onToggleStreetViewMode={() => setStreetViewMode((v) => !v)}
+              />
 
               {mapRef.current && (
-                <MapMarkers
-                  mapRef={mapRef}
-                  properties={filteredProperties}
-                  listingHrefPrefix={config.hrefPrefix}
-                />
+                <>
+                  <MapMarkers
+                    mapRef={mapRef}
+                    properties={filteredProperties}
+                    listingHrefPrefix={config.hrefPrefix}
+                    onSearchArea={handleSearchArea}
+                    onMobilePopup={handleMobilePopup}
+                  />
+
+                  {/* Layer overlays */}
+                  {showHeatmap && (
+                    <HeatmapLayer mapRef={mapRef} properties={filteredProperties} />
+                  )}
+                  {showBoundaries && (
+                    <NeighbourhoodLayer mapRef={mapRef} properties={filteredProperties} />
+                  )}
+                  {showIsochrone && (
+                    <IsochroneControl mapRef={mapRef} />
+                  )}
+                </>
               )}
 
               <ClusterPanel listingHrefPrefix={config.hrefPrefix} />
+
+              {/* Mobile bottom sheet popup */}
+              <MobilePropertySheet
+                property={mobilePopupProp}
+                landmarks={mobilePopupLandmarks}
+                hrefPrefix={config.hrefPrefix}
+                onClose={() => setMobilePopupProp(null)}
+              />
+
+              {/* Search This Area button */}
+              {searchAreaVisible && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30">
+                  <button
+                    onClick={handleSearchArea}
+                    className="bg-white shadow-lg border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+                  >
+                    Search This Area
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -328,7 +463,6 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
           <div className="mt-6 flex items-center justify-between gap-2">
             <div className="text-sm text-gray-600 shrink-0">Page {page} of {totalPages}</div>
             <div className="flex items-center gap-2 min-w-0">
-              {/* Page-number buttons — hidden on mobile to prevent overflow */}
               <div className="hidden sm:flex items-center gap-1 flex-wrap">
                 {Array.from({ length: totalPages }).map((_, i) => i + 1).map((n) => (
                   <button key={n} onClick={() => goToPage(n)}
@@ -353,6 +487,15 @@ export default function ClientListingsContent({ config }: { config: ListingsPage
           </div>
         </main>
       </div>
+
+      {/* Street View modal */}
+      {streetViewOpen && streetViewCoords && (
+        <StreetViewModal
+          lat={streetViewCoords.lat}
+          lng={streetViewCoords.lng}
+          onClose={closeStreetView}
+        />
+      )}
     </>
   );
 }

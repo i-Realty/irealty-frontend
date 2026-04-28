@@ -6,7 +6,9 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { standardProperties } from '@/lib/data/properties';
+import { standardProperties, developerProperties } from '@/lib/data/properties';
+import { usePropertyStore } from '@/lib/store/usePropertyStore';
+import { unifiedToListingProperty } from '@/lib/utils/propertyAdapter';
 import { usePropertyModals } from '@/lib/hooks/usePropertyModals';
 
 // Extracted sub-components
@@ -31,7 +33,12 @@ export default function PropertyDetails() {
   const router = useRouter();
   const params = useParams();
   const id = Number(params?.id || 0);
-  const prop = standardProperties.find((p) => p.id === id);
+
+  // Search all property sources: standard, developer, and property store
+  const { getVerifiedProperties } = usePropertyStore();
+  const storeProps = getVerifiedProperties().map((p, i) => unifiedToListingProperty(p, i));
+  const allProperties = [...standardProperties, ...developerProperties, ...storeProps];
+  const prop = allProperties.find((p) => p.id === id);
   const propId = id;
 
   const { likedIds, toggleLike: toggleStoreLike } = useFavouritesStore();
@@ -114,7 +121,7 @@ export default function PropertyDetails() {
               <PropertyInfoBar property={prop} />
 
               {/* Tabs */}
-              <PropertyTabs />
+              <PropertyTabs lat={prop.lat} lng={prop.lng} />
             </div>
 
             {/* Agent Sidebar */}

@@ -33,7 +33,7 @@ export default function FundDepositModal() {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Fund deposit">
-       <div className="bg-white w-full h-full md:max-w-[500px] md:h-auto md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
+       <div className="bg-white w-full h-full md:h-auto md:max-w-[500px] md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200 md:border md:border-gray-200 overflow-hidden">
           
           {/* Header */}
           <div className="p-6 pb-4 flex items-center justify-between z-10 w-full bg-white relative border-b border-gray-100/0">
@@ -102,7 +102,7 @@ export default function FundDepositModal() {
              <div className="w-full flex flex-col gap-2 mt-2 border-t border-gray-100 pt-6">
 
                  <button
-                   onClick={() => alert('Flutterwave integration coming soon.')}
+                   onClick={() => {}}
                    className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
                  >
                      <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ export default function FundDepositModal() {
                  </button>
 
                  <button
-                   onClick={() => alert('Paystack integration coming soon.')}
+                   onClick={() => {}}
                    className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
                  >
                      <div className="flex items-center gap-3">

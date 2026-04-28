@@ -35,4 +35,24 @@ export type PropertyWithCoords = Property & {
   lga?: string;
   // Amenities list
   amenities?: string[];
+  // Backend-ready fields
+  placeId?: string;
+  formattedAddress?: string;
+  landmarks?: Landmark[];
+  neighbourhoodSlug?: string;
+  streetViewAvailable?: boolean;
 };
+
+// Landmark / POI type used across map components and data providers
+export interface Landmark {
+  name: string;
+  type: string;
+  category?: string;
+  distance: number; // metres
+  icon: string;
+  lat?: number;
+  lng?: number;
+}
+
+// Bounding box: [west, south, east, north]
+export type BBox = [number, number, number, number];

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import {
   fullDescription,
   features,
@@ -10,8 +11,15 @@ import {
   landmarksData,
 } from "@/lib/data/propertyDetails";
 
-export default function PropertyTabs() {
-  const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'>('description');
+const StreetViewEmbed = dynamic(() => import('@/components/map/StreetViewEmbed'), { ssr: false });
+
+interface PropertyTabsProps {
+  lat?: number;
+  lng?: number;
+}
+
+export default function PropertyTabs({ lat, lng }: PropertyTabsProps = {}) {
+  const [activeTab, setActiveTab] = useState<'description'|'amenities'|'documents'|'landmarks'|'streetview'>('description');
   const [showFullDesc, setShowFullDesc] = useState(false);
 
   const previewDescription = fullDescription[0].length > 220 ? fullDescription[0].slice(0, 220) + '...' : fullDescription[0];
@@ -80,6 +88,23 @@ export default function PropertyTabs() {
           >
             Landmarks
           </button>
+
+          {lat !== undefined && lng !== undefined && (
+            <button
+              id="tab-streetview"
+              role="tab"
+              aria-selected={activeTab === 'streetview'}
+              aria-controls="panel-streetview"
+              onClick={() => setActiveTab('streetview')}
+              className={
+                activeTab === 'streetview'
+                  ? 'px-6 py-3 bg-white rounded-md text-sm font-semibold text-blue-600 shadow-md -mb-4'
+                  : 'px-6 py-3 text-sm text-gray-400'
+              }
+            >
+              Street View
+            </button>
+          )}
         </div>
       </div>
 
@@ -213,6 +238,20 @@ export default function PropertyTabs() {
             ))}
           </div>
         </div>
+
+        {lat !== undefined && lng !== undefined && (
+          <div
+            id="panel-streetview"
+            role="tabpanel"
+            aria-labelledby="tab-streetview"
+            hidden={activeTab !== 'streetview'}
+            className={`bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm ${activeTab !== 'streetview' ? 'hidden' : ''}`}
+          >
+            <div className="h-[400px]">
+              {activeTab === 'streetview' && <StreetViewEmbed lat={lat} lng={lng} />}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

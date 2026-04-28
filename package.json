@@ -12,6 +12,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^2.0.2",
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/helpers": "^7.3.5",
     "framer-motion": "^12.23.24",
     "lucide-react": "^1.7.0",
     "mapbox-gl": "^3.9.4",
@@ -27,6 +30,7 @@
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/google.maps": "^3.64.0",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^20",
     "@types/react": "^19",

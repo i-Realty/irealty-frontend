@@ -6,17 +6,49 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
-import { useAuthStore, AuthUser } from '@/lib/store/useAuthStore';
+import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
 
+// ── Mock credentials (until backend is integrated) ──────────────────────────
+// When NEXT_PUBLIC_USE_API=true, this block is bypassed and a real API call is
+// made instead. These credentials only work while the app is in mock mode.
+
+const MOCK_CREDENTIALS: Record<string, { password: string; role: UserRole; name: string; id: string }> = {
+  'admin@i-realty.app':     { password: 'admin2323RR',     role: 'Admin',           name: 'Admin User',      id: 'demo-admin' },
+  'seeker@i-realty.app':    { password: 'seeker2323RR',    role: 'Property Seeker', name: 'Seeker User',     id: 'demo-seeker' },
+  'agent@i-realty.app':     { password: 'agent2323RR',     role: 'Agent',           name: 'Agent User',      id: 'demo-agent' },
+  'developer@i-realty.app': { password: 'developer2323RR', role: 'Developer',       name: 'Developer User',  id: 'demo-developer' },
+  'diaspora@i-realty.app':  { password: 'diaspora2323RR',  role: 'Diaspora',        name: 'Diaspora User',   id: 'demo-diaspora' },
+  'landlord@i-realty.app':  { password: 'landlord2323RR',  role: 'Landlord',        name: 'Landlord User',   id: 'demo-landlord' },
+};
+
+const ROLE_DASHBOARD_MAP: Record<UserRole, string> = {
+  'Admin':           '/dashboard/admin',
+  'Agent':           '/dashboard/agent',
+  'Developer':       '/dashboard/developer',
+  'Property Seeker': '/dashboard/seeker',
+  'Landlord':        '/dashboard/landlord',
+  'Diaspora':        '/dashboard/diaspora',
+};
+
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore(state => state.login);
+  const { login: doLogin, logout, isLoggedIn } = useAuthStore();
+  const login = doLogin;
   const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Clear any stale session when the login page is visited
+  // This ensures old mock sessions don't persist
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      logout();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Errors state
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
@@ -27,9 +59,9 @@ export default function LoginPage() {
     e.preventDefault();
     setErrors({});
 
-    // Validate
+    // Validate format
     const emailErr = validateEmail(email) || validateRequired(email, 'Email');
-    const pwdErr = validatePassword(password);
+    const pwdErr = validateRequired(password, 'Password');
 
     if (emailErr || pwdErr) {
       setErrors({ email: emailErr, password: pwdErr });
@@ -38,22 +70,42 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // Simulate network delay — replace setTimeout body with real API call
+    // Simulate network delay — when NEXT_PUBLIC_USE_API=true, replace with real API call
     setTimeout(() => {
+      const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+      if (USE_API) {
+        // TODO: Replace with real API call
+        // fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+        setLoading(false);
+        return;
+      }
+
+      // Mock mode: validate against demo credentials
+      const normalizedEmail = email.trim().toLowerCase();
+      const cred = MOCK_CREDENTIALS[normalizedEmail];
+
+      if (!cred || cred.password !== password) {
+        setErrors({ general: 'Invalid email or password. Use a demo account.' });
+        setLoading(false);
+        return;
+      }
+
       const mockUser: AuthUser = {
-        id: 'agent-123',
-        name: 'Waden Warren',
-        email,
-        role: 'Agent',
-        displayName: 'Waden Warren',
-        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
-        kycStatus: 'unverified',
+        id: cred.id,
+        name: cred.name,
+        email: normalizedEmail,
+        role: cred.role,
+        displayName: cred.name,
+        avatarUrl: '',
+        kycStatus: cred.role === 'Admin' ? 'verified' : 'unverified',
         accountStatus: 'active',
       };
+
       login(mockUser);
-      // Honour redirect param if present, otherwise go to agent dashboard
+
       const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirect') || '/dashboard/agent';
+      const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[cred.role];
       router.push(redirectTo);
     }, 500);
   }

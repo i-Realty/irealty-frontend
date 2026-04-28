@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
-import { standardProperties } from '@/lib/data/properties';
+import { standardProperties, developerProperties } from '@/lib/data/properties';
 import PropertyCard from '@/components/shared/PropertyCard';
 
 const CATEGORY_TABS = [
@@ -24,10 +24,12 @@ export default function SeekerFavoritesPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryTab>('All');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // In real app this would come from an API; we derive from liked IDs + property data
+  // Derive liked properties from all available property sources
+  // When backend is integrated (NEXT_PUBLIC_USE_API=true), replace with GET /api/seeker/favorites
+  const allProperties = useMemo(() => [...standardProperties, ...developerProperties], []);
   const likedProperties = useMemo(
-    () => standardProperties.filter((p) => likedIds.has(p.id)),
-    [likedIds]
+    () => allProperties.filter((p) => likedIds.has(p.id)),
+    [likedIds, allProperties]
   );
 
   // Map tab labels to title keywords (titles follow "N Bed <Type> ..." convention)

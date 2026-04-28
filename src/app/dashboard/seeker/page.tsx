@@ -8,14 +8,14 @@ import SeekerStats from '@/components/dashboard/seeker/SeekerStats';
 import SeekerRecentTransactions from '@/components/dashboard/seeker/SeekerRecentTransactions';
 
 export default function SeekerDashboardPage() {
-  const { fetchDashboardDataMock, isLoading } = useSeekerDashboardStore();
-  const fetchTransactionsMock = useSeekerTransactionsStore((s) => s.fetchTransactionsMock);
+  const { fetchDashboardData, isLoading } = useSeekerDashboardStore();
+  const fetchTransactions = useSeekerTransactionsStore((s) => s.fetchTransactions);
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    fetchDashboardDataMock();
-    fetchTransactionsMock();
-  }, [fetchDashboardDataMock, fetchTransactionsMock]);
+    fetchDashboardData();
+    fetchTransactions();
+  }, [fetchDashboardData, fetchTransactions]);
 
   if (isLoading) {
     return (
@@ -30,7 +30,7 @@ export default function SeekerDashboardPage() {
       {/* Welcome Banner */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.displayName ?? 'Waden'}!
+          Welcome back, {user?.displayName ?? 'there'}!
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           Manage your property investments and escrow transactions securely

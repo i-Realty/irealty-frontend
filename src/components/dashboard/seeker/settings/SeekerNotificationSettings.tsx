@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { apiPatch } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 interface NotifToggle {
   id: string;
@@ -20,10 +23,39 @@ const DEFAULT_PREFS: NotifToggle[] = [
   { id: 'promo',         label: 'Promotions & newsletters',   description: 'Occasional offers and market updates from i-Realty.',                        enabled: false },
 ];
 
+const STORAGE_KEY = 'irealty-seeker-notification-prefs';
+
+function loadPrefs(): NotifToggle[] {
+  if (typeof window === 'undefined') return DEFAULT_PREFS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_PREFS;
+    const saved: Record<string, boolean> = JSON.parse(raw);
+    return DEFAULT_PREFS.map((p) => ({
+      ...p,
+      enabled: saved[p.id] !== undefined ? saved[p.id] : p.enabled,
+    }));
+  } catch {
+    return DEFAULT_PREFS;
+  }
+}
+
+function savePrefsToStorage(prefs: NotifToggle[]) {
+  if (typeof window === 'undefined') return;
+  const map: Record<string, boolean> = {};
+  prefs.forEach((p) => { map[p.id] = p.enabled; });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+}
+
 export default function SeekerNotificationSettings() {
   const [prefs, setPrefs] = useState<NotifToggle[]>(DEFAULT_PREFS);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Load persisted preferences on mount
+  useEffect(() => {
+    setPrefs(loadPrefs());
+  }, []);
 
   const toggle = (id: string) => {
     setPrefs((prev) => prev.map((p) => p.id === id ? { ...p, enabled: !p.enabled } : p));
@@ -32,7 +64,21 @@ export default function SeekerNotificationSettings() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 900));
+
+    if (USE_API) {
+      try {
+        const payload: Record<string, boolean> = {};
+        prefs.forEach((p) => { payload[p.id] = p.enabled; });
+        await apiPatch('/api/seeker/settings/notifications', payload);
+      } catch {
+        // Fallback to local persistence on API failure
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 900));
+    }
+
+    // Always persist locally as cache
+    savePrefsToStorage(prefs);
     setIsSaving(false);
     setSaved(true);
   };

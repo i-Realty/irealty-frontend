@@ -16,7 +16,7 @@ export default function ChangeWithdrawMethodModal() {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:items-center md:justify-center bg-black/40 backdrop-blur-[2px] p-0 md:p-6 transition-all duration-200 fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Change withdrawal method">
-       <div className="bg-white w-full h-full md:max-w-md md:h-auto md:max-h-[85vh] md:rounded-3xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
+       <div className="bg-white w-full h-full md:h-auto md:max-w-md md:max-h-[85vh] md:rounded-2xl shadow-2xl flex flex-col relative animate-in slide-in-from-bottom md:zoom-in-95 duration-200 md:border md:border-gray-200 overflow-hidden">
 
           <div className="p-6 md:p-8 flex items-center justify-between z-10 w-full bg-white relative border-b border-gray-100">
              <div className="flex items-center gap-3">

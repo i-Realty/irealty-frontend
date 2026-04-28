@@ -23,38 +23,44 @@ export default function SignupSuccess() {
       return;
     }
 
-    // Map signup store role slug to AuthUser role type
-    const roleMap: Record<string, AuthUser['role']> = {
-      'real-estate-agent': 'Agent',
-      'property-seeker': 'Property Seeker',
-      'developers': 'Developer',
-      'property-owner': 'Landlord',
-      'diaspora-investors': 'Diaspora',
-    };
-    const mappedRole: AuthUser['role'] = roleMap[signupStore.role] ?? 'Agent';
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
-    // Persist to actual auth session
-    const newUser: AuthUser = {
-      id: `user-${Date.now()}`,
-      name: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
-      email: signupStore.email,
-      role: mappedRole,
-      displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
-      kycStatus: 'unverified',
-      accountStatus: 'active',
-    };
-    login(newUser);
+    if (USE_API) {
+      // When backend is integrated, the signup API will handle session creation.
+      // Map signup store role slug to AuthUser role type
+      const roleMap: Record<string, AuthUser['role']> = {
+        'real-estate-agent': 'Agent',
+        'property-seeker': 'Property Seeker',
+        'developers': 'Developer',
+        'property-owner': 'Landlord',
+        'diaspora-investors': 'Diaspora',
+      };
+      const mappedRole: AuthUser['role'] = roleMap[signupStore.role] ?? 'Agent';
 
-  }, [signupStore.email, signupStore.firstName, signupStore.lastName, signupStore.username, login, router]);
+      const newUser: AuthUser = {
+        id: `user-${Date.now()}`,
+        name: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
+        email: signupStore.email,
+        role: mappedRole,
+        displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
+        avatarUrl: '',
+        kycStatus: 'unverified',
+        accountStatus: 'active',
+      };
+      login(newUser);
+    }
+    // In mock mode: do NOT create a session — user must log in with demo credentials
+
+  }, [signupStore.email, signupStore.firstName, signupStore.lastName, signupStore.username, signupStore.role, login, router]);
 
   function handleContinue() {
     setRedirecting(true);
-    // Cleanup the signup wizard explicitly
     signupStore.reset();
-    
+
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
     setTimeout(() => {
-      router.push('/');
+      // In mock mode, direct to login so user uses demo credentials
+      router.push(USE_API ? '/' : '/auth/login');
     }, 500);
   }
 
@@ -70,15 +76,18 @@ export default function SignupSuccess() {
 
         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Profile Created!</h3>
         <p className="text-gray-500 dark:text-gray-400 text-center mb-8 px-4">
-          Your i-Realty account has been successfully created. Welcome aboard, {signupStore.firstName || 'User'}!
+          {process.env.NEXT_PUBLIC_USE_API === 'true'
+            ? `Your i-Realty account has been successfully created. Welcome aboard, ${signupStore.firstName || 'User'}!`
+            : `Account registration noted. Please log in with your demo credentials to access the dashboard.`
+          }
         </p>
 
-        <button 
-          onClick={handleContinue} 
+        <button
+          onClick={handleContinue}
           disabled={redirecting}
           className={`w-full py-3 rounded-lg font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 cursor-pointer ${redirecting ? 'opacity-80' : ''}`}
         >
-          {redirecting ? 'Taking you home...' : 'Go to Homepage'}
+          {redirecting ? 'Redirecting...' : (process.env.NEXT_PUBLIC_USE_API === 'true' ? 'Go to Homepage' : 'Go to Login')}
         </button>
       </div>
     </AuthLayout>

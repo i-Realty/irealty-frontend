@@ -21,19 +21,18 @@ const SEEKER_TABS: { id: SeekerTab; icon: LucideIcon }[] = [
 ];
 
 export default function SeekerSettingsPage() {
-  const { activeTab, setActiveTab } = useSettingsStore();
+  const { setActiveTab } = useSettingsStore();
   const [localTab, setLocalTab] = useState<SeekerTab>('Profile');
-
-  const validSettingsTab = SEEKER_TABS.find((t) => t.id === activeTab) ? activeTab as SeekerTab : null;
-  const activeLocalTab = validSettingsTab ?? localTab;
 
   const handleTabChange = (tab: SeekerTab) => {
     setLocalTab(tab);
-    // Only sync to shared settings store for tabs it knows about
+    // Sync to shared settings store for tabs it knows about
     if (tab !== 'Notifications') {
       setActiveTab(tab as SettingsTab);
     }
   };
+
+  const activeLocalTab = localTab;
 
   return (
     <div className="w-full min-h-full bg-gray-50/30 md:bg-white flex flex-col p-4 md:p-8 animate-in fade-in duration-300">
