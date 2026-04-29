@@ -56,7 +56,10 @@ async function request<T>(
     ...extraHeaders,
   };
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  // Strip the /api prefix so paths like /api/wallet/ledger become
+  // https://staging-api.i-realty.app/v1/wallet/ledger
+  const versionedPath = path.replace(/^\/api\//, '/');
+  const response = await fetch(`${BASE_URL}${versionedPath}`, {
     method,
     headers,
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
