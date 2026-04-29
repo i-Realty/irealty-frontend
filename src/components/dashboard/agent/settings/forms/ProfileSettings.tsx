@@ -5,7 +5,7 @@ import { Camera, Loader2, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { profileSchema, extractErrors } from '@/lib/validations/settings';
 
-const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
+const FALLBACK_AVATAR = '/images/demo-avatar.jpg';
 
 export default function ProfileSettings() {
   const { profile, updateProfile, updateSocials, submitProfileMock, isSaving } = useSettingsStore();

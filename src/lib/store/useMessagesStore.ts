@@ -181,9 +181,9 @@ export const generateMockThreads = (): ChatThread[] => {
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150',
         role: 'Property Seeker',
       },
-      lastMessage: 'Hello',
+      lastMessage: 'Hello, is the mansion still listed?',
       lastMessageTime: '2h',
-      unreadCount: 0,
+      unreadCount: 1,
       contextType: 'property',
       contextId: 'prop_seed_002',
       propertyContext: {
@@ -193,7 +193,10 @@ export const generateMockThreads = (): ChatThread[] => {
         priceFormatted: '₦85,000,000',
         image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80',
       },
-      messages: [],
+      messages: [
+        { id: 'c2m1', chatId: 'chat_2', senderId: 'u2', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '10:02AM' },
+        { id: 'c2m2', chatId: 'chat_2', senderId: 'u2', content: 'Hello, is the mansion still listed?', contentType: 'text', createdAt: now, timestamp: '10:03AM' },
+      ],
       createdAt: now,
     },
     {
@@ -204,9 +207,9 @@ export const generateMockThreads = (): ChatThread[] => {
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150',
         role: 'Property Seeker',
       },
-      lastMessage: 'Hello',
+      lastMessage: 'What is the annual rent for the office space?',
       lastMessageTime: '2h',
-      unreadCount: 0,
+      unreadCount: 1,
       contextType: 'property',
       contextId: 'prop_seed_005',
       propertyContext: {
@@ -216,7 +219,11 @@ export const generateMockThreads = (): ChatThread[] => {
         priceFormatted: '₦5,000,000/yr',
         image: 'https://images.unsplash.com/photo-1600607687920-4e2a09be15f1?auto=format&fit=crop&q=80',
       },
-      messages: [],
+      messages: [
+        { id: 'c3m1', chatId: 'chat_3', senderId: 'u3', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '9:15AM' },
+        { id: 'c3m2', chatId: 'chat_3', senderId: 'ME', content: 'Hi Cameron, how can I help you?', contentType: 'text', createdAt: now, timestamp: '9:20AM' },
+        { id: 'c3m3', chatId: 'chat_3', senderId: 'u3', content: 'What is the annual rent for the office space?', contentType: 'text', createdAt: now, timestamp: '9:21AM' },
+      ],
       createdAt: now,
     },
     {
@@ -227,9 +234,9 @@ export const generateMockThreads = (): ChatThread[] => {
         avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=150&h=150',
         role: 'Property Seeker',
       },
-      lastMessage: 'Hello',
+      lastMessage: 'Can I get a virtual tour link?',
       lastMessageTime: '2h',
-      unreadCount: 0,
+      unreadCount: 1,
       contextType: 'property',
       contextId: 'prop_seed_001',
       propertyContext: {
@@ -239,7 +246,11 @@ export const generateMockThreads = (): ChatThread[] => {
         priceFormatted: '₦45,000,000',
         image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80',
       },
-      messages: [],
+      messages: [
+        { id: 'c4m1', chatId: 'chat_4', senderId: 'u4', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '8:30AM' },
+        { id: 'c4m2', chatId: 'chat_4', senderId: 'ME', content: 'Good morning Ronald, happy to assist!', contentType: 'text', createdAt: now, timestamp: '8:45AM' },
+        { id: 'c4m3', chatId: 'chat_4', senderId: 'u4', content: 'Can I get a virtual tour link?', contentType: 'text', createdAt: now, timestamp: '8:46AM' },
+      ],
       createdAt: now,
     },
     {
@@ -250,9 +261,9 @@ export const generateMockThreads = (): ChatThread[] => {
         avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150',
         role: 'Diaspora',
       },
-      lastMessage: 'Hello',
+      lastMessage: 'Interested in the Asokoro Villas project.',
       lastMessageTime: '2h',
-      unreadCount: 0,
+      unreadCount: 1,
       contextType: 'service',
       contextId: 'plan_premium',
       propertyContext: {
@@ -262,7 +273,11 @@ export const generateMockThreads = (): ChatThread[] => {
         priceFormatted: '₦90,000,000',
         image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80',
       },
-      messages: [],
+      messages: [
+        { id: 'c5m1', chatId: 'chat_5', senderId: 'u5', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '7:00AM' },
+        { id: 'c5m2', chatId: 'chat_5', senderId: 'ME', content: 'Hi Dianne, welcome! How can I help?', contentType: 'text', createdAt: now, timestamp: '7:10AM' },
+        { id: 'c5m3', chatId: 'chat_5', senderId: 'u5', content: 'Interested in the Asokoro Villas project.', contentType: 'text', createdAt: now, timestamp: '7:11AM' },
+      ],
       createdAt: now,
     },
   ];
@@ -296,11 +311,19 @@ export const useMessagesStore = create<MessagesStore>()(
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
             const { threads } = get();
-            // Only seed if no threads exist (so real threads persist)
+            const seedThreads = generateMockThreads();
             if (threads.length === 0) {
-              set({ threads: generateMockThreads(), isLoadingChats: false });
+              // Fresh load — use full seed data
+              set({ threads: seedThreads, isLoadingChats: false });
             } else {
-              set({ isLoadingChats: false });
+              // Patch any persisted threads whose messages array is still empty
+              // (fixes users who loaded before seed messages were added)
+              const patched = threads.map((t) => {
+                if (t.messages.length > 0) return t;
+                const seed = seedThreads.find((s) => s.id === t.id);
+                return seed ? { ...t, messages: seed.messages, lastMessage: seed.lastMessage } : t;
+              });
+              set({ threads: patched, isLoadingChats: false });
             }
           }
         } catch (err: unknown) {

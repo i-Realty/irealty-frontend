@@ -98,7 +98,7 @@ export default function LoginPage() {
         email: normalizedEmail,
         role: cred.role,
         displayName: cred.name,
-        avatarUrl: '',
+        avatarUrl: '/images/demo-avatar.jpg',
         kycStatus: cred.role === 'Admin' ? 'verified' : 'unverified',
         accountStatus: 'active',
       };

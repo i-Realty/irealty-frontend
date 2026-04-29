@@ -26,7 +26,7 @@ import { getNavItems, getRoleFromPath, getDashboardRoot } from '@/config/nav';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/i18n';
 
-const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop';
+const FALLBACK_AVATAR = '/images/demo-avatar.jpg';
 
 export default function Sidebar() {
   const pathname = usePathname();

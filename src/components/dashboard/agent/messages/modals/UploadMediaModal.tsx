@@ -1,6 +1,5 @@
 'use client';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
 import { X, Plus, Smile, Video } from 'lucide-react';
 import { useMessagesStore } from '@/lib/store/useMessagesStore';
 import type { StagedFile } from '@/lib/store/useMessagesStore';
@@ -98,20 +97,16 @@ export default function UploadMediaModal() {
                 src={selectedFile.url}
                 controls
                 className="max-w-full max-h-full rounded-xl shadow-lg object-contain"
-                style={{ maxHeight: 'calc(100% - 0px)' }}
               />
             ) : (
-              /* Real image preview */
-              <div className="relative w-full h-full">
-                <Image
-                  key={selectedFile?.url}
-                  src={selectedFile?.url ?? ''}
-                  alt={selectedFile?.name ?? ''}
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
+              /* Plain <img> — works with blob URLs regardless of parent dimensions */
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={selectedFile?.url}
+                src={selectedFile?.url ?? ''}
+                alt={selectedFile?.name ?? ''}
+                className="max-w-full max-h-full object-contain rounded-xl shadow-lg block"
+              />
             )}
           </div>
 
@@ -149,12 +144,11 @@ export default function UploadMediaModal() {
                       <Video className="w-5 h-5 text-white" />
                     </div>
                   ) : (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={file.url}
                       alt={file.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   )}
                 </button>

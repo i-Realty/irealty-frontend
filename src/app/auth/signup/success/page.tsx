@@ -43,7 +43,7 @@ export default function SignupSuccess() {
         email: signupStore.email,
         role: mappedRole,
         displayName: `${signupStore.firstName} ${signupStore.lastName}`.trim() || signupStore.username || 'Demo User',
-        avatarUrl: '',
+        avatarUrl: '/images/demo-avatar.jpg',
         kycStatus: 'unverified',
         accountStatus: 'active',
       };

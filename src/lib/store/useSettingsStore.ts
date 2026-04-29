@@ -253,12 +253,12 @@ const MOCK_ACCOUNTS: AccountInfo[] = [
 // AuthUser objects used when switching accounts in mock mode.
 // In API mode these come from the /api/auth/switch-account response.
 const MOCK_ACCOUNT_USERS: Record<string, AuthUser> = {
-  'demo-admin':     { id: 'demo-admin',     name: 'Waden Warren',  email: 'admin@i-realty.app',     role: 'Admin',           displayName: 'Waden Warren',  avatarUrl: '', kycStatus: 'verified',   accountStatus: 'active' },
-  'demo-agent':     { id: 'demo-agent',     name: 'Marcus Bell',   email: 'agent@i-realty.app',     role: 'Agent',           displayName: 'Marcus Bell',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
-  'demo-seeker':    { id: 'demo-seeker',    name: 'Sarah Homes',   email: 'seeker@i-realty.app',    role: 'Property Seeker', displayName: 'Sarah Homes',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
-  'demo-developer': { id: 'demo-developer', name: 'Chidi Okeke',   email: 'developer@i-realty.app', role: 'Developer',       displayName: 'Chidi Okeke',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
-  'demo-diaspora':  { id: 'demo-diaspora',  name: 'Ngozi Adeyemi', email: 'diaspora@i-realty.app',  role: 'Diaspora',        displayName: 'Ngozi Adeyemi', avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
-  'demo-landlord':  { id: 'demo-landlord',  name: 'Tunde Bakare',  email: 'landlord@i-realty.app',  role: 'Landlord',        displayName: 'Tunde Bakare',  avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-admin':     { id: 'demo-admin',     name: 'Waden Warren',  email: 'admin@i-realty.app',     role: 'Admin',           displayName: 'Waden Warren',  avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'verified',   accountStatus: 'active' },
+  'demo-agent':     { id: 'demo-agent',     name: 'Marcus Bell',   email: 'agent@i-realty.app',     role: 'Agent',           displayName: 'Marcus Bell',   avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-seeker':    { id: 'demo-seeker',    name: 'Sarah Homes',   email: 'seeker@i-realty.app',    role: 'Property Seeker', displayName: 'Sarah Homes',   avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-developer': { id: 'demo-developer', name: 'Chidi Okeke',   email: 'developer@i-realty.app', role: 'Developer',       displayName: 'Chidi Okeke',   avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-diaspora':  { id: 'demo-diaspora',  name: 'Ngozi Adeyemi', email: 'diaspora@i-realty.app',  role: 'Diaspora',        displayName: 'Ngozi Adeyemi', avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-landlord':  { id: 'demo-landlord',  name: 'Tunde Bakare',  email: 'landlord@i-realty.app',  role: 'Landlord',        displayName: 'Tunde Bakare',  avatarUrl: '/images/demo-avatar.jpg', kycStatus: 'unverified', accountStatus: 'active' },
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
