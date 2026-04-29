@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
+import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
 
@@ -15,12 +16,12 @@ import { useI18n } from '@/lib/i18n';
 // made instead. These credentials only work while the app is in mock mode.
 
 const MOCK_CREDENTIALS: Record<string, { password: string; role: UserRole; name: string; id: string }> = {
-  'admin@i-realty.app':     { password: 'admin2323RR',     role: 'Admin',           name: 'Admin User',      id: 'demo-admin' },
-  'seeker@i-realty.app':    { password: 'seeker2323RR',    role: 'Property Seeker', name: 'Seeker User',     id: 'demo-seeker' },
-  'agent@i-realty.app':     { password: 'agent2323RR',     role: 'Agent',           name: 'Agent User',      id: 'demo-agent' },
-  'developer@i-realty.app': { password: 'developer2323RR', role: 'Developer',       name: 'Developer User',  id: 'demo-developer' },
-  'diaspora@i-realty.app':  { password: 'diaspora2323RR',  role: 'Diaspora',        name: 'Diaspora User',   id: 'demo-diaspora' },
-  'landlord@i-realty.app':  { password: 'landlord2323RR',  role: 'Landlord',        name: 'Landlord User',   id: 'demo-landlord' },
+  'admin@i-realty.app':     { password: 'admin2323RR',     role: 'Admin',           name: 'Waden Warren',   id: 'demo-admin'     },
+  'agent@i-realty.app':     { password: 'agent2323RR',     role: 'Agent',           name: 'Marcus Bell',    id: 'demo-agent'     },
+  'seeker@i-realty.app':    { password: 'seeker2323RR',    role: 'Property Seeker', name: 'Sarah Homes',    id: 'demo-seeker'    },
+  'developer@i-realty.app': { password: 'developer2323RR', role: 'Developer',       name: 'Chidi Okeke',    id: 'demo-developer' },
+  'diaspora@i-realty.app':  { password: 'diaspora2323RR',  role: 'Diaspora',        name: 'Ngozi Adeyemi',  id: 'demo-diaspora'  },
+  'landlord@i-realty.app':  { password: 'landlord2323RR',  role: 'Landlord',        name: 'Tunde Bakare',   id: 'demo-landlord'  },
 };
 
 const ROLE_DASHBOARD_MAP: Record<UserRole, string> = {
@@ -103,6 +104,8 @@ export default function LoginPage() {
       };
 
       login(mockUser);
+      // Sync the settings store so the account switcher and profile reflect this account
+      useSettingsStore.getState().setActiveAccount(mockUser.id);
 
       const params = new URLSearchParams(window.location.search);
       const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[cred.role];

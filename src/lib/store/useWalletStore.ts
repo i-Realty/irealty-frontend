@@ -140,6 +140,11 @@ export const useWalletStore = create<WalletStore>()(
       },
 
       processWithdrawal: async (amount: number) => {
+        // Guard: never allow overdraft regardless of how the call was triggered
+        if (amount > get().walletBalance) {
+          set({ error: 'Insufficient wallet balance' });
+          return;
+        }
         set({ isProcessingAction: true, error: null });
         try {
           if (USE_API) {
@@ -148,7 +153,21 @@ export const useWalletStore = create<WalletStore>()(
           } else {
             await new Promise((resolve) => setTimeout(resolve, 1500));
           }
-          set({ isProcessingAction: false, activeModal: 'withdrawSuccess' });
+          // Deduct balance and log the transaction regardless of mock/API mode
+          const entry: WalletTransaction = {
+            id: `wdraw_${Date.now()}`,
+            type: 'Withdrawal',
+            amount,
+            status: 'Pending', // bank/crypto transfer takes up to 48 h
+            date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
+            description: `Withdrawal via ${get().currentWithdrawMethod}`,
+          };
+          set((s) => ({
+            walletBalance: Math.max(0, s.walletBalance - amount),
+            transactions: [entry, ...s.transactions],
+            isProcessingAction: false,
+            activeModal: 'withdrawSuccess',
+          }));
         } catch (err) {
           set({ error: err instanceof Error ? err.message : 'Withdrawal failed', isProcessingAction: false });
         }

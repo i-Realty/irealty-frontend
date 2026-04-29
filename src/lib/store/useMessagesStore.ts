@@ -24,7 +24,7 @@ export type PropertyContext = {
   image: string;
 };
 
-export type MessageContentType = 'text' | 'document' | 'image_grid' | 'video';
+export type MessageContentType = 'text' | 'document' | 'image_grid' | 'video' | 'audio';
 
 export type FilePayload = {
   name: string;
@@ -32,6 +32,7 @@ export type FilePayload = {
   sizeMb: number;
   pages?: number;
   format: string;
+  audioDuration?: number; // seconds — set for audio messages
 };
 
 export interface StagedFile {

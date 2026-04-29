@@ -28,8 +28,8 @@ export default function TopNavBar() {
   const {
     activeAccount,
     accounts,
-    setActiveAccount,
     setAddAccountModalOpen,
+    switchAccount,
   } = useSettingsStore();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -72,12 +72,11 @@ export default function TopNavBar() {
   const displayName = user?.displayName ?? activeAccount.name;
   const avatarUrl = user?.avatarUrl ?? FALLBACK_AVATAR;
 
-  const handleAccountSwitch = (accountId: string) => {
+  const handleAccountSwitch = async (accountId: string) => {
     const account = accounts.find((a) => a.id === accountId);
-    setActiveAccount(accountId);
+    await switchAccount(accountId);
     setIsDropdownOpen(false);
     if (account) {
-      // Navigate to the correct dashboard root for the selected role
       router.push(getDashboardRoot(account.role as Parameters<typeof getDashboardRoot>[0]));
     }
   };
@@ -157,7 +156,7 @@ export default function TopNavBar() {
             <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-200/50 py-2 z-[70] animate-in slide-in-from-top-2 fade-in duration-200">
               <div className="flex flex-col">
                 {accounts.map((acc) => {
-                  const isActive = activeAccount.id === acc.id;
+                  const isActive = (user?.id ?? activeAccount.id) === acc.id;
                   return (
                     <button
                       key={acc.id}

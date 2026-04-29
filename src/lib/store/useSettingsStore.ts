@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiPost, apiPut } from '@/lib/api/client';
+import { useAuthStore, type AuthUser } from '@/lib/store/useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -76,6 +77,7 @@ export interface AccountInfo {
   id: string;
   role: AccountRole;
   name: string;
+  email: string;
 }
 
 interface SettingsStore {
@@ -89,9 +91,13 @@ interface SettingsStore {
   isAddAccountModalOpen: boolean;
   setAddAccountModalOpen: (open: boolean) => void;
   setActiveAccount: (accountId: string) => void;
+  /** API-ready: switches the active account and updates the auth user. */
+  switchAccount: (accountId: string) => Promise<void>;
 
   // Payloads
   profile: UserProfilePayload;
+  /** Persists each account's profile independently so switching restores the right data. */
+  profilesByAccount: Record<string, UserProfilePayload>;
   payout: PayoutPayload;
   security: SecurityPayload;
   helpTicket: HelpTicketPayload;
@@ -149,15 +155,38 @@ interface SettingsStore {
   submitDeveloperProjectMock: () => Promise<void>;
 }
 
-// Default States
-const defaultProfile: UserProfilePayload = {
-  firstName: 'Warren',
-  lastName: 'Waden',
-  displayName: 'Sarah Homes',
-  phone: '9045433344',
-  phoneCode: '+234',
-  about: '',
-  socials: { linkedin: '', facebook: '', instagram: '', twitter: '' }
+// Per-account default profiles — names are used throughout the demo dashboards
+const MOCK_ACCOUNT_PROFILES: Record<string, UserProfilePayload> = {
+  'demo-admin': {
+    firstName: 'Waden', lastName: 'Warren', displayName: 'Waden Warren',
+    phone: '8012345678', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
+  'demo-agent': {
+    firstName: 'Marcus', lastName: 'Bell', displayName: 'Marcus Bell',
+    phone: '8023456789', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
+  'demo-seeker': {
+    firstName: 'Sarah', lastName: 'Homes', displayName: 'Sarah Homes',
+    phone: '8034567890', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
+  'demo-developer': {
+    firstName: 'Chidi', lastName: 'Okeke', displayName: 'Chidi Okeke',
+    phone: '8045678901', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
+  'demo-diaspora': {
+    firstName: 'Ngozi', lastName: 'Adeyemi', displayName: 'Ngozi Adeyemi',
+    phone: '8056789012', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
+  'demo-landlord': {
+    firstName: 'Tunde', lastName: 'Bakare', displayName: 'Tunde Bakare',
+    phone: '8067890123', phoneCode: '+234', about: '',
+    socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
+  },
 };
 
 const defaultPayout: PayoutPayload = {
@@ -213,10 +242,24 @@ const defaultLandlordLease: LandlordLeasePayload = {
 };
 
 const MOCK_ACCOUNTS: AccountInfo[] = [
-  { id: 'acc-1', role: 'Admin', name: 'Waden Warren' },
-  { id: 'acc-2', role: 'Agent', name: 'Waden Warren' },
-  { id: 'acc-3', role: 'Property Seeker', name: 'Waden Warren' },
+  { id: 'demo-admin',     role: 'Admin',           name: 'Waden Warren',   email: 'admin@i-realty.app'     },
+  { id: 'demo-agent',     role: 'Agent',            name: 'Marcus Bell',    email: 'agent@i-realty.app'     },
+  { id: 'demo-seeker',    role: 'Property Seeker',  name: 'Sarah Homes',    email: 'seeker@i-realty.app'    },
+  { id: 'demo-developer', role: 'Developer',        name: 'Chidi Okeke',    email: 'developer@i-realty.app' },
+  { id: 'demo-diaspora',  role: 'Diaspora',         name: 'Ngozi Adeyemi',  email: 'diaspora@i-realty.app'  },
+  { id: 'demo-landlord',  role: 'Landlord',         name: 'Tunde Bakare',   email: 'landlord@i-realty.app'  },
 ];
+
+// AuthUser objects used when switching accounts in mock mode.
+// In API mode these come from the /api/auth/switch-account response.
+const MOCK_ACCOUNT_USERS: Record<string, AuthUser> = {
+  'demo-admin':     { id: 'demo-admin',     name: 'Waden Warren',  email: 'admin@i-realty.app',     role: 'Admin',           displayName: 'Waden Warren',  avatarUrl: '', kycStatus: 'verified',   accountStatus: 'active' },
+  'demo-agent':     { id: 'demo-agent',     name: 'Marcus Bell',   email: 'agent@i-realty.app',     role: 'Agent',           displayName: 'Marcus Bell',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-seeker':    { id: 'demo-seeker',    name: 'Sarah Homes',   email: 'seeker@i-realty.app',    role: 'Property Seeker', displayName: 'Sarah Homes',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-developer': { id: 'demo-developer', name: 'Chidi Okeke',   email: 'developer@i-realty.app', role: 'Developer',       displayName: 'Chidi Okeke',   avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-diaspora':  { id: 'demo-diaspora',  name: 'Ngozi Adeyemi', email: 'diaspora@i-realty.app',  role: 'Diaspora',        displayName: 'Ngozi Adeyemi', avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+  'demo-landlord':  { id: 'demo-landlord',  name: 'Tunde Bakare',  email: 'landlord@i-realty.app',  role: 'Landlord',        displayName: 'Tunde Bakare',  avatarUrl: '', kycStatus: 'unverified', accountStatus: 'active' },
+};
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   activeTab: 'Profile',
@@ -228,10 +271,28 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setAddAccountModalOpen: (open) => set({ isAddAccountModalOpen: open }),
   setActiveAccount: (accountId) => {
     const target = get().accounts.find(a => a.id === accountId);
-    if (target) set({ activeAccount: target });
+    if (!target) return;
+    const profile = get().profilesByAccount[accountId] ?? MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
+    set({ activeAccount: target, profile });
   },
 
-  profile: defaultProfile,
+  switchAccount: async (accountId) => {
+    const account = get().accounts.find(a => a.id === accountId);
+    if (!account) return;
+    if (USE_API) {
+      const user = await apiPost<AuthUser>('/api/auth/switch-account', { accountId });
+      useAuthStore.getState().login(user);
+    } else {
+      await new Promise(r => setTimeout(r, 300));
+      const mockUser = MOCK_ACCOUNT_USERS[accountId];
+      if (mockUser) useAuthStore.getState().login(mockUser);
+    }
+    const profile = get().profilesByAccount[accountId] ?? MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
+    set({ activeAccount: account, profile });
+  },
+
+  profile: MOCK_ACCOUNT_PROFILES['demo-admin'],
+  profilesByAccount: { ...MOCK_ACCOUNT_PROFILES },
   payout: defaultPayout,
   security: defaultSecurity,
   helpTicket: defaultHelpTicket,
@@ -240,8 +301,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   landlordLease: defaultLandlordLease,
   developerProject: defaultDeveloperProject,
 
-  updateProfile: (data) => set((state) => ({ profile: { ...state.profile, ...data } })),
-  updateSocials: (data) => set((state) => ({ profile: { ...state.profile, socials: { ...state.profile.socials, ...data } } })),
+  updateProfile: (data) => set((state) => {
+    const updated = { ...state.profile, ...data };
+    return { profile: updated, profilesByAccount: { ...state.profilesByAccount, [state.activeAccount.id]: updated } };
+  }),
+  updateSocials: (data) => set((state) => {
+    const updated = { ...state.profile, socials: { ...state.profile.socials, ...data } };
+    return { profile: updated, profilesByAccount: { ...state.profilesByAccount, [state.activeAccount.id]: updated } };
+  }),
 
   updatePayoutMethod: (method) => set((state) => ({ payout: { ...state.payout, activeMethod: method } })),
   updateBankPayout: (data) => set((state) => ({ payout: { ...state.payout, bank: { ...state.payout.bank, ...data } } })),
@@ -267,7 +334,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
-      set({ isSaving: false });
+      const { profile, activeAccount } = get();
+      const displayName = profile.displayName;
+      // Sync the display name into the auth user and the accounts switcher list
+      useAuthStore.getState().updateUser({ displayName, name: displayName });
+      set((state) => ({
+        isSaving: false,
+        activeAccount: { ...state.activeAccount, name: displayName },
+        accounts: state.accounts.map(a => a.id === activeAccount.id ? { ...a, name: displayName } : a),
+      }));
     } catch (err) {
       set({ isSaving: false, error: err instanceof Error ? err.message : 'Failed to save profile' });
     }

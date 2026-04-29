@@ -22,7 +22,7 @@ import {
 import { useSidebarStore } from '@/lib/store/useSidebarStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { getNavItems, getRoleFromPath } from '@/config/nav';
+import { getNavItems, getRoleFromPath, getDashboardRoot } from '@/config/nav';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/i18n';
 
@@ -36,8 +36,8 @@ export default function Sidebar() {
   const {
     activeAccount,
     accounts,
-    setActiveAccount,
     setAddAccountModalOpen,
+    switchAccount,
   } = useSettingsStore();
 
   const [isMobileAccountMenuOpen, setIsMobileAccountMenuOpen] = useState(false);
@@ -158,11 +158,13 @@ export default function Sidebar() {
                   return (
                     <button
                       key={acc.id}
-                      onClick={() => {
-                        setActiveAccount(acc.id);
+                      onClick={async () => {
+                        await switchAccount(acc.id);
+                        router.push(getDashboardRoot(acc.role as Parameters<typeof getDashboardRoot>[0]));
                         setIsMobileAccountMenuOpen(false);
+                        close();
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors ${isActive ? 'bg-blue-50/30' : ''}`}
+                      className={`w-full flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors ${(user?.id ?? activeAccount.id) === acc.id ? 'bg-blue-50/30' : ''}`}
                     >
                       <div className="flex items-center gap-3">
                         <Image
@@ -173,13 +175,13 @@ export default function Sidebar() {
                           className="w-9 h-9 rounded-full border border-gray-200 object-cover opacity-90"
                         />
                         <div className="flex flex-col items-start gap-0">
-                          <span className={`text-[13px] leading-tight ${isActive ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>
+                          <span className={`text-[13px] leading-tight ${(user?.id ?? activeAccount.id) === acc.id ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>
                             {acc.name}
                           </span>
                           <span className="text-[11px] font-medium text-gray-400 capitalize">{acc.role}</span>
                         </div>
                       </div>
-                      {isActive && <Check className="w-4 h-4 text-blue-600" />}
+                      {(user?.id ?? activeAccount.id) === acc.id && <Check className="w-4 h-4 text-blue-600" />}
                     </button>
                   );
                 })}

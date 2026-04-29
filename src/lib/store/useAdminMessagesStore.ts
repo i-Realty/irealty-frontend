@@ -21,11 +21,23 @@ export interface AdminMessageUser {
   totalTransactions: number;
 }
 
+export type AdminMessageContentType = 'text' | 'image_grid' | 'video' | 'audio';
+
+export interface AdminMessageFile {
+  url: string;
+  name: string;
+  sizeMb: number;
+  format: string;
+  audioDuration?: number;
+}
+
 export interface AdminMessage {
   id: string;
   threadId: string;
   senderId: string; // 'ADMIN' for admin replies
   content: string;
+  contentType?: AdminMessageContentType;
+  files?: AdminMessageFile[];
   createdAt: string;
   timestamp: string;
 }
@@ -63,7 +75,7 @@ interface AdminMessagesState {
 
   // API-ready actions
   fetchThreads: () => Promise<void>;
-  sendReply: (threadId: string, content: string) => Promise<void>;
+  sendReply: (threadId: string, content: string, attachments?: AdminMessageFile[]) => Promise<void>;
   resolveThread: (threadId: string) => Promise<void>;
   escalateThread: (threadId: string) => Promise<void>;
   reopenThread: (threadId: string) => Promise<void>;
@@ -71,7 +83,7 @@ interface AdminMessagesState {
   /** @deprecated Use fetchThreads() */
   fetchThreadsMock: () => Promise<void>;
   /** @deprecated Use sendReply() */
-  sendReplyMock: (threadId: string, content: string) => Promise<void>;
+  sendReplyMock: (threadId: string, content: string, attachments?: AdminMessageFile[]) => Promise<void>;
   /** @deprecated Use resolveThread() */
   resolveThreadMock: (threadId: string) => Promise<void>;
   /** @deprecated Use escalateThread() */
@@ -372,18 +384,30 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
     }
   },
 
-  sendReply: async (threadId, content) => {
+  sendReply: async (threadId, content, attachments) => {
     set({ isSending: true, error: null });
     await new Promise((r) => setTimeout(r, 500));
+
+    const hasAttachments = attachments && attachments.length > 0;
+    const isAudio = hasAttachments && attachments![0].audioDuration !== undefined;
+    const contentType: AdminMessageContentType = hasAttachments
+      ? (isAudio ? 'audio' : (attachments![0].format.match(/mp4|webm|mov/) ? 'video' : 'image_grid'))
+      : 'text';
 
     const newMessage: AdminMessage = {
       id: `msg-${Date.now()}`,
       threadId,
       senderId: 'ADMIN',
       content,
+      contentType,
+      files: attachments,
       createdAt: new Date().toISOString(),
       timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
     };
+
+    const lastMessage = hasAttachments
+      ? `[${contentType} attachment]`
+      : content;
 
     set((s) => ({
       threads: s.threads.map((t) =>
@@ -391,9 +415,9 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
           ? {
               ...t,
               messages: [...t.messages, newMessage],
-              lastMessage: content,
+              lastMessage,
               lastMessageTime: 'Just now',
-              status: t.status, // Status must be changed explicitly via resolveThreadMock/escalateThreadMock
+              status: t.status,
             }
           : t
       ),
@@ -442,7 +466,7 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
 
   // Backward-compatible aliases
   fetchThreadsMock: async () => get().fetchThreads(),
-  sendReplyMock: async (threadId, content) => get().sendReply(threadId, content),
+  sendReplyMock: async (threadId, content, attachments) => get().sendReply(threadId, content, attachments),
   resolveThreadMock: async (threadId) => get().resolveThread(threadId),
   escalateThreadMock: async (threadId) => get().escalateThread(threadId),
   reopenThreadMock: async (threadId) => get().reopenThread(threadId),

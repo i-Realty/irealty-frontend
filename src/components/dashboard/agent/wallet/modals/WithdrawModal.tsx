@@ -20,19 +20,27 @@ export default function WithdrawModal() {
   const [amount, setAmount] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const formatCurrency = (val: number) => {
-    return `₦${val.toLocaleString('en-US')}`;
+  const formatCurrency = (val: number) => `₦${val.toLocaleString('en-US')}`;
+
+  const numericAmount = Number(amount);
+  const exceedsBalance = !!amount && numericAmount > walletBalance;
+  const isInvalid = exceedsBalance || !amount || numericAmount <= 0;
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value);
+    // Clear error as user types so it only shows on real-time exceed
+    if (errors.amount) setErrors({});
   };
 
   const handleWithdraw = async () => {
-     if (!amount) return;
-     const result = withdrawAmountSchema.safeParse({ amount: Number(amount), balance: walletBalance });
-     if (!result.success) {
-       setErrors(extractErrors(result.error));
-       return;
-     }
-     setErrors({});
-     await processWithdrawalMock(Number(amount));
+    if (!amount) return;
+    const result = withdrawAmountSchema.safeParse({ amount: numericAmount, balance: walletBalance });
+    if (!result.success) {
+      setErrors(extractErrors(result.error));
+      return;
+    }
+    setErrors({});
+    await processWithdrawalMock(numericAmount);
   };
 
   return (
@@ -58,14 +66,29 @@ export default function WithdrawModal() {
                  <h3 className="text-[24px] font-bold text-gray-900 tracking-tight">{formatCurrency(walletBalance)}</h3>
               </div>
 
-              <input
-                 type="number"
-                 placeholder="Enter amount"
-                 value={amount}
-                 onChange={(e) => setAmount(e.target.value)}
-                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400"
-              />
-              {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
+              <div className="w-full relative">
+                <input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className={`w-full bg-white border rounded-xl px-4 py-3.5 pr-16 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-gray-400 ${
+                    exceedsBalance ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-blue-500'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => { setAmount(String(walletBalance)); setErrors({}); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors"
+                >
+                  Max
+                </button>
+              </div>
+              {(exceedsBalance || errors.amount) && (
+                <p className="text-red-500 text-xs mt-1 self-start">
+                  {exceedsBalance ? `Exceeds available balance (${formatCurrency(walletBalance)})` : errors.amount}
+                </p>
+              )}
               <div className="mb-6" />
 
               <div className="w-full bg-gray-50/60 border border-gray-100 rounded-2xl p-5 mb-4 shadow-sm">
@@ -111,9 +134,9 @@ export default function WithdrawModal() {
                  Change withdrawal method
               </button>
 
-              <button 
+              <button
                 onClick={handleWithdraw}
-                disabled={isProcessingAction || !amount}
+                disabled={isProcessingAction || isInvalid}
                 className="w-full bg-blue-600 border border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 text-white font-medium text-[15px] py-3.5 rounded-xl transition-colors shadow-sm mt-auto relative"
               >
                   {isProcessingAction ? (
