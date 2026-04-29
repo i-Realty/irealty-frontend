@@ -16,7 +16,7 @@ function formatAudioTime(sec: number) {
 function waveformBars(url: string, count = 28): number[] {
   return Array.from({ length: count }, (_, i) => {
     const seed = url.charCodeAt(i % url.length) * 7 + i * 13;
-    return 20 + (seed % 60); // heights 20–79 px
+    return 3 + (seed % 16); // heights 3–18 px — fits inside h-5 (20 px) container
   });
 }
 
@@ -95,15 +95,15 @@ function AudioPlayer({
       </button>
 
       <div className="flex-1 flex flex-col gap-1.5 min-w-0 overflow-hidden">
-        {/* Waveform */}
-        <div className="flex items-center gap-[2px] h-8">
+        {/* Waveform — bars bottom-aligned, clipped to container height */}
+        <div className="flex items-end gap-[2px] h-5 overflow-hidden">
           {bars.map((h, i) => {
             const pct = (i / bars.length) * 100;
             return (
               <div
                 key={i}
-                style={{ height: `${h * (pct < progress ? 1 : 0.38)}px` }}
-                className={`w-1 rounded-full flex-shrink-0 transition-all duration-75 ${
+                style={{ height: `${pct < progress ? h : Math.max(3, Math.round(h * 0.4))}px` }}
+                className={`w-[3px] rounded-full flex-shrink-0 transition-all duration-75 ${
                   pct < progress ? barPlayed : barRest
                 }`}
               />
@@ -202,17 +202,16 @@ export default function MessageBubble({ message }: { message: Message }) {
                   {fileIsVideo ? (
                     <video
                       src={file.url}
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                       muted
                       playsInline
                     />
                   ) : (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={file.url}
                       alt={file.name}
-                      fill
-                      className={`object-cover ${isLastAndMore ? 'brightness-[0.4]' : ''}`}
-                      unoptimized
+                      className={`absolute inset-0 w-full h-full object-cover ${isLastAndMore ? 'brightness-[0.4]' : ''}`}
                     />
                   )}
                   {isVideo && idx === 0 && (

@@ -15,11 +15,14 @@ export default function UploadMediaModal() {
   const [caption, setCaption] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
   const addMoreRef = useRef<HTMLInputElement>(null);
+  // Track whether files were sent so we don't revoke URLs still in use by MessageBubble
+  const sentRef = useRef(false);
 
-  // Revoke blob URLs on unmount to avoid memory leaks
+  // Only revoke blob URLs if the modal was cancelled (not sent)
   useEffect(() => {
     const urls = stagedFiles.map((f) => f.url);
     return () => {
+      if (sentRef.current) return; // URLs are now owned by the message store — leave them alive
       urls.forEach((u) => {
         if (u.startsWith('blob:')) URL.revokeObjectURL(u);
       });
@@ -46,6 +49,7 @@ export default function UploadMediaModal() {
 
   const handleSend = () => {
     if (!activeChatId || stagedFiles.length === 0) return;
+    sentRef.current = true; // prevent cleanup from revoking URLs still needed by MessageBubble
     const hasVideo = stagedFiles.some((f) => f.isVideo);
     const type = hasVideo ? 'video' : 'image_grid';
     const filePayloads = stagedFiles.map(({ url, name, sizeMb, format, pages }) => ({

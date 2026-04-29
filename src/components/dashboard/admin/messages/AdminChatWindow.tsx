@@ -28,7 +28,7 @@ function formatTime(sec: number) {
 function waveformBars(url: string, count = 24): number[] {
   return Array.from({ length: count }, (_, i) => {
     const seed = url.charCodeAt(i % url.length) * 7 + i * 13;
-    return 18 + (seed % 52);
+    return 3 + (seed % 16); // heights 3–18 px
   });
 }
 
@@ -72,11 +72,14 @@ function AdminAudioPlayer({ url, duration: staticDuration, isAdmin }: { url: str
         {playing ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
       </button>
       <div className="flex-1 flex flex-col gap-1 min-w-0">
-        <div className="flex items-center gap-[2px] h-7">
-          {bars.map((h, i) => (
-            <div key={i} style={{ height: `${h * ((i / bars.length) * 100 < progress ? 1 : 0.38)}px` }}
-              className={`w-1 rounded-full flex-shrink-0 transition-all duration-75 ${(i / bars.length) * 100 < progress ? barPlayed : barRest}`} />
-          ))}
+        <div className="flex items-end gap-[2px] h-5 overflow-hidden">
+          {bars.map((h, i) => {
+            const played = (i / bars.length) * 100 < progress;
+            return (
+              <div key={i} style={{ height: `${played ? h : Math.max(3, Math.round(h * 0.4))}px` }}
+                className={`w-[3px] rounded-full flex-shrink-0 transition-all duration-75 ${played ? barPlayed : barRest}`} />
+            );
+          })}
         </div>
         <span className={`text-[11px] font-medium tabular-nums ${timeCls}`}>{formatTime(playing ? current : total)}</span>
       </div>
@@ -196,8 +199,6 @@ export default function AdminChatWindow() {
     };
   }, []);
 
-  if (!thread) return null;
-
   const handleSend = () => {
     if (!text.trim() || !activeThreadId || isSending) return;
     sendReplyMock(activeThreadId, text);
@@ -228,6 +229,8 @@ export default function AdminChatWindow() {
     sendReplyMock(activeThreadId, '', attachments);
     e.target.value = '';
   }, [activeThreadId, sendReplyMock]);
+
+  if (!thread) return null;
 
   // ── Audio recording ──────────────────────────────────────────────────────
   const startRecording = async () => {

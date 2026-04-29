@@ -116,7 +116,7 @@ export default function ChatWindow() {
             <span className="text-xs text-gray-400 font-medium tracking-wide">Sun, Dec 17 (Today)</span>
          </div>
          
-         <div className="flex flex-col w-full h-full justify-end min-h-full">
+         <div className="flex flex-col w-full min-h-full justify-end">
            {activeThread.messages.map((msg) => (
              <MessageBubble key={msg.id} message={msg} />
            ))}
