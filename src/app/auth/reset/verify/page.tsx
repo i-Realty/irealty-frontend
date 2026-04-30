@@ -44,12 +44,16 @@ function ResetVerifyContent() {
     if (otpErr) { setError(otpErr); return; }
     setError('');
     setLoading(true);
-    // Code is passed to the new-password page which sends it alongside the new password.
-    // No separate verify-only endpoint assumed — the PATCH /auth/reset-password validates it.
     try {
-      await new Promise(r => setTimeout(r, USE_API ? 0 : 600));
+      if (USE_API) {
+        // Verify the OTP code before proceeding to new password page
+        await apiPost('/api/auth/verify-reset-otp', { email, code });
+      } else {
+        await new Promise(r => setTimeout(r, 600));
+      }
       router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
-    } finally {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.');
       setLoading(false);
     }
   }

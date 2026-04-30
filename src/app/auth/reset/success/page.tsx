@@ -42,11 +42,11 @@ function ResetSuccessContent() {
     setLoading(true);
     try {
       if (USE_API) {
-        // PATCH /api/auth/reset-password — verifies code + sets new password
+        // POST /api/v1/auth/reset-password — sets new password using verified code
         await apiPost('/api/auth/reset-password', {
           email,
           code,
-          password,
+          newPassword: password,
         });
       } else {
         await new Promise(r => setTimeout(r, 800));
