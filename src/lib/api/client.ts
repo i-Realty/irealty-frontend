@@ -9,9 +9,11 @@
  *
  *   const data = await apiGet<ListingsResponse>('/api/listings?page=1');
  *   const result = await apiPost<CreatePropertyResponse>('/api/properties', payload);
+ *
+ * All /api/* paths are proxied through Next.js rewrites to the backend
+ * (next.config.ts: /api/:path* → https://staging-api.i-realty.app/api/v1/:path*)
+ * so there is no CORS issue and no need for an explicit BASE_URL.
  */
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // ── Token helpers ─────────────────────────────────────────────────────
 
@@ -51,7 +53,7 @@ async function tryRefreshToken(): Promise<boolean> {
     const { refreshToken } = getAuthState();
     if (!refreshToken) return false;
 
-    const resp = await fetch(`${BASE_URL}/auth/refresh`, {
+    const resp = await fetch(`/api/auth/refresh`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ refreshToken }),
@@ -109,10 +111,8 @@ async function request<T>(
     ...extraHeaders,
   };
 
-  // Strip the /api prefix so paths like /api/wallet/ledger become
-  // https://staging-api.i-realty.app/v1/wallet/ledger
-  const versionedPath = path.replace(/^\/api\//, '/');
-  const response = await fetch(`${BASE_URL}${versionedPath}`, {
+  // Paths must start with /api/ — Next.js rewrites forward them to the backend.
+  const response = await fetch(path, {
     method,
     headers,
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),

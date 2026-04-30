@@ -156,7 +156,7 @@ The backend JWT must be stored under the key `token` inside the Zustand auth sta
 
 ### 2.3 Email Verification
 
-Backend has `POST /api/v1/auth/verify-email` and `POST /api/v1/auth/resend-verification`. Frontend has no screens for this yet.
+Backend has `POST /api/v1/auth/verify-email` and `POST /api/v1/auth/resend-verification`. Frontend screens exists.
 
 **Action needed:** Create `/auth/verify-email` page or add verification banner to dashboard.
 
