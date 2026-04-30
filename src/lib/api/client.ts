@@ -107,6 +107,53 @@ export class ApiError extends Error {
   }
 }
 
+// ── Error message helpers ────────────────────────────────────────────
+
+const FRIENDLY_STATUS: Record<number, string> = {
+  400: 'The request was invalid. Please check your input and try again.',
+  401: 'Invalid email or password.',
+  403: 'You do not have permission to perform this action.',
+  404: 'The requested resource was not found.',
+  409: 'This account already exists. Please log in instead.',
+  422: 'Some fields are invalid. Please check your input.',
+  429: 'Too many attempts. Please wait a moment and try again.',
+  500: 'Something went wrong on our end. Please try again later.',
+};
+
+/**
+ * Extract a human-readable string from any error body shape.
+ * Handles: string, string[], { message }, { error }, nested objects, etc.
+ */
+function extractErrorMessage(body: unknown, status: number): string {
+  if (!body || typeof body !== 'object') {
+    return FRIENDLY_STATUS[status] ?? `Something went wrong (${status}).`;
+  }
+
+  const obj = body as Record<string, unknown>;
+
+  // Try common fields: message, error, detail, errors
+  for (const key of ['message', 'error', 'detail', 'errors']) {
+    const val = obj[key];
+    if (typeof val === 'string' && val.trim()) return val;
+    if (Array.isArray(val)) {
+      // Array of strings (NestJS validation) or array of objects
+      const strs = val.map(v =>
+        typeof v === 'string' ? v : (v as Record<string, unknown>)?.message ?? ''
+      ).filter(Boolean);
+      if (strs.length) return strs.join('. ');
+    }
+    // Nested object like { message: { email: "..." } }
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      const nested = Object.values(val as Record<string, unknown>)
+        .filter(v => typeof v === 'string')
+        .join('. ');
+      if (nested) return nested;
+    }
+  }
+
+  return FRIENDLY_STATUS[status] ?? `Something went wrong (${status}).`;
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────
 
 async function request<T>(
@@ -154,22 +201,15 @@ async function request<T>(
       }
     }
 
-    // Read the error body for a meaningful message
     let errorBody: unknown;
     try { errorBody = await response.json(); } catch { errorBody = null; }
-    const eb = errorBody as { message?: string | string[]; error?: string } | null;
-    const raw = eb?.message ?? eb?.error ?? 'Invalid email or password';
-    const message = Array.isArray(raw) ? raw.join('; ') : raw;
-    throw new ApiError(401, message, errorBody);
+    throw new ApiError(401, extractErrorMessage(errorBody, 401), errorBody);
   }
 
   if (!response.ok) {
     let errorBody: unknown;
     try { errorBody = await response.json(); } catch { errorBody = null; }
-    const body = errorBody as { message?: string | string[]; error?: string } | null;
-    const raw = body?.message ?? body?.error ?? `API error ${response.status}`;
-    const message = Array.isArray(raw) ? raw.join('; ') : raw;
-    throw new ApiError(response.status, message, errorBody);
+    throw new ApiError(response.status, extractErrorMessage(errorBody, response.status), errorBody);
   }
 
   // 204 No Content — return empty object
