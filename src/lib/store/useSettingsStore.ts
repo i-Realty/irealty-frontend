@@ -564,13 +564,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       // Sync name into the auth store
       useAuthStore.getState().updateUser({ displayName, name: fullName || displayName });
 
-      // Only update the active account's name — other accounts keep their
-      // own independently customized names.
+      // Update the active account. If this is the main account, propagate
+      // the new name to ALL linked accounts (they share the main's identity).
+      const isMain = activeAccount.id === mainAccountId;
       set((state) => ({
         isSaving: false,
         activeAccount: { ...state.activeAccount, name: displayName },
         accounts: state.accounts.map(a =>
-          a.id === activeAccount.id ? { ...a, name: displayName } : a
+          a.id === activeAccount.id || isMain ? { ...a, name: displayName } : a
         ),
       }));
     } catch (err) {
