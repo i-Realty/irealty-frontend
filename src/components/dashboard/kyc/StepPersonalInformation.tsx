@@ -3,7 +3,10 @@
 import { useKYCStore } from './useKYCStore';
 import { kycStep1Schema, extractErrors } from '@/lib/validations/kyc';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function StepPersonalInformation() {
   const { setCurrentKycStep, updateKycProgress } = useKYCStore();
@@ -20,8 +23,10 @@ export default function StepPersonalInformation() {
     city: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const result = kycStep1Schema.safeParse({
       bvn: formData.bvn,
       firstName: formData.firstName,
@@ -38,6 +43,34 @@ export default function StepPersonalInformation() {
       return;
     }
     setErrors({});
+    setApiError('');
+
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        const monthMap: Record<string, string> = {
+          Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
+          Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12',
+        };
+        const mm = monthMap[formData.dobMonth] ?? formData.dobMonth;
+        const dd = formData.dobDay.padStart(2, '0');
+        await apiPost('/api/kyc/personal-info', {
+          bvn:         formData.bvn,
+          firstName:   formData.firstName,
+          lastName:    formData.lastName,
+          dateOfBirth: `${formData.dobYear}-${mm}-${dd}`,
+          address:     formData.address,
+          postCode:    formData.postCode,
+          city:        formData.city,
+        });
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Failed to submit. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
+    }
+
     updateKycProgress(1);
     setCurrentKycStep(2);
   };
@@ -178,11 +211,14 @@ export default function StepPersonalInformation() {
         </div>
       </div>
 
+      {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
       <div className="pt-4 flex justify-end">
-        <button 
+        <button
           onClick={handleNext}
-          className="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={submitting}
+          className="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-2"
         >
+          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           Proceed
         </button>
       </div>

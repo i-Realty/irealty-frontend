@@ -2,13 +2,18 @@
 
 import { useKYCStore } from './useKYCStore';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Camera, CheckCircle2, RefreshCw, Loader2 } from 'lucide-react';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function StepFaceMatch() {
   const { setCurrentKycStep, updateKycProgress } = useKYCStore();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isStreamActive, setIsStreamActive] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -55,7 +60,20 @@ export default function StepFaceMatch() {
 
   const handleRetake = () => setCapturedImage(null);
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    setApiError('');
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        // Register liveness session — QoreId handles the selfie verification
+        await apiPost('/api/kyc/liveness/register-session', {});
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Liveness check failed. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
+    }
     updateKycProgress(4);
     setCurrentKycStep(5);
   };
@@ -130,6 +148,7 @@ export default function StepFaceMatch() {
         </ul>
       </div>
 
+      {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
       <div className="pt-2 flex justify-end gap-3">
         {capturedImage && (
           <button
@@ -141,9 +160,10 @@ export default function StepFaceMatch() {
         )}
         <button
           onClick={capturedImage ? handleNext : handleCapture}
-          disabled={!capturedImage && !isStreamActive}
-          className="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          disabled={(!capturedImage && !isStreamActive) || submitting}
+          className="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
         >
+          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {capturedImage ? 'Proceed' : 'Capture'}
         </button>
       </div>

@@ -2,7 +2,10 @@
 
 import { useKYCStore } from './useKYCStore';
 import { useState, useRef } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function StepVerifyPhone() {
   const { setCurrentKycStep, updateKycProgress } = useKYCStore();
@@ -11,11 +14,25 @@ export default function StepVerifyPhone() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const handlePhoneSubmit = () => {
-    if (phone.length > 5) {
-      setShowOtp(true);
+  const handlePhoneSubmit = async () => {
+    if (phone.length < 5) return;
+    setApiError('');
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        const phoneNumber = phone.startsWith('+') ? phone : `+234${phone.replace(/^0/, '')}`;
+        await apiPost('/api/kyc/phone/send-otp', { phoneNumber });
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Failed to send OTP.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
     }
+    setShowOtp(true);
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -38,12 +55,23 @@ export default function StepVerifyPhone() {
     }
   };
 
-  const handleOtpSubmit = () => {
-    // Check if full
-    if (otp.join('').length === 6) {
-      updateKycProgress(2);
-      setCurrentKycStep(3); // Go to next KYC step
+  const handleOtpSubmit = async () => {
+    if (otp.join('').length !== 6) return;
+    setApiError('');
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        const phoneNumber = phone.startsWith('+') ? phone : `+234${phone.replace(/^0/, '')}`;
+        await apiPost('/api/kyc/phone/verify-otp', { phoneNumber, idToken: otp.join('') });
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Invalid OTP. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
     }
+    updateKycProgress(2);
+    setCurrentKycStep(3);
   };
 
   if (showOtp) {
@@ -82,16 +110,18 @@ export default function StepVerifyPhone() {
           </button>
         </div>
 
+        {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
         <div className="pt-4 flex justify-end">
-          <button 
+          <button
             onClick={handleOtpSubmit}
-            disabled={otp.join('').length !== 6}
-            className={`font-medium py-3 px-8 rounded-lg transition-colors ${
-              otp.join('').length === 6 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            disabled={otp.join('').length !== 6 || submitting}
+            className={`font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2 ${
+              otp.join('').length === 6 && !submitting
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-blue-300 text-white cursor-not-allowed'
             }`}
           >
+            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Verify Phone Number
           </button>
         </div>
@@ -135,14 +165,16 @@ export default function StepVerifyPhone() {
         </div>
       </div>
 
+      {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
       <div className="pt-4 flex justify-end">
-        <button 
+        <button
           onClick={handlePhoneSubmit}
-          disabled={!phone}
-          className={`font-medium py-3 px-8 rounded-lg transition-colors ${
-            phone ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-400 text-white cursor-not-allowed'
+          disabled={!phone || submitting}
+          className={`font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2 ${
+            phone && !submitting ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-400 text-white cursor-not-allowed'
           }`}
         >
+          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           Proceed
         </button>
       </div>

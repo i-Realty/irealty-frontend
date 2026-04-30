@@ -1,9 +1,96 @@
 import { create } from 'zustand';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api/client';
+import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from '@/lib/api/client';
 import { usePropertyStore } from './usePropertyStore';
 import { useAuthStore } from './useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+// ---------------------------------------------------------------------------
+// Backend ↔ frontend field mapping helpers
+// ---------------------------------------------------------------------------
+const PROPERTY_TYPE_MAP: Record<string, string> = {
+  RESIDENTIAL: 'Residential', COMMERCIAL: 'Commercial',
+  LAND: 'Plots/Lands', SHORT_LET: 'Service Apartments & Short Lets', PG_HOSTEL: 'PG/Hostel',
+};
+const PROPERTY_TYPE_TO_BACKEND: Record<string, string> = {
+  Residential: 'RESIDENTIAL', Commercial: 'COMMERCIAL',
+  'Plots/Lands': 'LAND', 'Service Apartments & Short Lets': 'SHORT_LET', 'PG/Hostel': 'PG_HOSTEL',
+};
+const LISTING_TYPE_MAP: Record<string, string> = { FOR_SALE: 'For Sale', FOR_RENT: 'For Rent' };
+const LISTING_TYPE_TO_BACKEND: Record<string, string> = { 'For Sale': 'FOR_SALE', 'For Rent': 'FOR_RENT' };
+const PROPERTY_STATUS_MAP: Record<string, string> = { UNDER_CONSTRUCTION: 'Under Construction', READY: 'Ready' };
+const PROPERTY_STATUS_TO_BACKEND: Record<string, string> = { 'Under Construction': 'UNDER_CONSTRUCTION', Ready: 'READY' };
+const PRICE_TYPE_MAP: Record<string, string> = { PER_MONTH: 'Per Month', EVERY_6_MONTHS: 'Every 6 Months', PER_YEAR: 'Per Year' };
+const PRICE_TYPE_TO_BACKEND: Record<string, string> = { 'Per Month': 'PER_MONTH', 'Every 6 Months': 'EVERY_6_MONTHS', 'Per Year': 'PER_YEAR' };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendListing(l: Record<string, any>): AgentProperty {
+  return {
+    id:               String(l.id),
+    createdAt:        l.createdAt ?? new Date().toISOString(),
+    propertyCategory: (PROPERTY_TYPE_MAP[l.propertyType] ?? l.propertyType ?? 'Residential') as import('./useAgentPropertiesStore').PropertyCategory,
+    listingType:      (LISTING_TYPE_MAP[l.listingType] ?? 'For Sale') as import('./useAgentPropertiesStore').ListingType,
+    propertyStatus:   (PROPERTY_STATUS_MAP[l.propertyStatus] ?? 'Ready') as import('./useAgentPropertiesStore').PropertyStatus,
+    title:            l.title ?? '',
+    description:      l.description ?? '',
+    state:            l.state ?? '',
+    city:             l.city ?? '',
+    address:          l.fullAddress ?? l.address ?? '',
+    landmarks:        l.landmarks ?? [],
+    price:            l.price ?? 0,
+    priceType:        PRICE_TYPE_MAP[l.priceType] as AgentProperty['priceType'],
+    bedrooms:         l.bedrooms,
+    bathrooms:        l.bathrooms,
+    sizeSqm:          l.sizeSqm,
+    amenities:        l.amenities ?? [],
+    media:            (l.images ?? []).map((img: Record<string, unknown>) => String(img.url)),
+    virtualTourUrl:   l.virtualTourUrl,
+    securityDeposit:  l.securityDeposit,
+    agencyFee:        l.agencyFee,
+    legalFee:         l.legalFee,
+    cautionFee:       l.cautionFee,
+    documentTypes:    l.documentTypes,
+    zoningType:       l.zoningType,
+    unitsFloors:      l.unitsFloors,
+    parkingCapacity:  l.parkingCapacity,
+    floorAreaSqm:     l.floorAreaSqm,
+    roomType:         l.roomType,
+    utilitiesIncluded: Array.isArray(l.utilitiesIncluded)
+      ? l.utilitiesIncluded.join(', ')
+      : l.utilitiesIncluded,
+  };
+}
+
+function toBackendListing(prop: AgentProperty): Record<string, unknown> {
+  return {
+    propertyType:   PROPERTY_TYPE_TO_BACKEND[prop.propertyCategory] ?? 'RESIDENTIAL',
+    listingType:    LISTING_TYPE_TO_BACKEND[prop.listingType] ?? 'FOR_SALE',
+    propertyStatus: PROPERTY_STATUS_TO_BACKEND[prop.propertyStatus] ?? 'READY',
+    title:          prop.title,
+    description:    prop.description,
+    state:          prop.state,
+    city:           prop.city,
+    fullAddress:    prop.address,
+    landmarks:      prop.landmarks,
+    amenities:      prop.amenities,
+    bedrooms:       prop.bedrooms,
+    bathrooms:      prop.bathrooms,
+    sizeSqm:        prop.sizeSqm,
+    price:          prop.price,
+    priceType:      prop.priceType ? PRICE_TYPE_TO_BACKEND[prop.priceType] : undefined,
+    securityDeposit: prop.securityDeposit,
+    agencyFee:      prop.agencyFee,
+    legalFee:       prop.legalFee,
+    cautionFee:     prop.cautionFee,
+    virtualTourUrl: prop.virtualTourUrl,
+    documentTypes:  prop.documentTypes,
+    zoningType:     prop.zoningType,
+    unitsFloors:    prop.unitsFloors,
+    parkingCapacity: prop.parkingCapacity,
+    floorAreaSqm:   prop.floorAreaSqm,
+    roomType:       prop.roomType,
+  };
+}
 
 // --- Types ---
 export type PropertyCategory = 'Residential' | 'Commercial' | 'Plots/Lands' | 'Service Apartments & Short Lets' | 'PG/Hostel';
@@ -135,7 +222,8 @@ interface AgentPropertiesState {
   setSearchQuery: (query: string) => void;
   setPage: (page: number) => void;
   deleteProperty: (id: string) => Promise<boolean>;
-  addProperty: (prop: AgentProperty) => Promise<void>;
+  addProperty: (prop: AgentProperty) => Promise<AgentProperty>;
+  publishProperty: (id: string) => Promise<void>;
   getPropertyById: (id: string) => AgentProperty | undefined;
   updateProperty: (prop: AgentProperty) => Promise<void>;
 
@@ -159,8 +247,11 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ properties: AgentProperty[] }>('/api/agent/properties');
-        set({ properties: data.properties, isLoading: false });
+        const raw = await apiGet<unknown>('/api/listings/mine');
+        const list = Array.isArray(raw) ? raw : [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const properties = list.map((l: any) => mapBackendListing(l));
+        set({ properties, isLoading: false });
       } else {
         await new Promise((resolve) => setTimeout(resolve, 800));
         set({ properties: mockAgentProperties, isLoading: false });
@@ -179,7 +270,7 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        await apiDelete(`/api/agent/properties/${id}`);
+        await apiDelete(`/api/listings/${id}`);
       } else {
         await new Promise((resolve) => setTimeout(resolve, 600));
       }
@@ -192,12 +283,15 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
   },
 
   addProperty: async (prop) => {
+    let finalProp = prop;
     if (USE_API) {
-      await apiPost('/api/agent/properties', prop);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiPost<any>('/api/listings', toBackendListing(prop));
+      finalProp = mapBackendListing(raw);
     }
     set((state) => ({
-      properties: [prop, ...state.properties],
-      activeTab: prop.listingType,
+      properties: [finalProp, ...state.properties],
+      activeTab: finalProp.listingType,
       activeFilter: 'All',
       page: 1,
     }));
@@ -209,30 +303,49 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
       ownerName: user?.name ?? 'Agent',
       ownerRole: 'Agent',
       ownerAvatar: user?.avatarUrl,
-      title: prop.title,
-      description: prop.description,
-      category: prop.propertyCategory as import('./usePropertyStore').PropertyCategory,
-      listingType: prop.listingType,
-      price: prop.price,
-      priceType: prop.priceType,
-      state: prop.state,
-      city: prop.city,
-      address: prop.address,
-      landmarks: prop.landmarks,
-      bedrooms: typeof prop.bedrooms === 'number' ? prop.bedrooms : undefined,
-      bathrooms: typeof prop.bathrooms === 'number' ? prop.bathrooms : undefined,
-      sizeSqm: typeof prop.sizeSqm === 'number' ? prop.sizeSqm : undefined,
-      amenities: prop.amenities,
-      media: prop.media,
-      virtualTourUrl: prop.virtualTourUrl,
+      title: finalProp.title,
+      description: finalProp.description,
+      category: finalProp.propertyCategory as import('./usePropertyStore').PropertyCategory,
+      listingType: finalProp.listingType,
+      price: finalProp.price,
+      priceType: finalProp.priceType,
+      state: finalProp.state,
+      city: finalProp.city,
+      address: finalProp.address,
+      landmarks: finalProp.landmarks,
+      bedrooms: typeof finalProp.bedrooms === 'number' ? finalProp.bedrooms : undefined,
+      bathrooms: typeof finalProp.bathrooms === 'number' ? finalProp.bathrooms : undefined,
+      sizeSqm: typeof finalProp.sizeSqm === 'number' ? finalProp.sizeSqm : undefined,
+      amenities: finalProp.amenities,
+      media: finalProp.media,
+      virtualTourUrl: finalProp.virtualTourUrl,
     });
+    return finalProp;
+  },
+
+  publishProperty: async (id) => {
+    if (USE_API) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiPatch<any>(`/api/listings/${id}/publish`);
+      const updated = mapBackendListing(raw);
+      set((s) => ({ properties: s.properties.map(p => p.id === id ? updated : p) }));
+    }
   },
 
   getPropertyById: (id) => get().properties.find(p => p.id === id),
 
   updateProperty: async (prop) => {
     if (USE_API) {
-      await apiPut(`/api/agent/properties/${prop.id}`, prop);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiPut<any>(`/api/listings/${prop.id}`, toBackendListing(prop));
+      const updated = mapBackendListing(raw);
+      set((state) => ({
+        properties: state.properties.map(p => p.id === prop.id ? updated : p),
+        activeTab: updated.listingType,
+        activeFilter: 'All',
+        page: 1,
+      }));
+      return;
     }
     set((state) => ({
       properties: state.properties.map(p => p.id === prop.id ? prop : p),

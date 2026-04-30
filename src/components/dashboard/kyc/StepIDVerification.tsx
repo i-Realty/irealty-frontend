@@ -2,7 +2,19 @@
 
 import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
 import { useState, useRef } from 'react';
-import { UploadCloud, File, Trash2, ChevronDown } from 'lucide-react';
+import { UploadCloud, File, Trash2, ChevronDown, Loader2 } from 'lucide-react';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+// Map frontend labels → backend idType enum
+const ID_TYPE_BACKEND: Record<string, string> = {
+  'International Passport': 'INTERNATIONAL_PASSPORT',
+  "Driver's License": 'DRIVERS_LICENSE',
+  "Voter's Card": 'VOTERS_CARD',
+  NIN: 'NIN',
+  BVN: 'BVN',
+};
 
 export default function StepIDVerification() {
   const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
@@ -10,21 +22,45 @@ export default function StepIDVerification() {
   const [idNumber, setIdNumber] = useState('');
   const [idType, setIdType] = useState('');
   const [fileName, setFileName] = useState('');
+  const [fileData, setFileData] = useState<string>('');
   const [attempted, setAttempted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setAttempted(true);
-    if (idNumber && idType && fileName) {
-      updateKycProgress(3);
-      setCurrentKycStep(4);
+    if (!idNumber || !idType || !fileName) return;
+    setApiError('');
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        await apiPost('/api/kyc/id-verification', {
+          idType:  ID_TYPE_BACKEND[idType] ?? idType,
+          idNumber,
+          // file is binary — send as base64 when file upload endpoint exists
+          // For now submit without file if not available
+          ...(fileData ? { file: fileData } : {}),
+        });
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Failed to submit ID. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
     }
+    updateKycProgress(3);
+    setCurrentKycStep(4);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    // Read as base64 for API submission
+    const reader = new FileReader();
+    reader.onload = () => setFileData(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const removeFile = () => {
@@ -112,11 +148,14 @@ export default function StepIDVerification() {
 
       {attempted && !fileName && <p className="text-xs text-red-500 -mt-4">Please upload an identification document</p>}
 
+      {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
       <div className="pt-4 flex justify-end">
         <button
           onClick={handleNext}
-          className="font-medium py-3 px-8 rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700"
+          disabled={submitting}
+          className="font-medium py-3 px-8 rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
         >
+          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           Proceed
         </button>
       </div>

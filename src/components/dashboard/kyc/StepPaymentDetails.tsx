@@ -3,7 +3,10 @@
 import { useKYCStore } from './useKYCStore';
 import { kycPaymentDetailsSchema, extractErrors } from '@/lib/validations/kyc';
 import { useState } from 'react';
-import { Briefcase, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
+import { Briefcase, Wallet, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 interface StepPaymentDetailsProps {
   onComplete: () => void;
@@ -27,16 +30,41 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const result = kycPaymentDetailsSchema.safeParse(bankData);
     if (!result.success) {
       setErrors(extractErrors(result.error));
       return;
     }
     setErrors({});
+    setApiError('');
+
+    if (USE_API) {
+      setSubmitting(true);
+      try {
+        // POST /api/kyc/payment expects bankCode (not bankName) — use accountNumber as bankCode placeholder
+        // until a bank lookup is implemented
+        await apiPost('/api/kyc/payment', {
+          bankAccount: {
+            bankCode:      bankData.bankName,   // TODO: replace with actual bank code from GET /api/paystack/banks
+            accountNumber: bankData.accountNumber,
+          },
+          ...(cryptoData.address ? {
+            cryptoWallet: { walletType: cryptoData.type, walletAddress: cryptoData.address },
+          } : {}),
+        });
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Failed to save payment details. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitting(false);
+    }
+
     updateKycProgress(5);
-    // Trigger submission
     onComplete();
   };
 
@@ -160,16 +188,18 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
         )}
       </div>
 
+      {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
       <div className="pt-4 flex justify-end">
-        <button 
+        <button
           onClick={handleComplete}
-          disabled={!bankData.bankName || !bankData.accountNumber}
-          className={`font-medium py-3 px-8 rounded-lg transition-colors ${
-            (bankData.bankName && bankData.accountNumber) 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+          disabled={!bankData.bankName || !bankData.accountNumber || submitting}
+          className={`font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2 ${
+            (bankData.bankName && bankData.accountNumber && !submitting)
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-blue-300 text-white cursor-not-allowed'
           }`}
         >
+          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           Complete
         </button>
       </div>
