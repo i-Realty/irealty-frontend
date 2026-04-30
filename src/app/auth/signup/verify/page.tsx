@@ -10,7 +10,7 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateOtp } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost, apiGet } from '@/lib/api/client';
+import { apiPost, apiGet, setTokenImmediate } from '@/lib/api/client';
 import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 
 function VerifyCodeContent() {
@@ -81,11 +81,12 @@ function VerifyCodeContent() {
         // If backend issues a token on verification, log the user in immediately
         if (token) {
           setToken(token, refreshToken);
+          setTokenImmediate(token);
           const meData   = await apiGet<BackendUser>('/api/auth/me');
           const authUser = mapUser(meData);
           login(authUser);
           useSettingsStore.getState().setActiveAccount(authUser.id);
-          await useSettingsStore.getState().fetchAccounts();
+          useSettingsStore.getState().fetchAccounts(); // non-blocking
         }
         router.push('/auth/signup/success');
       } catch (err: unknown) {

@@ -10,7 +10,7 @@ import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost, apiGet, ApiError } from '@/lib/api/client';
+import { apiPost, apiGet, ApiError, setTokenImmediate } from '@/lib/api/client';
 import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
@@ -44,10 +44,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Clear any stale session when the login page is visited
-  // This ensures old mock sessions don't persist
+  // Clear any stale session when the user *intentionally* navigates to login.
+  // Only fires on initial mount — does NOT react to isLoggedIn changing later
+  // (which would clobber a login that just succeeded and is about to redirect).
+  const staleOnMount = React.useRef(isLoggedIn);
   React.useEffect(() => {
-    if (isLoggedIn) {
+    if (staleOnMount.current) {
       logout();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,10 +85,14 @@ export default function LoginPage() {
           password,
         });
 
-        // Store token immediately so the /me request is authenticated
+        // Store token in both Zustand (persist) and in-memory override
+        // so the /me request below can use it immediately.
         const token        = extractToken(data);
         const refreshToken = extractRefreshToken(data);
-        if (token) setToken(token, refreshToken);
+        if (token) {
+          setToken(token, refreshToken);
+          setTokenImmediate(token);
+        }
 
         // Use /me to get the authoritative user object (documented shape)
         const meData   = await apiGet<BackendUser>('/api/auth/me');
@@ -94,7 +100,8 @@ export default function LoginPage() {
 
         login(authUser);
         useSettingsStore.getState().setActiveAccount(authUser.id);
-        await useSettingsStore.getState().fetchAccounts();
+        // fetchAccounts is non-critical; don't let it block navigation
+        useSettingsStore.getState().fetchAccounts();
         const params     = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
         router.push(redirectTo);

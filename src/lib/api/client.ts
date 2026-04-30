@@ -17,6 +17,18 @@
 
 // ── Token helpers ─────────────────────────────────────────────────────
 
+/**
+ * In-memory override so callers that just stored a token via setToken()
+ * can use it immediately, without waiting for Zustand persist to flush
+ * to localStorage (which happens asynchronously).
+ */
+let tokenOverride: string | null = null;
+
+/** Call this right after setToken() so the very next request picks it up. */
+export function setTokenImmediate(token: string | null) {
+  tokenOverride = token;
+}
+
 function getAuthState(): { token: string | null; refreshToken: string | null } {
   if (typeof window === 'undefined') return { token: null, refreshToken: null };
   try {
@@ -33,7 +45,7 @@ function getAuthState(): { token: string | null; refreshToken: string | null } {
 }
 
 function getToken(): string | null {
-  return getAuthState().token;
+  return tokenOverride ?? getAuthState().token;
 }
 
 // ── Token refresh ─────────────────────────────────────────────────────
@@ -62,8 +74,8 @@ async function tryRefreshToken(): Promise<boolean> {
     if (!resp.ok) return false;
 
     const data = await resp.json();
-    const newToken        = data.token ?? data.accessToken;
-    const newRefreshToken = data.refreshToken;
+    const newToken        = data.token ?? data.accessToken ?? data.access_token;
+    const newRefreshToken = data.refreshToken ?? data.refresh_token;
     if (!newToken) return false;
 
     // Patch localStorage directly to avoid a circular import of useAuthStore
