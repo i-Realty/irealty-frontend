@@ -10,7 +10,7 @@ import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost } from '@/lib/api/client';
+import { apiPost, ApiError } from '@/lib/api/client';
 import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
@@ -92,6 +92,11 @@ export default function LoginPage() {
         const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
         router.push(redirectTo);
       } catch (err: unknown) {
+        if (err instanceof ApiError && err.status === 409) {
+          // Account exists but email not yet verified — go to verification step
+          router.push(`/auth/signup/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+          return;
+        }
         const msg = err instanceof Error ? err.message : 'Login failed. Please try again.';
         setErrors({ general: msg });
       } finally {

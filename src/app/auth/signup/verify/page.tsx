@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import ProgressPill from '@/components/auth/ProgressPill';
 import OtpInput from '@/components/auth/OtpInput';
@@ -13,11 +13,15 @@ import { useI18n } from '@/lib/i18n';
 import { apiPost } from '@/lib/api/client';
 import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
 
-export default function VerifyCode() {
+function VerifyCodeContent() {
   const router = useRouter();
-  const { email } = useSignupStore();
+  const searchParams = useSearchParams();
+  const { email: storeEmail } = useSignupStore();
+  // Support arriving here from the login 409 redirect (?email=...)
+  const email = storeEmail || searchParams?.get('email') || '';
   const { login, setToken } = useAuthStore();
   const { t } = useI18n();
+
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +56,7 @@ export default function VerifyCode() {
     }
   }
 
-  // Guard: if no email in store, they skipped steps
+  // Guard: if no email anywhere, they skipped steps
   useEffect(() => {
     if (!email) {
       router.replace('/auth/signup');
@@ -144,5 +148,13 @@ export default function VerifyCode() {
         </button>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function VerifyCode() {
+  return (
+    <Suspense>
+      <VerifyCodeContent />
+    </Suspense>
   );
 }

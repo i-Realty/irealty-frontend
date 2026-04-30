@@ -140,9 +140,9 @@ async function request<T>(
   if (!response.ok) {
     let errorBody: unknown;
     try { errorBody = await response.json(); } catch { errorBody = null; }
-    const message =
-      (errorBody as { message?: string })?.message ??
-      `API error ${response.status}`;
+    const body = errorBody as { message?: string | string[]; error?: string } | null;
+    const raw = body?.message ?? body?.error ?? `API error ${response.status}`;
+    const message = Array.isArray(raw) ? raw.join('; ') : raw;
     throw new ApiError(response.status, message, errorBody);
   }
 

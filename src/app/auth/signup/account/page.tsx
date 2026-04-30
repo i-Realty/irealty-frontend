@@ -10,7 +10,7 @@ import PasswordInput from '@/components/auth/PasswordInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
 import { validateEmail, validatePassword, validatePhone, validateRequired, validateUsername } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost } from '@/lib/api/client';
+import { apiPost, ApiError } from '@/lib/api/client';
 import { SIGNUP_ROLE_TO_BACKEND } from '@/lib/api/adapters';
 
 export default function SignupAccount() {
@@ -87,7 +87,10 @@ export default function SignupAccount() {
         // Backend sends OTP to email — proceed to verify step
         router.push('/auth/signup/verify');
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+        let msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+        if (err instanceof ApiError && err.status === 409) {
+          msg = 'An account with this email already exists. Please log in instead.';
+        }
         setErrors({ general: msg });
       } finally {
         setLoading(false);
