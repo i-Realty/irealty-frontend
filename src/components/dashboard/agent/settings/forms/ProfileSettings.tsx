@@ -69,8 +69,8 @@ export default function ProfileSettings() {
                   </div>
                </div>
                <div className="flex flex-col">
-                  <span className="text-[18px] font-bold text-gray-900">{profile.displayName || 'Sarah Homes'}</span>
-                  <span className="text-[13px] font-medium text-gray-400 mt-0.5">Einstein.oyakhilome1@gmail.com</span>
+                  <span className="text-[18px] font-bold text-gray-900">{profile.displayName || user?.displayName || user?.name || 'User'}</span>
+                  <span className="text-[13px] font-medium text-gray-400 mt-0.5">{user?.email || ''}</span>
                </div>
            </div>
 
