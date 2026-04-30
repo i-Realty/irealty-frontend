@@ -10,8 +10,8 @@ import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost, ApiError } from '@/lib/api/client';
-import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
+import { apiPost, apiGet, ApiError } from '@/lib/api/client';
+import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
 // When NEXT_PUBLIC_USE_API=true, this block is bypassed and a real API call is
@@ -82,13 +82,20 @@ export default function LoginPage() {
           email: email.trim().toLowerCase(),
           password,
         });
-        const authUser = mapAuthResponse(data);
-        const token    = extractToken(data);
+
+        // Store token immediately so the /me request is authenticated
+        const token        = extractToken(data);
+        const refreshToken = extractRefreshToken(data);
+        if (token) setToken(token, refreshToken);
+
+        // Use /me to get the authoritative user object (documented shape)
+        const meData   = await apiGet<BackendUser>('/api/auth/me');
+        const authUser = mapUser(meData);
+
         login(authUser);
-        if (token) setToken(token, data.refreshToken ?? null);
         useSettingsStore.getState().setActiveAccount(authUser.id);
         await useSettingsStore.getState().fetchAccounts();
-        const params    = new URLSearchParams(window.location.search);
+        const params     = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
         router.push(redirectTo);
       } catch (err: unknown) {

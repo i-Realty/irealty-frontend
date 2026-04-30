@@ -93,20 +93,26 @@ export interface BackendUser {
 
 /** Backend auth response — login, register, refresh, switch-account */
 export interface BackendAuthResponse {
-  // Token field names vary — handle both
-  token?:        string;
-  accessToken?:  string;
-  refreshToken?: string;
-  user?:         BackendUser;
+  // Token field names vary across frameworks — handle all common variants
+  token?:         string;
+  accessToken?:   string;
+  access_token?:  string;  // NestJS @nestjs/jwt default
+  refreshToken?:  string;
+  refresh_token?: string;
+  user?:          BackendUser;
   // Sometimes the user fields are at the top level
-  id?:           string;
-  email?:        string;
-  roles?:        string[];
+  id?:            string;
+  email?:         string;
+  roles?:         string[];
 }
 
 /** Extract the access token from a backend auth response */
 export const extractToken = (res: BackendAuthResponse): string | null =>
-  res.token ?? res.accessToken ?? null;
+  res.token ?? res.accessToken ?? res.access_token ?? null;
+
+/** Extract the refresh token from a backend auth response */
+export const extractRefreshToken = (res: BackendAuthResponse): string | null =>
+  res.refreshToken ?? res.refresh_token ?? null;
 
 /** Map a BackendUser (or top-level auth response) to frontend AuthUser */
 export const mapUser = (raw: BackendUser): AuthUser => {

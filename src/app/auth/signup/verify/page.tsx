@@ -10,8 +10,8 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateOtp } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost } from '@/lib/api/client';
-import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
+import { apiPost, apiGet } from '@/lib/api/client';
+import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 
 function VerifyCodeContent() {
   const router = useRouter();
@@ -74,13 +74,16 @@ function VerifyCodeContent() {
     if (USE_API) {
       // ── Live API mode ────────────────────────────────────────────
       try {
-        const data = await apiPost<BackendAuthResponse>('/api/auth/verify-email', { email, code });
-        // If backend returns a token+user on verification, log in immediately
-        const token = extractToken(data);
+        const data         = await apiPost<BackendAuthResponse>('/api/auth/verify-email', { email, code });
+        const token        = extractToken(data);
+        const refreshToken = extractRefreshToken(data);
+
+        // If backend issues a token on verification, log the user in immediately
         if (token) {
-          const authUser = mapAuthResponse(data);
+          setToken(token, refreshToken);
+          const meData   = await apiGet<BackendUser>('/api/auth/me');
+          const authUser = mapUser(meData);
           login(authUser);
-          setToken(token, data.refreshToken ?? null);
           useSettingsStore.getState().setActiveAccount(authUser.id);
           await useSettingsStore.getState().fetchAccounts();
         }
