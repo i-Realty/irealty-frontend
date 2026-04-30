@@ -410,7 +410,7 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: DeveloperTransactionDetail[] }>('/api/developer/transactions');
+        const data = await apiGet<{ transactions: DeveloperTransactionDetail[] }>('/api/property-transactions');
         set({ transactions: data.transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
@@ -441,7 +441,7 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
   acceptTransaction: async (id) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/developer/transactions/${id}/accept`);
+      await apiPost(`/api/property-transactions/${id}/accept`);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
@@ -457,7 +457,7 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
   declineTransaction: async (id) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/developer/transactions/${id}/decline`);
+      await apiPost(`/api/property-transactions/${id}/decline`);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }

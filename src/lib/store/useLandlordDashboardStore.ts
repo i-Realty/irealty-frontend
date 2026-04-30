@@ -188,7 +188,7 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
     set({ transactionsLoading: true });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: LandlordTransaction[] }>('/api/landlord/transactions');
+        const data = await apiGet<{ transactions: LandlordTransaction[] }>('/api/property-transactions');
         set({ transactions: data.transactions, transactionsLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));

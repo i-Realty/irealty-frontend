@@ -1,7 +1,40 @@
 import { create } from 'zustand';
 import { apiGet, apiPost } from '@/lib/api/client';
+import { usePropertyTransactionsStore, mapBackendTransaction, type BackendPropertyTransaction } from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+// ---------------------------------------------------------------------------
+// Backend → TransactionDetail adapter
+// ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapToTransactionDetail(t: BackendPropertyTransaction): TransactionDetail {
+  const pt = mapBackendTransaction(t);
+  return {
+    id:                  pt.id,
+    date:                pt.date,
+    propertyName:        pt.propertyTitle,
+    propertyType:        pt.propertyType,
+    clientName:          pt.buyerName,
+    clientAvatar:        pt.buyerAvatar,
+    clientVerified:      pt.buyerVerified,
+    transactionCategory: pt.type === 'inspection' ? 'Inspection Fee' : pt.type === 'rental' ? 'Rental' : 'Sale',
+    amount:              pt.amount,
+    status:              pt.status === 'Cancelled' ? 'Declined' : pt.status,
+    currentStep:         pt.step,
+    escrowAmount:        pt.escrowAmount,
+    propertyPrice:       pt.propertyPrice,
+    scheduledDate:       pt.scheduledDate,
+    scheduledTime:       pt.scheduledTime,
+    propertyImage:       pt.propertyImage,
+    propertyTag:         pt.propertyTag,
+    propertyLocation:    pt.propertyLocation,
+    propertyFullPrice:   pt.propertyPrice,
+    propertyBeds:        pt.propertyBeds,
+    propertyBaths:       pt.propertyBaths,
+    propertySqm:         pt.propertySqm,
+  };
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -141,8 +174,9 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: TransactionDetail[] }>('/api/agent/transactions');
-        set({ transactions: data.transactions, isLoading: false });
+        await usePropertyTransactionsStore.getState().fetchTransactions();
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(mapToTransactionDetail);
+        set({ transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
         set({ transactions: mockTransactions, isLoading: false });
@@ -156,8 +190,8 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transaction: TransactionDetail }>(`/api/agent/transactions/${id}`);
-        set({ selectedTransaction: data.transaction, isLoading: false });
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        set({ selectedTransaction: mapToTransactionDetail(raw), isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 400));
         const tx = get().transactions.length > 0
@@ -173,7 +207,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   acceptTransaction: async (id: string) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/agent/transactions/${id}/accept`);
+      await usePropertyTransactionsStore.getState().acceptTransaction(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
@@ -183,7 +217,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   declineTransaction: async (id: string) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/agent/transactions/${id}/decline`);
+      await usePropertyTransactionsStore.getState().declineTransaction(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
@@ -193,7 +227,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   confirmHandover: async (id: string) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/agent/transactions/${id}/confirm-handover`);
+      await usePropertyTransactionsStore.getState().confirmHandover(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }

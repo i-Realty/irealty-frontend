@@ -268,7 +268,7 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
     set({ isLoading: true });
     try {
       if (USE_API) {
-        await apiPost(`/api/diaspora/transactions/${txId}/advance-step`, { stepIndex });
+        await apiPost(`/api/property-transactions/${txId}/confirm-completion`, { stepIndex });
       } else {
         await new Promise((r) => setTimeout(r, 600));
       }

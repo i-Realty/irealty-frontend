@@ -2,9 +2,10 @@
 
 import { useKYCStore } from './useKYCStore';
 import { kycPaymentDetailsSchema, extractErrors } from '@/lib/validations/kyc';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Briefcase, Wallet, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import { apiPost } from '@/lib/api/client';
+import { usePaystackStore } from '@/lib/store/usePaystackStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -14,15 +15,22 @@ interface StepPaymentDetailsProps {
 
 export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsProps) {
   const { updateKycProgress, profile } = useKYCStore();
-  
+  const { banks, fetchBanks } = usePaystackStore();
+
+  useEffect(() => {
+    if (banks.length === 0) fetchBanks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [bankOpen, setBankOpen] = useState(true);
   const [cryptoOpen, setCryptoOpen] = useState(true);
   
   const [bankData, setBankData] = useState({
-    accountName: profile?.name || 'Oyakhilome Einstein Godstime',
+    accountName: profile?.name || '',
     bankName: '',
     accountNumber: ''
   });
+  const [selectedBankCode, setSelectedBankCode] = useState('');
 
   const [cryptoData, setCryptoData] = useState({
     type: 'USDT', // or BTC, ETH
@@ -45,11 +53,9 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
     if (USE_API) {
       setSubmitting(true);
       try {
-        // POST /api/kyc/payment expects bankCode (not bankName) — use accountNumber as bankCode placeholder
-        // until a bank lookup is implemented
         await apiPost('/api/kyc/payment', {
           bankAccount: {
-            bankCode:      bankData.bankName,   // TODO: replace with actual bank code from GET /api/paystack/banks
+            bankCode:      selectedBankCode || bankData.bankName,
             accountNumber: bankData.accountNumber,
           },
           ...(cryptoData.address ? {
@@ -103,16 +109,31 @@ export default function StepPaymentDetails({ onComplete }: StepPaymentDetailsPro
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
               <div className="relative">
-                <select 
+                <select
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  value={bankData.bankName}
-                  onChange={(e) => setBankData({...bankData, bankName: e.target.value})}
+                  value={selectedBankCode || bankData.bankName}
+                  onChange={(e) => {
+                    const bank = banks.find(b => b.code === e.target.value);
+                    if (bank) {
+                      setSelectedBankCode(bank.code);
+                      setBankData({ ...bankData, bankName: bank.name });
+                    } else {
+                      setBankData({ ...bankData, bankName: e.target.value });
+                    }
+                  }}
                 >
                   <option value="" disabled>Select Your Bank</option>
-                  <option value="GTBank">GTBank</option>
-                  <option value="Access Bank">Access Bank</option>
-                  <option value="Zenith Bank">Zenith Bank</option>
-                  <option value="FBN">First Bank of Nigeria</option>
+                  {banks.length > 0
+                    ? banks.map(b => <option key={b.code} value={b.code}>{b.name}</option>)
+                    : (
+                      <>
+                        <option value="058">GTBank</option>
+                        <option value="044">Access Bank</option>
+                        <option value="057">Zenith Bank</option>
+                        <option value="011">First Bank of Nigeria</option>
+                      </>
+                    )
+                  }
                 </select>
                 <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

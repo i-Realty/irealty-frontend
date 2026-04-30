@@ -1,8 +1,43 @@
 import { create } from 'zustand';
 import { apiGet, apiPost } from '@/lib/api/client';
 import type { TransactionStatus } from '@/lib/store/useTransactionsStore';
+import { usePropertyTransactionsStore, mapBackendTransaction, type BackendPropertyTransaction } from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+// Adapter: BackendPropertyTransaction → SeekerTransactionDetail
+function mapToSeekerDetail(t: BackendPropertyTransaction): SeekerTransactionDetail {
+  const pt = mapBackendTransaction(t);
+  const flow: SeekerTransactionFlow =
+    pt.type === 'inspection' ? 'inspection' :
+    pt.type === 'rental'     ? 'agent-rental' : 'agent-sale';
+  return {
+    id:              pt.id,
+    date:            pt.date,
+    propertyName:    pt.propertyTitle,
+    propertyType:    pt.propertyType,
+    clientName:      pt.sellerName,
+    clientAvatar:    pt.sellerAvatar,
+    clientVerified:  pt.buyerVerified,
+    clientLabel:     'Client',
+    flow,
+    amount:          pt.amount,
+    status:          (pt.status === 'Cancelled' ? 'Declined' : pt.status) as TransactionStatus,
+    currentStep:     pt.step,
+    escrowAmount:    pt.escrowAmount,
+    irealtyFee:      0,
+    propertyPrice:   pt.propertyPrice,
+    scheduledDate:   pt.scheduledDate,
+    scheduledTime:   pt.scheduledTime,
+    propertyImage:   pt.propertyImage,
+    propertyTag:     pt.propertyTag,
+    propertyLocation:pt.propertyLocation,
+    propertyFullPrice:pt.propertyPrice,
+    propertyBeds:    pt.propertyBeds,
+    propertyBaths:   pt.propertyBaths,
+    propertySqm:     pt.propertySqm,
+  };
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -310,8 +345,9 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: SeekerTransactionDetail[] }>('/api/seeker/transactions');
-        set({ transactions: data.transactions, isLoading: false });
+        await usePropertyTransactionsStore.getState().fetchTransactions();
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(mapToSeekerDetail);
+        set({ transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
         set({ transactions: mockSeekerTransactions, isLoading: false });
@@ -321,20 +357,15 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
     }
   },
 
-  // ── Fetch by ID ───────────────────────────────────────────────────
-
   fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transaction: SeekerTransactionDetail }>(`/api/seeker/transactions/${id}`);
-        set({ selectedTransaction: data.transaction, isLoading: false });
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        set({ selectedTransaction: mapToSeekerDetail(raw), isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 400));
-        const tx =
-          get().transactions.find((t) => t.id === id) ??
-          mockSeekerTransactions.find((t) => t.id === id) ??
-          null;
+        const tx = get().transactions.find((t) => t.id === id) ?? mockSeekerTransactions.find((t) => t.id === id) ?? null;
         set({ selectedTransaction: tx, isLoading: false });
       }
     } catch (err) {
@@ -342,12 +373,10 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
     }
   },
 
-  // ── Actions ───────────────────────────────────────────────────────
-
   confirmInspection: async (id) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/seeker/transactions/${id}/confirm-inspection`);
+      await usePropertyTransactionsStore.getState().confirmTour(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
@@ -357,7 +386,7 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
   confirmHandover: async (id) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/seeker/transactions/${id}/confirm-handover`);
+      await usePropertyTransactionsStore.getState().confirmHandover(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
@@ -367,7 +396,7 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
   approveMilestone: async (id) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/seeker/transactions/${id}/approve-milestone`);
+      await usePropertyTransactionsStore.getState().confirmCompletion(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
