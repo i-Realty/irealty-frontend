@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { apiGet } from '@/lib/api/client';
+import { apiGet, apiPost, apiPatch } from '@/lib/api/client';
+import { mapRole } from '@/lib/api/adapters';
 import type { UserRole } from './useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
@@ -79,6 +80,11 @@ interface AdminMessagesState {
   resolveThread: (threadId: string) => Promise<void>;
   escalateThread: (threadId: string) => Promise<void>;
   reopenThread: (threadId: string) => Promise<void>;
+  claimTicket: (threadId: string) => Promise<void>;
+  releaseTicket: (threadId: string) => Promise<void>;
+  transferTicket: (threadId: string, adminId: string) => Promise<void>;
+  setTicketPriority: (threadId: string, priority: TicketPriority) => Promise<void>;
+  fetchTicketById: (threadId: string) => Promise<void>;
 
   /** @deprecated Use fetchThreads() */
   fetchThreadsMock: () => Promise<void>;
@@ -353,6 +359,56 @@ const MOCK_THREADS: SupportThread[] = [
   },
 ];
 
+// ── Backend → Frontend mapper ───────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendTicket(t: Record<string, any>): SupportThread {
+  const user = t.user ?? t.creator ?? {};
+  const messages: AdminMessage[] = (t.messages ?? []).map((m: Record<string, any>) => ({
+    id: m.id ?? '',
+    threadId: t.id ?? '',
+    senderId: m.senderId === 'admin' || m.isAdmin ? 'ADMIN' : (m.senderId ?? m.userId ?? ''),
+    content: m.content ?? m.text ?? '',
+    createdAt: m.createdAt ?? '',
+    timestamp: m.createdAt ? new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '',
+  }));
+  const lastMsg = messages[messages.length - 1];
+  const STATUS_MAP: Record<string, TicketStatus> = {
+    OPEN: 'Open', IN_PROGRESS: 'In Progress', RESOLVED: 'Resolved',
+    ESCALATED: 'Escalated', CLAIMED: 'In Progress', CLOSED: 'Resolved',
+  };
+  const PRIORITY_MAP: Record<string, TicketPriority> = {
+    LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', URGENT: 'Urgent',
+  };
+  const CATEGORY_MAP: Record<string, TicketCategory> = {
+    GENERAL: 'General', KYC: 'KYC', PAYMENT: 'Payment', PROPERTY: 'Property', ACCOUNT: 'Account',
+  };
+  const diff = lastMsg?.createdAt ? Math.floor((Date.now() - new Date(lastMsg.createdAt).getTime()) / 1000) : 0;
+  const relTime = diff < 60 ? 'Just now' : diff < 3600 ? `${Math.floor(diff/60)}m` : diff < 86400 ? `${Math.floor(diff/3600)}h` : `${Math.floor(diff/86400)}d`;
+  return {
+    id: t.id ?? '',
+    user: {
+      id: user.id ?? '',
+      name: user.displayName || `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'User',
+      avatar: user.avatarUrl ?? '/images/demo-avatar.jpg',
+      role: (mapRole(user.roles?.[0] ?? '') as UserRole) ?? 'Property Seeker',
+      email: user.email ?? '',
+      kycStatus: user.verificationStatus === 'VERIFIED' ? 'verified' : user.verificationStatus === 'PENDING' ? 'in-progress' : 'unverified',
+      joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+      totalTransactions: user.totalTransactions ?? 0,
+    },
+    subject: t.subject ?? t.title ?? '',
+    category: CATEGORY_MAP[t.category ?? ''] ?? (t.category as TicketCategory) ?? 'General',
+    priority: PRIORITY_MAP[t.priority ?? ''] ?? (t.priority as TicketPriority) ?? 'Medium',
+    status: STATUS_MAP[t.status ?? ''] ?? (t.status as TicketStatus) ?? 'Open',
+    lastMessage: lastMsg?.content ?? '',
+    lastMessageTime: relTime,
+    unreadCount: Number(t.unreadCount ?? 0),
+    createdAt: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+    messages,
+  };
+}
+
 // ── Store ────────────────────────────────────────────────────────────────
 
 export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
@@ -373,8 +429,13 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const d = await apiGet<{ threads: SupportThread[] }>('/api/admin/support-tickets');
-        set({ threads: d.threads, isLoading: false });
+        const raw = await apiGet<unknown>('/api/admin/tickets');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const list: any[] = Array.isArray(raw) ? raw
+          : Array.isArray((raw as Record<string, unknown>)?.items) ? (raw as Record<string, unknown[]>).items as any[]
+          : Array.isArray((raw as Record<string, unknown>)?.tickets) ? (raw as Record<string, unknown[]>).tickets as any[]
+          : [];
+        set({ threads: list.map(mapBackendTicket), isLoading: false });
         return;
       }
       await new Promise((r) => setTimeout(r, 600));
@@ -386,48 +447,62 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
 
   sendReply: async (threadId, content, attachments) => {
     set({ isSending: true, error: null });
-    await new Promise((r) => setTimeout(r, 500));
+    try {
+      if (USE_API) {
+        await apiPost(`/api/admin/tickets/${threadId}/messages`, { content });
+      } else {
+        await new Promise((r) => setTimeout(r, 500));
+      }
 
-    const hasAttachments = attachments && attachments.length > 0;
-    const isAudio = hasAttachments && attachments![0].audioDuration !== undefined;
-    const contentType: AdminMessageContentType = hasAttachments
-      ? (isAudio ? 'audio' : (attachments![0].format.match(/mp4|webm|mov/) ? 'video' : 'image_grid'))
-      : 'text';
+      const hasAttachments = attachments && attachments.length > 0;
+      const isAudio = hasAttachments && attachments![0].audioDuration !== undefined;
+      const contentType: AdminMessageContentType = hasAttachments
+        ? (isAudio ? 'audio' : (attachments![0].format.match(/mp4|webm|mov/) ? 'video' : 'image_grid'))
+        : 'text';
 
-    const newMessage: AdminMessage = {
-      id: `msg-${Date.now()}`,
-      threadId,
-      senderId: 'ADMIN',
-      content,
-      contentType,
-      files: attachments,
-      createdAt: new Date().toISOString(),
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-    };
+      const newMessage: AdminMessage = {
+        id: `msg-${Date.now()}`,
+        threadId,
+        senderId: 'ADMIN',
+        content,
+        contentType,
+        files: attachments,
+        createdAt: new Date().toISOString(),
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      };
 
-    const lastMessage = hasAttachments
-      ? `[${contentType} attachment]`
-      : content;
+      const lastMessage = hasAttachments
+        ? `[${contentType} attachment]`
+        : content;
 
-    set((s) => ({
-      threads: s.threads.map((t) =>
-        t.id === threadId
-          ? {
-              ...t,
-              messages: [...t.messages, newMessage],
-              lastMessage,
-              lastMessageTime: 'Just now',
-              status: t.status,
-            }
-          : t
-      ),
-      isSending: false,
-    }));
+      set((s) => ({
+        threads: s.threads.map((t) =>
+          t.id === threadId
+            ? {
+                ...t,
+                messages: [...t.messages, newMessage],
+                lastMessage,
+                lastMessageTime: 'Just now',
+                status: t.status,
+              }
+            : t
+        ),
+        isSending: false,
+      }));
+    } catch (err) {
+      set({ isSending: false, error: err instanceof Error ? err.message : 'Failed to send reply' });
+    }
   },
 
   resolveThread: async (threadId) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 400));
+    try {
+      if (USE_API) await apiPost(`/api/admin/tickets/${threadId}/resolve`);
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
     set((s) => ({
       threads: s.threads.map((t) =>
         t.id === threadId ? { ...t, status: 'Resolved' as const, unreadCount: 0 } : t
@@ -438,10 +513,16 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
 
   escalateThread: async (threadId) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 400));
+    try {
+      if (USE_API) await apiPatch(`/api/admin/tickets/${threadId}/priority`, { priority: 'URGENT' });
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
     set((s) => ({
       threads: s.threads.map((t) =>
-        t.id === threadId ? { ...t, status: 'Escalated' as const } : t
+        t.id === threadId ? { ...t, status: 'Escalated' as const, priority: 'Urgent' as const } : t
       ),
       isActionLoading: false,
     }));
@@ -449,13 +530,90 @@ export const useAdminMessagesStore = create<AdminMessagesState>((set, get) => ({
 
   reopenThread: async (threadId) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 400));
+    try {
+      if (USE_API) await apiPost(`/api/admin/tickets/${threadId}/reopen`);
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
     set((s) => ({
       threads: s.threads.map((t) =>
         t.id === threadId ? { ...t, status: 'Open' as const } : t
       ),
       isActionLoading: false,
     }));
+  },
+
+  claimTicket: async (threadId) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPost(`/api/admin/tickets/${threadId}/claim`);
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
+    set((s) => ({
+      threads: s.threads.map((t) => t.id === threadId ? { ...t, status: 'In Progress' as const } : t),
+      isActionLoading: false,
+    }));
+  },
+
+  releaseTicket: async (threadId) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPost(`/api/admin/tickets/${threadId}/release`);
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
+    set((s) => ({
+      threads: s.threads.map((t) => t.id === threadId ? { ...t, status: 'Open' as const } : t),
+      isActionLoading: false,
+    }));
+  },
+
+  transferTicket: async (threadId, adminId) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPost(`/api/admin/tickets/${threadId}/transfer`, { adminId });
+      else await new Promise((r) => setTimeout(r, 400));
+      set({ isActionLoading: false });
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+    }
+  },
+
+  setTicketPriority: async (threadId, priority) => {
+    const PRIORITY_TO_BACKEND: Record<TicketPriority, string> = { Low: 'LOW', Medium: 'MEDIUM', High: 'HIGH', Urgent: 'URGENT' };
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPatch(`/api/admin/tickets/${threadId}/priority`, { priority: PRIORITY_TO_BACKEND[priority] });
+      else await new Promise((r) => setTimeout(r, 400));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' });
+      return;
+    }
+    set((s) => ({
+      threads: s.threads.map((t) => t.id === threadId ? { ...t, priority } : t),
+      isActionLoading: false,
+    }));
+  },
+
+  fetchTicketById: async (threadId) => {
+    if (!USE_API) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiGet<Record<string, any>>(`/api/admin/tickets/${threadId}`);
+      const thread = mapBackendTicket(raw);
+      set((s) => ({
+        threads: s.threads.some((t) => t.id === threadId)
+          ? s.threads.map((t) => t.id === threadId ? thread : t)
+          : [thread, ...s.threads],
+      }));
+    } catch { /* keep existing data */ }
   },
 
   setActiveThreadId: (id) => set({ activeThreadId: id, isMobileDetailOpen: false }),

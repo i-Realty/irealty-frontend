@@ -227,6 +227,17 @@ interface AdminDashboardState {
   reactivateUser: (userId: string) => Promise<void>;
   suspendAdmin: (adminId: string, reason: string) => Promise<void>;
   revokeAdmin: (adminId: string, reason: string) => Promise<void>;
+  // Admin management
+  admins: AdminUser[];
+  pendingAdmins: AdminUser[];
+  auditLogs: { id: string; timestamp: string; action: string; actor: string; details?: string }[];
+  fetchAdmins: () => Promise<void>;
+  createAdmin: (data: { firstName: string; lastName: string; email: string; password: string; username?: string }) => Promise<void>;
+  fetchPendingAdmins: () => Promise<void>;
+  approveAdmin: (adminId: string) => Promise<void>;
+  fetchAuditLogs: () => Promise<void>;
+  fetchPlatformFees: () => Promise<void>;
+  broadcastMessage: (message: string) => Promise<void>;
   fetchProperties: () => Promise<void>;
   approveProperty: (id: string) => Promise<void>;
   rejectProperty: (id: string, reason: string) => Promise<void>;
@@ -402,6 +413,14 @@ const MOCK_ESCROW: EscrowItem[] = [
   { id: 'ESC-005', transactionId: 'TXN-A007', parties: 'Tunde Bakare ↔ Ada Obi', amount: 90000000, dateDeposited: '01 Jul 2025', expectedRelease: '18 Aug 2025', status: 'Released', ageDays: 62 },
 ];
 
+const MOCK_REVENUE_BREAKDOWN: RevenueBreakdown[] = [
+  { category: 'Inspection Fees', amount: 11250000, count: 450 },
+  { category: 'Sales Commission', amount: 85000000, count: 85 },
+  { category: 'Rental Commission', amount: 18375000, count: 210 },
+  { category: 'Developer Fees', amount: 24300000, count: 45 },
+  { category: 'Diaspora Services', amount: 18750000, count: 30 },
+];
+
 const MOCK_PAYOUTS: PayoutRequest[] = [
   { id: 'PAY-001', userId: 'USR-001', userName: 'Sarah Homes', role: 'Agent', amount: 12500000, method: 'Bank', bankName: 'GTBank', accountNumber: '0123456789', requestDate: '28 Aug 2025', status: 'Pending' },
   { id: 'PAY-002', userId: 'USR-003', userName: 'Amara Osei', role: 'Developer', amount: 35000000, method: 'Bank', bankName: 'First Bank', accountNumber: '9876543210', requestDate: '27 Aug 2025', status: 'Pending' },
@@ -445,6 +464,11 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   payoutFilter: 'all',
   setPayoutFilter: (f) => set({ payoutFilter: f }),
 
+  // Admin management
+  admins: [],
+  pendingAdmins: [],
+  auditLogs: [],
+
   // Platform fees
   platformFees: { inspection: 10, sale: 2.5, rental: 2.5, developer: 3, diaspora: 100 },
   updatePlatformFees: (fees) => set((s) => ({ platformFees: { ...s.platformFees, ...fees } })),
@@ -465,11 +489,27 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     if (USE_API) {
       try {
         const { period } = get();
-        const data = await apiGet<{
-          stats: AdminStats; revenueData: RevenueDataPoint[]; userGrowthData: UserGrowthPoint[];
-          transactionVolumeData: TransactionVolumePoint[]; recentTransactions: AdminTransaction[]; pendingKycUsers: AdminUser[];
-        }>(`/api/admin/dashboard?period=${period}`);
-        set({ ...data, isLoading: false });
+        const qs = period && period !== 'all' ? `?period=${period}` : '';
+        const [statsRaw, recentTxRaw, pendingKycRaw] = await Promise.all([
+          apiGet<Record<string, unknown>>(`/api/admin/dashboard/stats${qs}`),
+          apiGet<unknown>('/api/admin/dashboard/recent-transactions'),
+          apiGet<unknown>('/api/admin/dashboard/pending-kyc'),
+        ]);
+        const stats: AdminStats = {
+          totalUsers:    Number(statsRaw.totalUsers    ?? statsRaw.total_users    ?? 0),
+          activeListings:Number(statsRaw.activeListings?? statsRaw.active_listings?? 0),
+          pendingKyc:    Number(statsRaw.pendingKyc    ?? statsRaw.pending_kyc    ?? 0),
+          totalRevenue:  Number(statsRaw.totalRevenue  ?? statsRaw.total_revenue  ?? 0) / 100,
+          escrowBalance: Number(statsRaw.escrowBalance ?? statsRaw.escrow_balance ?? 0) / 100,
+          pendingPayouts:Number(statsRaw.pendingPayouts?? statsRaw.pending_payouts?? 0),
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const txList: any[] = Array.isArray(recentTxRaw) ? recentTxRaw : (recentTxRaw as Record<string, unknown>)?.items as any[] ?? [];
+        const recentTransactions = txList.slice(0, 5).map(mapBackendTxToAdmin);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const kycList: any[] = Array.isArray(pendingKycRaw) ? pendingKycRaw : (pendingKycRaw as Record<string, unknown>)?.items as any[] ?? [];
+        const pendingKycUsers = kycList.map(mapBackendUser);
+        set({ stats, recentTransactions, pendingKycUsers, isLoading: false });
         return;
       } catch (err) {
         set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
@@ -758,8 +798,38 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   fetchProperties: async () => {
     set({ isLoading: true, error: null });
     if (USE_API) {
-      try { const d = await apiGet<{ properties: AdminProperty[] }>('/api/admin/properties'); set({ properties: d.properties, isLoading: false }); return; }
-      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+      try {
+        const { propertyFilters } = get();
+        const params = new URLSearchParams();
+        if (propertyFilters.search) params.set('search', propertyFilters.search);
+        if (propertyFilters.category !== 'all') params.set('category', propertyFilters.category);
+        params.set('page', String(propertyFilters.page));
+        params.set('limit', '20');
+        const raw = await apiGet<unknown>(`/api/admin/properties?${params}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const list: any[] = Array.isArray(raw) ? raw
+          : Array.isArray((raw as Record<string, unknown>)?.items) ? (raw as Record<string, unknown[]>).items as any[]
+          : Array.isArray((raw as Record<string, unknown>)?.properties) ? (raw as Record<string, unknown[]>).properties as any[]
+          : [];
+        const TYPE_MAP: Record<string, string> = { RESIDENTIAL: 'Residential', COMMERCIAL: 'Commercial', LAND: 'Plots/Lands', SHORT_LET: 'Service Apartments & Short Lets', PG_HOSTEL: 'PG/Hostel' };
+        const STATUS_MAP: Record<string, ModerationStatus> = { PENDING: 'Pending Review', APPROVED: 'Verified', REJECTED: 'Rejected', FLAGGED: 'Flagged', ACTIVE: 'Verified', PUBLISHED: 'Verified' };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const properties: AdminProperty[] = list.map((p: any) => ({
+          id: String(p.id ?? ''),
+          title: p.title ?? '',
+          type: (p.user?.roles ?? []).includes('DEVELOPER') ? 'Project' as const : 'Property' as const,
+          ownerName: p.user?.displayName || `${p.user?.firstName ?? ''} ${p.user?.lastName ?? ''}`.trim() || 'Owner',
+          ownerRole: ((p.user?.roles ?? []).includes('DEVELOPER') ? 'Developer' : 'Agent') as 'Agent' | 'Developer',
+          category: TYPE_MAP[p.propertyType] ?? p.propertyType ?? 'Residential',
+          price: (p.price ?? 0) / 100,
+          moderationStatus: STATUS_MAP[p.moderationStatus ?? p.status ?? ''] ?? 'Pending Review',
+          dateListed: p.createdAt ? formatDate(p.createdAt) : '',
+          image: p.images?.[0]?.url ?? '',
+          location: [p.city, p.state].filter(Boolean).join(', '),
+        }));
+        set({ properties, isLoading: false });
+        return;
+      } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
     }
     await new Promise((r) => setTimeout(r, 500));
     set({ properties: MOCK_PROPERTIES, isLoading: false });
@@ -767,18 +837,23 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   approveProperty: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      if (USE_API) { await apiPatch(`/api/admin/properties/${id}/approve`); }
+      else { await new Promise((r) => setTimeout(r, 600)); }
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); return; }
     set((s) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Verified' as const } : p),
       isActionLoading: false,
     }));
-    // Also approve in the unified property store
     usePropertyStore.getState().approveProperty(id);
   },
 
   rejectProperty: async (id, reason = 'Rejected by admin') => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      if (USE_API) { await apiPatch(`/api/admin/properties/${id}/reject`, { reason }); }
+      else { await new Promise((r) => setTimeout(r, 600)); }
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); return; }
     set((s) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Rejected' as const } : p),
       isActionLoading: false,
@@ -788,7 +863,10 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   flagProperty: async (id) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      if (USE_API) { await apiPatch(`/api/admin/properties/${id}/flag`); }
+      else { await new Promise((r) => setTimeout(r, 600)); }
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); return; }
     set((s) => ({
       properties: s.properties.map((p) => p.id === id ? { ...p, moderationStatus: 'Flagged' as const } : p),
       isActionLoading: false,
@@ -802,9 +880,19 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     set({ isLoading: true, error: null });
     if (USE_API) {
       try {
-        // Use the documented GET /api/property-transactions endpoint
-        await usePropertyTransactionsStore.getState().fetchTransactions();
-        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapBackendTxToAdmin(pt.raw));
+        const { transactionFilters } = get();
+        const params = new URLSearchParams();
+        if (transactionFilters.status !== 'all') params.set('status', transactionFilters.status.toUpperCase());
+        if (transactionFilters.search) params.set('search', transactionFilters.search);
+        params.set('page', String(transactionFilters.page));
+        params.set('limit', '20');
+        const raw = await apiGet<unknown>(`/api/admin/transactions?${params}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const list: any[] = Array.isArray(raw) ? raw
+          : Array.isArray((raw as Record<string, unknown>)?.items) ? (raw as Record<string, unknown[]>).items as any[]
+          : Array.isArray((raw as Record<string, unknown>)?.transactions) ? (raw as Record<string, unknown[]>).transactions as any[]
+          : [];
+        const transactions = list.map(mapBackendTxToAdmin);
         set({ transactions, isLoading: false });
         return;
       } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
@@ -817,21 +905,21 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     set({ isLoading: true, error: null });
     if (USE_API) {
       try {
-        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
-        const pt = mapBackendTransaction(raw);
-        const tx = mapBackendTxToAdmin(raw);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = await apiGet<Record<string, any>>(`/api/admin/transactions/${id}`);
+        const tx = mapBackendTxToAdmin(raw as BackendPropertyTransaction);
         set({
           selectedTransaction: {
             ...tx,
-            escrowAmount: pt.escrowAmount,
-            netToParties: pt.amount,
-            partyAAvatar: pt.buyerAvatar,
-            partyBAvatar: pt.sellerAvatar,
+            escrowAmount: (raw.escrowAmount ?? raw.amount ?? 0) / 100,
+            netToParties: ((raw.amount ?? 0) - (raw.platformFee ?? 0)) / 100,
+            partyAAvatar: raw.buyer?.avatarUrl ?? '/images/demo-avatar.jpg',
+            partyBAvatar: raw.seller?.avatarUrl ?? '/images/demo-avatar.jpg',
             auditLog: [
-              { timestamp: formatDate(raw.createdAt), action: 'Transaction created', by: 'System' },
-              ...(raw.acceptedAt ? [{ timestamp: formatDate(raw.acceptedAt), action: 'Transaction accepted', by: pt.sellerName }] : []),
-              ...(raw.declinedAt ? [{ timestamp: formatDate(raw.declinedAt), action: 'Transaction declined', by: pt.sellerName }] : []),
-              ...(raw.completedAt ? [{ timestamp: formatDate(raw.completedAt), action: 'Transaction completed', by: 'System' }] : []),
+              { timestamp: raw.createdAt ? formatDate(raw.createdAt) : '', action: 'Transaction created', by: 'System' },
+              ...(raw.acceptedAt ? [{ timestamp: formatDate(raw.acceptedAt), action: 'Accepted', by: raw.sellerName ?? 'Seller' }] : []),
+              ...(raw.declinedAt ? [{ timestamp: formatDate(raw.declinedAt), action: 'Declined', by: raw.sellerName ?? 'Seller' }] : []),
+              ...(raw.completedAt ? [{ timestamp: formatDate(raw.completedAt), action: 'Completed', by: 'System' }] : []),
             ],
           },
           isLoading: false,
@@ -865,6 +953,58 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   fetchFinance: async () => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try {
+        const [, byCategoryRaw, escrowRaw, payoutsRaw] = await Promise.all([
+          apiGet<unknown>('/api/admin/finance/revenue'),
+          apiGet<unknown>('/api/admin/finance/revenue/by-category'),
+          apiGet<unknown>('/api/admin/finance/escrow'),
+          apiGet<unknown>('/api/admin/finance/payouts'),
+        ]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const byCatList: any[] = Array.isArray(byCategoryRaw) ? byCategoryRaw : (byCategoryRaw as any)?.items ?? [];
+        const revenueBreakdown: RevenueBreakdown[] = byCatList.map((r: Record<string, unknown>) => ({
+          category: String(r.category ?? ''),
+          amount: Number(r.amount ?? 0) / 100,
+          count: Number(r.count ?? 0),
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const escList: any[] = Array.isArray(escrowRaw) ? escrowRaw : (escrowRaw as any)?.items ?? [];
+        const escrowItems: EscrowItem[] = escList.map((e: Record<string, unknown>) => ({
+          id: String(e.id ?? ''),
+          transactionId: String(e.transactionId ?? ''),
+          parties: String(e.parties ?? ''),
+          amount: Number(e.amount ?? 0) / 100,
+          dateDeposited: e.dateDeposited ? formatDate(String(e.dateDeposited)) : '',
+          expectedRelease: e.expectedRelease ? formatDate(String(e.expectedRelease)) : '',
+          status: (e.status as EscrowItemStatus) ?? 'Held',
+          ageDays: Number(e.ageDays ?? 0),
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const payList: any[] = Array.isArray(payoutsRaw) ? payoutsRaw : (payoutsRaw as any)?.items ?? [];
+        const payouts: PayoutRequest[] = payList.map((p: Record<string, unknown>) => ({
+          id: String(p.id ?? ''),
+          userId: String(p.userId ?? ''),
+          userName: String(p.userName ?? (p.user as Record<string, unknown>)?.name ?? ''),
+          role: mapRole(String(p.role ?? '')) as UserRole,
+          amount: Number(p.amount ?? 0) / 100,
+          method: (p.method === 'CRYPTO' ? 'Crypto' : 'Bank') as 'Bank' | 'Crypto',
+          bankName: p.bankName as string | undefined,
+          accountNumber: p.accountNumber as string | undefined,
+          cryptoCurrency: p.cryptoCurrency as string | undefined,
+          cryptoAddress: p.cryptoAddress as string | undefined,
+          requestDate: p.requestDate ? formatDate(String(p.requestDate)) : '',
+          status: ({ PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', PROCESSING: 'Processing' } as Record<string, PayoutStatus>)[String(p.status ?? '')] ?? 'Pending',
+        }));
+        set({
+          revenueBreakdown: revenueBreakdown.length ? revenueBreakdown : MOCK_REVENUE_BREAKDOWN,
+          escrowItems: escrowItems.length ? escrowItems : MOCK_ESCROW,
+          payouts: payouts.length ? payouts : MOCK_PAYOUTS,
+          isLoading: false,
+        });
+        return;
+      } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+    }
     await new Promise((r) => setTimeout(r, 500));
     // Merge static payouts with any real payout requests from walletStore
     const { useWalletStore } = await import('./useWalletStore');
@@ -882,8 +1022,6 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
       requestDate: p.requestedAt.split('T')[0],
       status: p.status as PayoutStatus,
     }));
-
-    // Build escrow from transaction ledger
     const ledgerEscrow = useTransactionLedger.getState().getEscrowEntries().map((e) => ({
       id: `ESC_${e.id}`,
       transactionId: e.id,
@@ -894,15 +1032,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
       status: 'Held' as EscrowItemStatus,
       ageDays: Math.floor((Date.now() - new Date(e.createdAt).getTime()) / 86400000),
     }));
-
     set({
-      revenueBreakdown: [
-        { category: 'Inspection Fees', amount: 11250000, count: 450 },
-        { category: 'Sales Commission', amount: 85000000, count: 85 },
-        { category: 'Rental Commission', amount: 18375000, count: 210 },
-        { category: 'Developer Fees', amount: 24300000, count: 45 },
-        { category: 'Diaspora Services', amount: 18750000, count: 30 },
-      ],
+      revenueBreakdown: MOCK_REVENUE_BREAKDOWN,
       escrowItems: ledgerEscrow.length > 0 ? ledgerEscrow : MOCK_ESCROW,
       payouts: [...realPayouts, ...MOCK_PAYOUTS],
       isLoading: false,
@@ -978,10 +1109,90 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   submitPlatformFees: async () => {
     if (USE_API) {
-      try { await apiPost('/api/admin/platform-fees', get().platformFees); } catch { /* handled upstream */ }
+      try { await apiPatch('/api/admin/settings/platform-fees', get().platformFees); } catch { /* handled upstream */ }
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
+  },
+
+  // ── Admin Management ─────────────────────────────────────────────────
+
+  fetchAdmins: async () => {
+    if (!USE_API) return;
+    set({ isLoading: true, error: null });
+    try {
+      const raw = await apiGet<unknown>('/api/admin/admins');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const list: any[] = Array.isArray(raw) ? raw : (raw as any)?.items ?? [];
+      set({ admins: list.map(mapBackendUser), isLoading: false });
+    } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); }
+  },
+
+  createAdmin: async (data) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPost('/api/admin/admins', data);
+      else await new Promise((r) => setTimeout(r, 600));
+      set({ isActionLoading: false });
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); }
+  },
+
+  fetchPendingAdmins: async () => {
+    if (!USE_API) return;
+    set({ isLoading: true, error: null });
+    try {
+      const raw = await apiGet<unknown>('/api/admin/admins/pending');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const list: any[] = Array.isArray(raw) ? raw : (raw as any)?.items ?? [];
+      set({ pendingAdmins: list.map(mapBackendUser), isLoading: false });
+    } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); }
+  },
+
+  approveAdmin: async (adminId) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPatch(`/api/admin/admins/${adminId}/approve`);
+      else await new Promise((r) => setTimeout(r, 600));
+      set((s) => ({
+        pendingAdmins: s.pendingAdmins.filter(a => a.id !== adminId),
+        isActionLoading: false,
+      }));
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); }
+  },
+
+  fetchAuditLogs: async () => {
+    if (!USE_API) return;
+    set({ isLoading: true, error: null });
+    try {
+      const raw = await apiGet<unknown>('/api/admin/audit-logs');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const list: any[] = Array.isArray(raw) ? raw : (raw as any)?.items ?? [];
+      const auditLogs = list.map((e: Record<string, unknown>) => ({
+        id: String(e.id ?? ''),
+        timestamp: e.createdAt ? formatDate(String(e.createdAt)) : '',
+        action: String(e.action ?? ''),
+        actor: String(e.actor ?? e.userName ?? ''),
+        details: e.details ? String(e.details) : undefined,
+      }));
+      set({ auditLogs, isLoading: false });
+    } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); }
+  },
+
+  fetchPlatformFees: async () => {
+    if (!USE_API) return;
+    try {
+      const data = await apiGet<Record<string, number>>('/api/admin/settings/platform-fees');
+      set({ platformFees: { ...get().platformFees, ...data } });
+    } catch { /* keep defaults */ }
+  },
+
+  broadcastMessage: async (message) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) await apiPost('/api/admin/messages/broadcast', { message });
+      else await new Promise((r) => setTimeout(r, 600));
+      set({ isActionLoading: false });
+    } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); }
   },
 
   // Backward-compatible aliases
