@@ -131,22 +131,36 @@ async function request<T>(
   });
 
   if (response.status === 401) {
-    // Only attempt refresh once — the X-Retry header flags the retry
-    const isRetry = !!extraHeaders?.['X-Retry'];
-    if (!isRetry) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        // Retry original request with the new token
-        return request<T>(method, path, body, { ...extraHeaders, 'X-Retry': '1' });
+    // Auth endpoints (login, register, verify, etc.) should never trigger
+    // a session-clear + redirect — a 401 there just means bad credentials.
+    const isAuthEndpoint = /^\/api\/auth\/(login|register|verify|resend|refresh)/.test(path)
+      || !!extraHeaders?.['X-Skip-Auth-Redirect'];
+
+    if (!isAuthEndpoint) {
+      // Only attempt refresh once — the X-Retry header flags the retry
+      const isRetry = !!extraHeaders?.['X-Retry'];
+      if (!isRetry) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          return request<T>(method, path, body, { ...extraHeaders, 'X-Retry': '1' });
+        }
+      }
+      // Refresh failed (or already retried) — clear session and redirect
+      if (typeof window !== 'undefined') {
+        document.cookie = 'irealty-session=; path=/; max-age=0';
+        localStorage.removeItem('irealty-auth');
+        tokenOverride = null;
+        window.location.href = '/auth/login';
       }
     }
-    // Refresh failed (or already retried) — clear session and redirect
-    if (typeof window !== 'undefined') {
-      document.cookie = 'irealty-session=; path=/; max-age=0';
-      localStorage.removeItem('irealty-auth');
-      window.location.href = '/auth/login';
-    }
-    throw new ApiError(401, 'Unauthorized');
+
+    // Read the error body for a meaningful message
+    let errorBody: unknown;
+    try { errorBody = await response.json(); } catch { errorBody = null; }
+    const eb = errorBody as { message?: string | string[]; error?: string } | null;
+    const raw = eb?.message ?? eb?.error ?? 'Invalid email or password';
+    const message = Array.isArray(raw) ? raw.join('; ') : raw;
+    throw new ApiError(401, message, errorBody);
   }
 
   if (!response.ok) {

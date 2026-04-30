@@ -85,23 +85,27 @@ export default function LoginPage() {
           password,
         });
 
-        // Store token in both Zustand (persist) and in-memory override
-        // so the /me request below can use it immediately.
+        // Store token so subsequent requests are authenticated.
         const token        = extractToken(data);
         const refreshToken = extractRefreshToken(data);
-        if (token) {
-          setToken(token, refreshToken);
-          setTokenImmediate(token);
+        if (!token) {
+          // Login succeeded (200) but no token found — log full shape for debugging
+          console.error('[i-Realty] Login 200 but no token found. Response keys:', Object.keys(data));
+          throw new Error('Login succeeded but no access token was returned. Please contact support.');
         }
+        setToken(token, refreshToken);
+        setTokenImmediate(token);
 
-        // Use /me to get the authoritative user object (documented shape)
-        const meData   = await apiGet<BackendUser>('/api/auth/me');
+        // Fetch the authoritative user object from /me (documented shape).
+        // X-Skip-Auth-Redirect prevents the 401 handler from hard-redirecting
+        // back to /auth/login if the /me call fails — we want the catch block
+        // below to handle it instead.
+        const meData   = await apiGet<BackendUser>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
         const authUser = mapUser(meData);
 
         login(authUser);
         useSettingsStore.getState().setActiveAccount(authUser.id);
-        // fetchAccounts is non-critical; don't let it block navigation
-        useSettingsStore.getState().fetchAccounts();
+        useSettingsStore.getState().fetchAccounts(); // non-blocking
         const params     = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
         router.push(redirectTo);

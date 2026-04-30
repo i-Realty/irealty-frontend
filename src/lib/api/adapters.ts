@@ -100,19 +100,36 @@ export interface BackendAuthResponse {
   refreshToken?:  string;
   refresh_token?: string;
   user?:          BackendUser;
+  // NestJS interceptors often wrap the payload in `data`
+  data?:          BackendAuthResponse;
   // Sometimes the user fields are at the top level
   id?:            string;
   email?:         string;
   roles?:         string[];
 }
 
+/**
+ * Unwrap a potential NestJS `{ statusCode, message, data: { … } }` envelope.
+ * If the response has a `data` key that looks like the real payload, use it.
+ */
+function unwrap(res: BackendAuthResponse): BackendAuthResponse {
+  if (res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+    return res.data;
+  }
+  return res;
+}
+
 /** Extract the access token from a backend auth response */
-export const extractToken = (res: BackendAuthResponse): string | null =>
-  res.token ?? res.accessToken ?? res.access_token ?? null;
+export const extractToken = (res: BackendAuthResponse): string | null => {
+  const r = unwrap(res);
+  return r.token ?? r.accessToken ?? r.access_token ?? null;
+};
 
 /** Extract the refresh token from a backend auth response */
-export const extractRefreshToken = (res: BackendAuthResponse): string | null =>
-  res.refreshToken ?? res.refresh_token ?? null;
+export const extractRefreshToken = (res: BackendAuthResponse): string | null => {
+  const r = unwrap(res);
+  return r.refreshToken ?? r.refresh_token ?? null;
+};
 
 /** Map a BackendUser (or top-level auth response) to frontend AuthUser */
 export const mapUser = (raw: BackendUser): AuthUser => {
@@ -134,11 +151,11 @@ export const mapUser = (raw: BackendUser): AuthUser => {
 
 /**
  * Pull the AuthUser out of a BackendAuthResponse.
- * Handles both { user: { ... } } and flat responses where user fields
- * are at the top level.
+ * Handles { data: { user } }, { user }, and flat responses.
  */
 export const mapAuthResponse = (res: BackendAuthResponse): AuthUser => {
-  const raw: BackendUser = res.user ?? (res as unknown as BackendUser);
+  const r = unwrap(res);
+  const raw: BackendUser = r.user ?? (r as unknown as BackendUser);
   return mapUser(raw);
 };
 

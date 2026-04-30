@@ -82,7 +82,7 @@ function VerifyCodeContent() {
         if (token) {
           setToken(token, refreshToken);
           setTokenImmediate(token);
-          const meData   = await apiGet<BackendUser>('/api/auth/me');
+          const meData   = await apiGet<BackendUser>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
           const authUser = mapUser(meData);
           login(authUser);
           useSettingsStore.getState().setActiveAccount(authUser.id);
