@@ -13,10 +13,20 @@ import { useI18n } from '@/lib/i18n';
 import { apiPost, apiGet, setTokenImmediate } from '@/lib/api/client';
 import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 
+const ROLE_DASHBOARD_MAP: Record<string, string> = {
+  'Admin':           '/dashboard/admin',
+  'Agent':           '/dashboard/agent',
+  'Developer':       '/dashboard/developer',
+  'Property Seeker': '/dashboard/seeker',
+  'Landlord':        '/dashboard/landlord',
+  'Diaspora':        '/dashboard/diaspora',
+};
+
 function VerifyCodeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { email: storeEmail } = useSignupStore();
+  const signupStore = useSignupStore();
+  const { email: storeEmail, password: storePassword } = signupStore;
   // Support arriving here from the login 409 redirect (?email=...)
   const email = storeEmail || searchParams?.get('email') || '';
   const { login, setToken } = useAuthStore();
@@ -74,11 +84,21 @@ function VerifyCodeContent() {
     if (USE_API) {
       // ── Live API mode ────────────────────────────────────────────
       try {
-        const data         = await apiPost<BackendAuthResponse>('/api/auth/verify-email', { email, code });
-        const token        = extractToken(data);
-        const refreshToken = extractRefreshToken(data);
+        const verifyData   = await apiPost<BackendAuthResponse>('/api/auth/verify-email', { email, code });
+        let token          = extractToken(verifyData);
+        let refreshToken   = extractRefreshToken(verifyData);
 
-        // If backend issues a token on verification, log the user in immediately
+        // If verify-email doesn't return a token, log in with the
+        // credentials the user provided during signup.
+        if (!token && storePassword) {
+          const loginData = await apiPost<BackendAuthResponse>('/api/auth/login', {
+            email: email.trim().toLowerCase(),
+            password: storePassword,
+          });
+          token        = extractToken(loginData);
+          refreshToken = extractRefreshToken(loginData);
+        }
+
         if (token) {
           setToken(token, refreshToken);
           setTokenImmediate(token);
@@ -87,8 +107,12 @@ function VerifyCodeContent() {
           login(authUser);
           useSettingsStore.getState().setActiveAccount(authUser.id);
           useSettingsStore.getState().fetchAccounts(); // non-blocking
+          signupStore.reset();
+          router.push(ROLE_DASHBOARD_MAP[authUser.role] ?? '/dashboard/seeker');
+        } else {
+          // Fallback: can't auto-login, send to success page
+          router.push('/auth/signup/success');
         }
-        router.push('/auth/signup/success');
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
         setError(msg);
