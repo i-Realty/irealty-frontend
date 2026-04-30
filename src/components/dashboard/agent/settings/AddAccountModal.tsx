@@ -1,28 +1,41 @@
 import { useState } from 'react';
-import { User, Home, Users, Globe, Building2, X } from 'lucide-react';
-import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { User, Home, Users, Globe, Building2, X, Loader2 } from 'lucide-react';
+import { useSettingsStore, type AccountRole } from '@/lib/store/useSettingsStore';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
 export default function AddAccountModal() {
-  const { isAddAccountModalOpen, setAddAccountModalOpen } = useSettingsStore();
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const { isAddAccountModalOpen, setAddAccountModalOpen, addLinkedAccount, accounts } = useSettingsStore();
+  const [selectedRole, setSelectedRole] = useState<AccountRole | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEscapeKey(() => setAddAccountModalOpen(false));
+  useEscapeKey(() => { if (!loading) setAddAccountModalOpen(false); });
 
   if (!isAddAccountModalOpen) return null;
 
-  const roles = [
-    { id: 'Property Seeker', icon: User, label: 'Property Seeker', description: 'Buy or rent' },
-    { id: 'Property Owner', icon: Home, label: 'Property Owner', description: 'Sell or rent out' },
-    { id: 'Real Estate Agent', icon: Users, label: 'Real Estate Agent', description: 'List & manage properties' },
-    { id: 'Diaspora investors', icon: Globe, label: 'Diaspora investors', description: 'Invest from abroad' },
-    { id: 'Developers', icon: Building2, label: 'Developers', description: 'Showcase projects and connect with investors.' },
+  // Roles the user already has — grey them out
+  const existingRoles = new Set(accounts.map(a => a.role));
+
+  const roles: { id: AccountRole; icon: typeof User; label: string; description: string }[] = [
+    { id: 'Property Seeker', icon: User,      label: 'Property Seeker',    description: 'Buy or rent' },
+    { id: 'Landlord',        icon: Home,      label: 'Property Owner',     description: 'Sell or rent out' },
+    { id: 'Agent',           icon: Users,     label: 'Real Estate Agent',  description: 'List & manage properties' },
+    { id: 'Diaspora',        icon: Globe,     label: 'Diaspora Investor',  description: 'Invest from abroad' },
+    { id: 'Developer',       icon: Building2, label: 'Developer',          description: 'Showcase projects and connect with investors.' },
   ];
 
-  const handleCreate = () => {
-     if (selectedRole) {
-         // Logic for adding account locally in production here
-         setAddAccountModalOpen(false);
+  const handleCreate = async () => {
+     if (!selectedRole || loading) return;
+     setLoading(true);
+     setError('');
+     try {
+       await addLinkedAccount(selectedRole);
+       setSelectedRole(null);
+       setAddAccountModalOpen(false);
+     } catch (err) {
+       setError(err instanceof Error ? err.message : 'Failed to add account. Please try again.');
+     } finally {
+       setLoading(false);
      }
   };
 
@@ -44,22 +57,32 @@ export default function AddAccountModal() {
            <h2 className="text-[20px] font-bold text-gray-900">How will you use i-Realty?</h2>
            <p className="text-[14px] text-gray-400 font-medium mb-6 mt-1">Select your primary role on the platform</p>
 
+           {error && (
+             <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-4">{error}</div>
+           )}
+
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {roles.map((role, idx) => {
                  const isSelected = selectedRole === role.id;
+                 const alreadyAdded = existingRoles.has(role.id);
                  const Icon = role.icon;
                  return (
                     <button
                       key={role.id}
-                      onClick={() => setSelectedRole(role.id)}
+                      onClick={() => !alreadyAdded && setSelectedRole(role.id)}
+                      disabled={alreadyAdded}
                       className={`flex flex-col items-center justify-center p-6 rounded-2xl border text-center transition-all ${
-                         isSelected 
-                         ? 'border-blue-500 bg-blue-50/20 shadow-sm' 
-                         : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50/50'
+                         alreadyAdded
+                         ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                         : isSelected
+                           ? 'border-blue-500 bg-blue-50/20 shadow-sm'
+                           : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50/50'
                       } ${idx === roles.length - 1 ? 'md:col-span-2' : ''}`}
                     >
-                       <Icon className={`w-8 h-8 mb-3 ${isSelected ? 'text-blue-600' : 'text-blue-500'}`} />
-                       <span className="text-[15px] font-bold text-gray-900 mb-1">{role.label}</span>
+                       <Icon className={`w-8 h-8 mb-3 ${alreadyAdded ? 'text-gray-300' : isSelected ? 'text-blue-600' : 'text-blue-500'}`} />
+                       <span className={`text-[15px] font-bold mb-1 ${alreadyAdded ? 'text-gray-400' : 'text-gray-900'}`}>
+                         {role.label}{alreadyAdded ? ' (active)' : ''}
+                       </span>
                        <span className="text-[13px] text-gray-400 font-medium">{role.description}</span>
                     </button>
                  );
@@ -67,12 +90,12 @@ export default function AddAccountModal() {
            </div>
 
            <div className="flex justify-end mt-8">
-              <button 
+              <button
                 onClick={handleCreate}
-                disabled={!selectedRole}
-                className="w-full md:w-auto min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:bg-blue-400 text-white font-medium text-[14px] py-3.5 px-8 rounded-xl transition-colors shadow-sm"
+                disabled={!selectedRole || loading}
+                className="w-full md:w-auto min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:bg-blue-400 text-white font-medium text-[14px] py-3.5 px-8 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
               >
-                 Add Account
+                 {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding...</> : 'Add Account'}
               </button>
            </div>
         </div>
