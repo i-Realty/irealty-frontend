@@ -174,6 +174,13 @@ interface BackendConversation {
   updatedAt: string;
 }
 
+interface BackendListing {
+  id: string | number;
+  title?: string;
+  price?: number;
+  images?: { url: string }[];
+}
+
 // ---------------------------------------------------------------------------
 // ADAPTERS
 // ---------------------------------------------------------------------------
@@ -343,6 +350,38 @@ export const useMessagesStore = create<MessagesStore>()(
             const convs = Array.isArray(data) ? data : [];
             const threads = convs.map(c => mapConversation(c, currentUserId));
             set({ threads, isLoadingChats: false });
+
+            // Enrich property context for listing-type conversations in background
+            const listingConvs = convs.filter(c => c.type === 'LISTING' && c.listingId);
+            if (listingConvs.length > 0) {
+              const listingIds = [...new Set(listingConvs.map(c => c.listingId!))];
+              Promise.all(
+                listingIds.map(id =>
+                  apiGet<BackendListing>(`/api/marketplace/${id}`).catch(() => null)
+                )
+              ).then(listings => {
+                const listingMap: Record<string, BackendListing> = {};
+                listings.forEach((l, i) => { if (l) listingMap[listingIds[i]] = l; });
+                set((s) => ({
+                  threads: s.threads.map(t => {
+                    const conv = listingConvs.find(c => c.id === t.id);
+                    if (!conv?.listingId) return t;
+                    const listing = listingMap[conv.listingId];
+                    if (!listing) return t;
+                    return {
+                      ...t,
+                      propertyContext: {
+                        id:             String(listing.id),
+                        title:          listing.title ?? '',
+                        priceRaw:       (listing.price ?? 0) / 100,
+                        priceFormatted: listing.price ? `₦${((listing.price) / 100).toLocaleString('en-NG')}` : '',
+                        image:          listing.images?.[0]?.url ?? '',
+                      },
+                    };
+                  }),
+                }));
+              }).catch(() => {});
+            }
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
             const { threads } = get();

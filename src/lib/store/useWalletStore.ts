@@ -38,6 +38,12 @@ export interface PayoutRequest {
   processedAt?: string;
 }
 
+export type VirtualAccount = {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+};
+
 interface WalletStore {
   walletBalance: number;
   escrowBalance: number;
@@ -46,6 +52,8 @@ interface WalletStore {
   isLoadingLedger: boolean;
   isProcessingAction: boolean;
   error: string | null;
+
+  virtualAccount: VirtualAccount | null;
 
   currentWithdrawMethod: WithdrawalMethod;
   fiatDetails: BankDetailsPayload;
@@ -58,6 +66,7 @@ interface WalletStore {
   setWithdrawMethod: (method: WithdrawalMethod) => void;
 
   fetchLedger: () => Promise<void>;
+  fetchVirtualAccount: () => Promise<void>;
   processWithdrawal: (amount: number) => Promise<void>;
   updateFiatDetails: (details: BankDetailsPayload) => Promise<void>;
 
@@ -82,6 +91,28 @@ interface WalletStore {
   getPendingPayouts: () => PayoutRequest[];
 }
 
+// ---------------------------------------------------------------------------
+// Transaction field adapters
+// ---------------------------------------------------------------------------
+function mapTxType(raw: string): WalletTransaction['type'] {
+  const map: Record<string, WalletTransaction['type']> = {
+    CREDIT: 'Credit', DEBIT: 'Debit',
+    DEPOSIT: 'Deposit', WITHDRAWAL: 'Withdrawal', REFUND: 'Refund',
+    credit: 'Credit', debit: 'Debit',
+    deposit: 'Deposit', withdrawal: 'Withdrawal', refund: 'Refund',
+  };
+  return map[raw] ?? 'Debit';
+}
+
+function mapTxStatus(raw: string): WalletTransaction['status'] {
+  const map: Record<string, WalletTransaction['status']> = {
+    COMPLETED: 'Completed', PENDING: 'Pending', FAILED: 'Failed',
+    completed: 'Completed', pending: 'Pending', failed: 'Failed',
+    SUCCESS: 'Completed', success: 'Completed',
+  };
+  return map[raw] ?? 'Pending';
+}
+
 export const useWalletStore = create<WalletStore>()(
   persist(
     (set, get) => ({
@@ -92,6 +123,8 @@ export const useWalletStore = create<WalletStore>()(
       isLoadingLedger: false,
       isProcessingAction: false,
       error: null,
+
+      virtualAccount: null,
 
       currentWithdrawMethod: 'Fiat',
       fiatDetails: {
@@ -110,17 +143,51 @@ export const useWalletStore = create<WalletStore>()(
       setActiveModal: (modal) => set({ activeModal: modal }),
       setWithdrawMethod: (method) => set({ currentWithdrawMethod: method }),
 
+      fetchVirtualAccount: async () => {
+        if (!USE_API) return;
+        try {
+          const data = await apiGet<Record<string, unknown>>('/api/wallet/virtual-account');
+          if (data) {
+            set({
+              virtualAccount: {
+                bankName:      String(data.bankName ?? data.bank_name ?? data.virtualAccountBank ?? 'i-Realty Bank'),
+                accountNumber: String(data.accountNumber ?? data.account_number ?? data.virtualAccountNumber ?? ''),
+                accountName:   String(data.accountName ?? data.account_name ?? ''),
+              },
+            });
+          }
+        } catch {
+          // Non-critical — deposit modal falls back to static display
+        }
+      },
+
       fetchLedger: async () => {
         set({ isLoadingLedger: true, error: null });
         try {
           if (USE_API) {
-            // Balance returned in kobo — divide by 100 for naira display
-            const data = await apiGet<{ availableBalance: number; escrowBalance: number }>('/api/wallet/balance');
-            set({
-              walletBalance: (data.availableBalance ?? 0) / 100,
-              escrowBalance: (data.escrowBalance ?? 0) / 100,
-              isLoadingLedger: false,
-            });
+            // Fetch balance and transaction history in parallel
+            const [balanceData, txData] = await Promise.all([
+              apiGet<{ availableBalance: number; escrowBalance: number }>('/api/wallet/balance'),
+              apiGet<unknown>('/api/transactions?limit=50').catch(() => null),
+            ]);
+            // Balance in kobo → naira
+            const walletBalance = (balanceData.availableBalance ?? 0) / 100;
+            const escrowBalance = (balanceData.escrowBalance ?? 0) / 100;
+            // Map transactions if available
+            const rawTxList: Record<string, unknown>[] = Array.isArray(txData)
+              ? txData
+              : Array.isArray((txData as Record<string, unknown>)?.items)
+                ? (txData as Record<string, unknown[]>).items as Record<string, unknown>[]
+                : [];
+            const transactions: WalletTransaction[] = rawTxList.map((t) => ({
+              id:          String(t.id ?? ''),
+              type:        mapTxType(String(t.type ?? '')),
+              amount:      (Number(t.amount ?? 0)) / 100,
+              status:      mapTxStatus(String(t.status ?? '')),
+              date:        t.createdAt ? new Date(String(t.createdAt)).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+              description: t.description ? String(t.description) : undefined,
+            }));
+            set({ walletBalance, escrowBalance, transactions, isLoadingLedger: false });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
             const { transactions } = get();

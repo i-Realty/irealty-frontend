@@ -1,27 +1,33 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
 import { X, Copy, ChevronRight, Check } from 'lucide-react';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
-const ACCOUNT_NUMBER = '12222223321';
-
 export default function FundDepositModal() {
-  const { setActiveModal } = useWalletStore();
+  const { setActiveModal, virtualAccount, fetchVirtualAccount } = useWalletStore();
   const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
   useEscapeKey(closeModal);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!virtualAccount) fetchVirtualAccount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const accountNumber = virtualAccount?.accountNumber || '—';
+  const bankName      = virtualAccount?.bankName      || 'i-Realty Bank';
+  const accountName   = virtualAccount?.accountName   || 'i-Realty Account';
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(ACCOUNT_NUMBER);
+      await navigator.clipboard.writeText(accountNumber);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for browsers without clipboard API
       const el = document.createElement('textarea');
-      el.value = ACCOUNT_NUMBER;
+      el.value = accountNumber;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
@@ -59,15 +65,16 @@ export default function FundDepositModal() {
                 
                 <div className="flex flex-col gap-1">
                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest">Bank name</span>
-                   <p className="text-[14px] font-bold text-gray-900">Noma Bank</p>
+                   <p className="text-[14px] font-bold text-gray-900">{bankName}</p>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest">Account number</span>
                    <div className="flex items-center justify-between">
-                       <p className="text-[14px] font-bold text-gray-900 tracking-wide">{ACCOUNT_NUMBER}</p>
+                       <p className="text-[14px] font-bold text-gray-900 tracking-wide">{accountNumber}</p>
                        <button
                          onClick={handleCopy}
+                         disabled={accountNumber === '—'}
                          className={`font-bold text-[13px] flex items-center gap-1.5 transition-colors ${copied ? 'text-green-600' : 'text-blue-600 hover:text-blue-800'}`}
                        >
                           {copied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
@@ -77,7 +84,7 @@ export default function FundDepositModal() {
 
                 <div className="flex flex-col gap-1">
                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest">Account name</span>
-                   <p className="text-[14px] font-bold text-gray-900">i-Realty-Oyakhilome Einstein</p>
+                   <p className="text-[14px] font-bold text-gray-900">{accountName}</p>
                 </div>
              </div>
 

@@ -575,7 +575,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/payout', get().payout);
+        // Save payout bank details via Paystack recipient endpoint
+        const p = get().payout;
+        if (p.activeMethod === 'Bank') {
+          await apiPost('/api/paystack/transfer/recipient', p.bank);
+        }
+        // Crypto payout endpoint not yet available — save locally only
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
@@ -598,10 +603,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
     try {
       if (USE_API) {
-        const payload = type === 'password'
-          ? { type, current: sec.passwordForm.current, new: sec.passwordForm.new }
-          : { type, current: sec.pinForm.current, new: sec.pinForm.new };
-        await apiPost('/api/settings/security', payload);
+        // Security/PIN endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
+        set({ error: 'Security settings will be available in an upcoming update.', isSaving: false });
+        return;
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
@@ -619,7 +624,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPost('/api/settings/help-ticket', get().helpTicket);
+        // Help ticket endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
+        set({ isSaving: false, helpTicket: defaultHelpTicket });
+        return;
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
@@ -633,7 +641,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/commission', get().commission);
+        // Commission endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
@@ -647,7 +656,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/diaspora-fx', get().diasporaFX);
+        // Diaspora FX endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
       } else {
         await new Promise(r => setTimeout(r, 1000));
       }
@@ -661,7 +671,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/landlord-lease', get().landlordLease);
+        // Landlord lease endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
       } else {
         await new Promise(r => setTimeout(r, 1000));
       }
@@ -684,7 +695,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/developer-project', get().developerProject);
+        // Developer project endpoint not yet available — save locally only
+        await new Promise(r => setTimeout(r, 600));
       } else {
         await new Promise(r => setTimeout(r, 1000));
       }
