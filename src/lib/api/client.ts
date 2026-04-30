@@ -240,3 +240,29 @@ export const apiPut = <T>(path: string, body?: unknown) =>
 
 export const apiDelete = <T>(path: string) =>
   request<T>('DELETE', path);
+
+/**
+ * Multipart file upload helper.
+ * Do NOT set Content-Type — the browser fills in the boundary automatically.
+ */
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const response = await fetch(path, { method: 'POST', headers, body: formData });
+
+  if (!response.ok) {
+    let errorBody: unknown;
+    try { errorBody = await response.json(); } catch { errorBody = null; }
+    throw new ApiError(response.status, extractErrorMessage(errorBody, response.status), errorBody);
+  }
+
+  if (response.status === 204) return {} as T;
+
+  const json = await response.json();
+  if (json && typeof json === 'object' && 'data' in json && json.data !== undefined
+      && ('statusCode' in json || 'message' in json)) {
+    return json.data as T;
+  }
+  return json as T;
+}

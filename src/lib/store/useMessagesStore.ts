@@ -105,6 +105,7 @@ interface MessagesStore {
   stagedFiles: StagedFile[];
 
   fetchThreads: () => Promise<void>;
+  fetchThread: (chatId: string) => Promise<void>;
   sendMessage: (chatId: string, content: string, type: MessageContentType, files?: FilePayload[]) => Promise<void>;
 
   /** @deprecated Use fetchThreads() */
@@ -399,6 +400,22 @@ export const useMessagesStore = create<MessagesStore>()(
           }
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isLoadingChats: false });
+        }
+      },
+
+      fetchThread: async (chatId) => {
+        if (!USE_API) return;
+        try {
+          const currentUserId = useAuthStore.getState().user?.id ?? '';
+          const conv = await apiGet<BackendConversation>(`/api/messages/conversations/${chatId}`);
+          const thread = mapConversation(conv, currentUserId);
+          set((s) => ({
+            threads: s.threads.some(t => t.id === chatId)
+              ? s.threads.map(t => t.id === chatId ? thread : t)
+              : [thread, ...s.threads],
+          }));
+        } catch {
+          // Non-critical — keep existing thread data
         }
       },
 

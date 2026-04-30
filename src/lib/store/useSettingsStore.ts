@@ -3,6 +3,16 @@ import { apiGet, apiPost, apiPut, setTokenImmediate } from '@/lib/api/client';
 import { useAuthStore, type AuthUser, type UserRole } from '@/lib/store/useAuthStore';
 import { mapRole, mapKycStatus, mapAccountStatus, extractToken, type BackendAuthResponse, type BackendUser, ROLE_TO_BACKEND } from '@/lib/api/adapters';
 
+export interface PublicAgentProfile {
+  id: string;
+  name: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+  kycStatus: 'unverified' | 'in-progress' | 'verified';
+  socials: { linkedin: string; facebook: string; instagram: string; twitter: string };
+}
+
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // --- API Payload Schemas ---
@@ -107,6 +117,17 @@ interface SettingsStore {
   switchAccount: (accountId: string) => Promise<UserRole>;
   /** Fetch linked accounts from the backend (no-op in mock mode). */
   fetchAccounts: () => Promise<void>;
+  /**
+   * Fetch the current agent's own profile (GET /api/agents/profile).
+   * Populates the settings profile including bio/about field.
+   * No-op for non-agent roles.
+   */
+  fetchAgentProfile: () => Promise<void>;
+  /**
+   * Fetch a public agent profile by user ID (GET /api/agents/{id}/profile).
+   * Returns the agent's public-facing data, or null on failure.
+   */
+  getPublicAgentProfile: (agentId: string) => Promise<PublicAgentProfile | null>;
   /** Add a new linked account role (API mode only). */
   addLinkedAccount: (role: AccountRole) => Promise<void>;
   /** Clear all user-specific data (call on logout). */
@@ -458,8 +479,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
       }
 
-      // Refresh the linked accounts list using the new token (non-blocking)
+      // Refresh linked accounts and agent profile using new token (non-blocking)
       get().fetchAccounts().catch(() => {});
+      get().fetchAgentProfile().catch(() => {});
     } else {
       const mockUser = MOCK_ACCOUNT_USERS[accountId];
       if (!mockUser) throw new Error(`No mock account found for id: ${accountId}`);
@@ -535,6 +557,67 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       displayName: undefined,
     });
     await get().fetchAccounts();
+  },
+
+  fetchAgentProfile: async () => {
+    if (!USE_API) return;
+    const currentRole = useAuthStore.getState().user?.role;
+    if (currentRole !== 'Agent') return;
+    try {
+      type AgentUser = BackendUser & { bio?: string; phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string };
+      const data = await apiGet<{ user?: AgentUser }>('/api/agents/profile');
+      const u = (data.user ?? data) as AgentUser;
+      if (!u?.firstName && !u?.displayName) return;
+      const phone = (u.phoneNumber ?? '').replace(/^\+234/, '');
+      const fetched: UserProfilePayload = {
+        firstName:   u.firstName ?? '',
+        lastName:    u.lastName  ?? '',
+        displayName: u.displayName ?? '',
+        phone,
+        phoneCode:   '+234',
+        about:       u.bio ?? '',
+        socials: {
+          linkedin:  u.linkedinUrl  ?? '',
+          facebook:  u.facebookUrl  ?? '',
+          instagram: u.instagramUrl ?? '',
+          twitter:   u.twitterUrl   ?? '',
+        },
+      };
+      const activeId = get().activeAccount.id;
+      set({
+        profile: fetched,
+        profilesByAccount: { ...get().profilesByAccount, [activeId]: fetched },
+      });
+    } catch {
+      // Non-critical — keep existing profile data
+    }
+  },
+
+  getPublicAgentProfile: async (agentId) => {
+    if (!USE_API) return null;
+    try {
+      type AgentUser = BackendUser & { bio?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string };
+      const data = await apiGet<{ user?: AgentUser }>(`/api/agents/${agentId}/profile`);
+      const u = (data.user ?? data) as AgentUser;
+      if (!u?.id) return null;
+      const name = `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.displayName || 'Agent';
+      return {
+        id:          u.id,
+        name,
+        displayName: u.displayName || name,
+        avatarUrl:   u.avatarUrl ?? '/images/demo-avatar.jpg',
+        bio:         u.bio ?? '',
+        kycStatus:   mapKycStatus(u.verificationStatus ?? ''),
+        socials: {
+          linkedin:  u.linkedinUrl  ?? '',
+          facebook:  u.facebookUrl  ?? '',
+          instagram: u.instagramUrl ?? '',
+          twitter:   u.twitterUrl   ?? '',
+        },
+      } satisfies PublicAgentProfile;
+    } catch {
+      return null;
+    }
   },
 
   resetUserData: () => {

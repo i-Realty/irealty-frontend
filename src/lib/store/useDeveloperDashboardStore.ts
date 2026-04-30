@@ -160,7 +160,25 @@ export const useDeveloperDashboardStore = create<DeveloperDashboardState>((set, 
     }));
   },
 
-  setKycModalOpen: (isOpen: boolean) => set({ isKycModalOpen: isOpen }),
+  setKycModalOpen: (isOpen: boolean) => {
+    set({ isKycModalOpen: isOpen });
+    if (isOpen && USE_API) {
+      const STEP_MAP: Record<string, number> = {
+        PERSONAL_INFO: 1, PHONE_VERIFICATION: 2,
+        ID_VERIFICATION: 3, LIVENESS: 4, PAYMENT: 5,
+      };
+      apiGet<{ onboardingStep?: string; step?: string; currentStep?: string }>(
+        '/api/kyc/status'
+      ).then(data => {
+        const stepKey = data.onboardingStep ?? data.step ?? data.currentStep ?? '';
+        if (stepKey === 'COMPLETE') {
+          set({ isKycModalOpen: false });
+        } else {
+          set({ currentKycStep: STEP_MAP[stepKey] ?? 1 });
+        }
+      }).catch(() => {});
+    }
+  },
   setCurrentKycStep: (step: number) => set({ currentKycStep: step }),
 
   submitKycForVerification: async () => {

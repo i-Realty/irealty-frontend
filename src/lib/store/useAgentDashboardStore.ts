@@ -163,7 +163,28 @@ export const useAgentDashboardStore = create<AgentDashboardState>((set, get) => 
     }));
   },
 
-  setKycModalOpen: (isOpen: boolean) => set({ isKycModalOpen: isOpen }),
+  setKycModalOpen: (isOpen: boolean) => {
+    set({ isKycModalOpen: isOpen });
+    // When opening in API mode, fetch current KYC status to resume from the right step
+    if (isOpen && USE_API) {
+      const STEP_MAP: Record<string, number> = {
+        PERSONAL_INFO: 1, PHONE_VERIFICATION: 2,
+        ID_VERIFICATION: 3, LIVENESS: 4, PAYMENT: 5,
+      };
+      apiGet<{ onboardingStep?: string; step?: string; currentStep?: string }>(
+        '/api/kyc/status'
+      ).then(data => {
+        const stepKey = data.onboardingStep ?? data.step ?? data.currentStep ?? '';
+        if (stepKey === 'COMPLETE') {
+          // KYC already completed — close modal, mark verified
+          set({ isKycModalOpen: false });
+        } else {
+          const step = STEP_MAP[stepKey] ?? 1;
+          set({ currentKycStep: step });
+        }
+      }).catch(() => { /* keep at step 1 */ });
+    }
+  },
   setCurrentKycStep: (step: number) => set({ currentKycStep: step }),
 
   submitKycForVerification: async () => {

@@ -228,6 +228,7 @@ interface AgentPropertiesState {
   updateProperty: (prop: AgentProperty) => Promise<void>;
 
   // Image management
+  uploadImages: (listingId: string, files: File[]) => Promise<string[]>;
   deleteImage: (listingId: string, imageId: string) => Promise<void>;
 
   // Inspection fee
@@ -364,6 +365,27 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
       activeFilter: 'All',
       page: 1,
     }));
+  },
+
+  uploadImages: async (listingId, files) => {
+    if (!USE_API || files.length === 0) return [];
+    const { apiUpload } = await import('@/lib/api/client');
+    const formData = new FormData();
+    files.forEach(f => formData.append('images', f));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await apiUpload<any>(`/api/listings/${listingId}/images`, formData);
+    const urls: string[] = Array.isArray(data)
+      ? data.map((img: Record<string, unknown>) => String(img.url ?? ''))
+      : Array.isArray(data?.images)
+        ? data.images.map((img: Record<string, unknown>) => String(img.url ?? ''))
+        : [];
+    // Update the listing's media in local state
+    set((s) => ({
+      properties: s.properties.map((p) =>
+        p.id === listingId ? { ...p, media: [...p.media, ...urls] } : p
+      ),
+    }));
+    return urls;
   },
 
   deleteImage: async (listingId, imageId) => {

@@ -84,6 +84,7 @@ interface CalendarStore {
   isAvailabilityModalOpen: boolean;
 
   fetchEvents: (month: Date) => Promise<void>;
+  fetchEventById: (id: string) => Promise<CalendarEvent | null>;
   saveAvailability: (availabilities: AvailabilityPayload[]) => Promise<void>;
   createEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<CalendarEvent | null>;
   updateEvent: (id: string, patch: Partial<CalendarEvent>) => Promise<void>;
@@ -157,6 +158,24 @@ export const useCalendarStore = create<CalendarStore>()(
           }
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isLoadingEvents: false });
+        }
+      },
+
+      fetchEventById: async (id) => {
+        // Return from cache first if available
+        const cached = get().events.find(e => e.id === id);
+        if (!USE_API) return cached ?? null;
+        try {
+          const raw = await apiGet<BackendCalendarEvent>(`/api/calendar/events/${id}`);
+          const event = mapBackendEvent(raw);
+          set((s) => ({
+            events: s.events.some(e => e.id === id)
+              ? s.events.map(e => e.id === id ? event : e)
+              : [...s.events, event],
+          }));
+          return event;
+        } catch {
+          return cached ?? null;
         }
       },
 
