@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { apiGet, apiPost, apiPut } from '@/lib/api/client';
-import { useAuthStore, type AuthUser } from '@/lib/store/useAuthStore';
+import { apiGet, apiPost, apiPut, setTokenImmediate } from '@/lib/api/client';
+import { useAuthStore, type AuthUser, type UserRole } from '@/lib/store/useAuthStore';
 import { mapRole, mapKycStatus, mapAccountStatus, extractToken, type BackendAuthResponse, type BackendUser, ROLE_TO_BACKEND } from '@/lib/api/adapters';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
@@ -94,8 +94,11 @@ interface SettingsStore {
   isAddAccountModalOpen: boolean;
   setAddAccountModalOpen: (open: boolean) => void;
   setActiveAccount: (accountId: string) => void;
-  /** API-ready: switches the active account and updates the auth user. */
-  switchAccount: (accountId: string) => Promise<void>;
+  /**
+   * API-ready: switches the active account and updates the auth user.
+   * Returns the new role on success. Throws on failure.
+   */
+  switchAccount: (accountId: string) => Promise<UserRole>;
   /** Fetch linked accounts from the backend (no-op in mock mode). */
   fetchAccounts: () => Promise<void>;
   /** Add a new linked account role (API mode only). */
@@ -375,57 +378,72 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   switchAccount: async (accountId) => {
     let account = get().accounts.find(a => a.id === accountId);
+    let newRole: UserRole;
+
     if (USE_API) {
-      try {
-        // Backend expects linkedUserId (the target account's UUID)
-        const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
-        const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
-        // Use the main account's real identity for linked accounts
-        const mainProfile = get().profilesByAccount[get().mainAccountId];
-        const prevUser = useAuthStore.getState().user;
-        const realName = mainProfile
-          ? (`${mainProfile.firstName} ${mainProfile.lastName}`.trim() || mainProfile.displayName)
-          : (prevUser?.name || prevUser?.displayName || '');
-        const realDisplayName = mainProfile?.displayName || realName;
-        const realEmail = prevUser?.email || '';
+      // Backend expects linkedUserId (the target account's UUID)
+      const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
+      const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
 
-        const rawName = `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim();
-        const isPlaceholder = rawName === 'Linked Account' || rawUser.displayName === 'Linked Account';
+      // Use the main account's real identity for linked accounts
+      const mainProfile = get().profilesByAccount[get().mainAccountId];
+      const prevUser = useAuthStore.getState().user;
+      const realName = mainProfile
+        ? (`${mainProfile.firstName} ${mainProfile.lastName}`.trim() || mainProfile.displayName)
+        : (prevUser?.name || prevUser?.displayName || '');
+      const realDisplayName = mainProfile?.displayName || realName;
+      const realEmail = prevUser?.email || '';
 
-        const mappedUser = {
-          id:            rawUser.id,
-          name:          isPlaceholder ? (realName || 'User') : (rawName || rawUser.displayName || realName || 'User'),
-          email:         realEmail || rawUser.email,
-          role:          mapRole(rawUser.roles?.[0] ?? ''),
-          displayName:   isPlaceholder ? (realDisplayName || 'User') : (rawUser.displayName || rawName || realDisplayName || 'User'),
-          avatarUrl:     prevUser?.avatarUrl ?? rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
-          kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
-          accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
-        } satisfies AuthUser;
-        useAuthStore.getState().login(mappedUser);
-        const token = extractToken(data);
-        if (token) {
-          useAuthStore.getState().setToken(token, data.refreshToken ?? null);
-          const { setTokenImmediate } = await import('@/lib/api/client');
-          setTokenImmediate(token);
-        }
-        // Ensure the switched account is in the list
-        if (!account) {
-          account = { id: mappedUser.id, role: mappedUser.role as AccountRole, name: mappedUser.displayName, email: mappedUser.email };
-          set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
-        }
-      } catch {
-        // switch-account failed — stay on current account
-        return;
+      const rawName = `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim();
+      const isPlaceholder = rawName === 'Linked Account' || rawUser.displayName === 'Linked Account';
+
+      // Determine the new role — prefer response roles, fall back to the
+      // pre-fetched account's role so we never default to 'Property Seeker'
+      const preKnownRole = account?.role as UserRole | undefined;
+      const responseRole = rawUser.roles?.length
+        ? mapRole(rawUser.roles[0])
+        : null;
+      newRole = responseRole ?? preKnownRole ?? 'Property Seeker';
+
+      const mappedUser = {
+        id:            rawUser.id,
+        name:          isPlaceholder ? (realName || 'User') : (rawName || rawUser.displayName || realName || 'User'),
+        email:         realEmail || rawUser.email,
+        role:          newRole,
+        displayName:   isPlaceholder ? (realDisplayName || 'User') : (rawUser.displayName || rawName || realDisplayName || 'User'),
+        avatarUrl:     prevUser?.avatarUrl ?? rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
+        kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
+        accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
+      } satisfies AuthUser;
+
+      useAuthStore.getState().login(mappedUser);
+
+      const token = extractToken(data);
+      if (token) {
+        const refreshToken = data.refreshToken ?? data.refresh_token ?? null;
+        useAuthStore.getState().setToken(token, refreshToken);
+        setTokenImmediate(token);
+      }
+
+      // Ensure the switched account is in the list
+      if (!account) {
+        account = { id: mappedUser.id, role: newRole as AccountRole, name: mappedUser.displayName, email: mappedUser.email };
+        set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
       }
     } else {
-      if (!account) return;
-      await new Promise(r => setTimeout(r, 300));
       const mockUser = MOCK_ACCOUNT_USERS[accountId];
-      if (mockUser) useAuthStore.getState().login(mockUser);
+      if (!mockUser) throw new Error(`No mock account found for id: ${accountId}`);
+      await new Promise(r => setTimeout(r, 300));
+      useAuthStore.getState().login(mockUser);
+      newRole = mockUser.role;
+      if (!account) {
+        account = { id: mockUser.id, role: newRole as AccountRole, name: mockUser.displayName, email: mockUser.email };
+        set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
+      }
     }
-    if (!account) return;
-    get().setActiveAccount(accountId);
+
+    get().setActiveAccount(account!.id);
+    return newRole;
   },
 
   fetchAccounts: async () => {

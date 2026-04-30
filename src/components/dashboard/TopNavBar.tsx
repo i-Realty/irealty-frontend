@@ -73,11 +73,13 @@ export default function TopNavBar() {
   const avatarUrl = user?.avatarUrl ?? FALLBACK_AVATAR;
 
   const handleAccountSwitch = async (accountId: string) => {
-    const account = accounts.find((a) => a.id === accountId);
-    await switchAccount(accountId);
-    setIsDropdownOpen(false);
-    if (account) {
-      router.push(getDashboardRoot(account.role as Parameters<typeof getDashboardRoot>[0]));
+    try {
+      const newRole = await switchAccount(accountId);
+      setIsDropdownOpen(false);
+      router.push(getDashboardRoot(newRole));
+    } catch {
+      // switch failed — stay on current account
+      setIsDropdownOpen(false);
     }
   };
 

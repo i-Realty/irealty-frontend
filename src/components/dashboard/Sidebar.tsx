@@ -163,10 +163,14 @@ export default function Sidebar() {
                     <button
                       key={acc.id}
                       onClick={async () => {
-                        await switchAccount(acc.id);
-                        router.push(getDashboardRoot(acc.role as Parameters<typeof getDashboardRoot>[0]));
-                        setIsMobileAccountMenuOpen(false);
-                        close();
+                        try {
+                          const newRole = await switchAccount(acc.id);
+                          setIsMobileAccountMenuOpen(false);
+                          close();
+                          router.push(getDashboardRoot(newRole));
+                        } catch {
+                          // switch failed — stay on current account
+                        }
                       }}
                       className={`w-full flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors ${isActive ? 'bg-blue-50/30' : ''}`}
                     >
