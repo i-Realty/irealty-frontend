@@ -36,6 +36,7 @@ export default function Sidebar() {
   const {
     activeAccount,
     accounts,
+    mainAccountId,
     setAddAccountModalOpen,
     switchAccount,
   } = useSettingsStore();
@@ -154,7 +155,8 @@ export default function Sidebar() {
             {isMobileAccountMenuOpen && (
               <div className="w-full bg-white border-t border-gray-100 flex flex-col py-1 animate-in slide-in-from-bottom-2 fade-in duration-200">
                 {accounts.map((acc) => {
-                  const isActive = activeAccount.id === acc.id;
+                  const isActive = (user?.id ?? activeAccount.id) === acc.id;
+                  const isMain = acc.id === mainAccountId;
                   return (
                     <button
                       key={acc.id}
@@ -164,7 +166,7 @@ export default function Sidebar() {
                         setIsMobileAccountMenuOpen(false);
                         close();
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors ${(user?.id ?? activeAccount.id) === acc.id ? 'bg-blue-50/30' : ''}`}
+                      className={`w-full flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors ${isActive ? 'bg-blue-50/30' : ''}`}
                     >
                       <div className="flex items-center gap-3">
                         <Image
@@ -175,13 +177,20 @@ export default function Sidebar() {
                           className="w-9 h-9 rounded-full border border-gray-200 object-cover opacity-90"
                         />
                         <div className="flex flex-col items-start gap-0">
-                          <span className={`text-[13px] leading-tight ${(user?.id ?? activeAccount.id) === acc.id ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>
-                            {acc.name}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[13px] leading-tight ${isActive ? 'font-bold text-blue-700' : 'font-semibold text-gray-800'}`}>
+                              {acc.name}
+                            </span>
+                            {isMain && (
+                              <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full uppercase tracking-wide">
+                                Main
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] font-medium text-gray-400 capitalize">{acc.role}</span>
                         </div>
                       </div>
-                      {(user?.id ?? activeAccount.id) === acc.id && <Check className="w-4 h-4 text-blue-600" />}
+                      {isActive && <Check className="w-4 h-4 text-blue-600" />}
                     </button>
                   );
                 })}

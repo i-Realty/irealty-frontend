@@ -27,6 +27,7 @@ export default function TopNavBar() {
   const {
     activeAccount,
     accounts,
+    mainAccountId,
     setAddAccountModalOpen,
     switchAccount,
   } = useSettingsStore();
@@ -156,6 +157,7 @@ export default function TopNavBar() {
               <div className="flex flex-col">
                 {accounts.map((acc) => {
                   const isActive = (user?.id ?? activeAccount.id) === acc.id;
+                  const isMain = acc.id === mainAccountId;
                   return (
                     <button
                       key={acc.id}
@@ -171,9 +173,16 @@ export default function TopNavBar() {
                           className="w-9 h-9 rounded-full border border-gray-200 object-cover shadow-sm"
                         />
                         <div className="flex flex-col items-start gap-0">
-                          <span className="text-[14px] font-bold text-gray-900 leading-tight">
-                            {acc.name}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[14px] font-bold text-gray-900 leading-tight">
+                              {acc.name}
+                            </span>
+                            {isMain && (
+                              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                                Main
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] font-medium text-gray-400 capitalize">
                             {acc.role}
                           </span>

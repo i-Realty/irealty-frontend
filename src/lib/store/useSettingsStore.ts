@@ -89,6 +89,8 @@ interface SettingsStore {
   // Multi-Account Switcher
   activeAccount: AccountInfo;
   accounts: AccountInfo[];
+  /** The original account the user registered with (first login). */
+  mainAccountId: string;
   isAddAccountModalOpen: boolean;
   setAddAccountModalOpen: (open: boolean) => void;
   setActiveAccount: (accountId: string) => void;
@@ -272,6 +274,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
   accounts: USE_API ? [] : MOCK_ACCOUNTS,
+  mainAccountId: '',
   isAddAccountModalOpen: false,
   setAddAccountModalOpen: (open) => set({ isAddAccountModalOpen: open }),
   setActiveAccount: (accountId) => {
@@ -285,7 +288,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const authUser = useAuthStore.getState().user;
       if (authUser && authUser.id === accountId) {
         target = { id: authUser.id, role: authUser.role as AccountRole, name: authUser.displayName || authUser.name, email: authUser.email };
-        set({ accounts: [target] });
+        // The first account set after login is the main (original) account.
+        const mainId = get().mainAccountId || accountId;
+        set({ accounts: [target], mainAccountId: mainId });
       }
     }
 
@@ -411,6 +416,22 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           email: currentUser.email,
         });
       }
+
+      // All linked accounts share the main account's personal details.
+      const mainId = get().mainAccountId;
+      const mainAcc = linked.find(a => a.id === mainId) ?? linked[0];
+      if (mainAcc) {
+        for (const acc of linked) {
+          if (acc.id !== mainAcc.id) {
+            acc.name  = mainAcc.name;
+            acc.email = mainAcc.email;
+          }
+        }
+      }
+
+      // Put main account first in the list
+      linked.sort((a, b) => (a.id === mainId ? -1 : b.id === mainId ? 1 : 0));
+
       set({ accounts: linked });
     } catch {
       // Non-critical — keep existing accounts list on failure
