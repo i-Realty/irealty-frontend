@@ -270,44 +270,122 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   activeTab: 'Profile',
   setActiveTab: (tab) => set({ activeTab: tab }),
 
-  activeAccount: MOCK_ACCOUNTS[0],
-  accounts: MOCK_ACCOUNTS,
+  activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
+  accounts: USE_API ? [] : MOCK_ACCOUNTS,
   isAddAccountModalOpen: false,
   setAddAccountModalOpen: (open) => set({ isAddAccountModalOpen: open }),
   setActiveAccount: (accountId) => {
-    const target = get().accounts.find(a => a.id === accountId);
+    let target = get().accounts.find(a => a.id === accountId);
+
+    // In API mode the real user's UUID won't exist in mock accounts.
+    // Create an entry from the current auth user so the rest of the
+    // settings store works (profile tab, account switcher, etc.).
+    if (!target && USE_API) {
+      const authUser = useAuthStore.getState().user;
+      if (authUser && authUser.id === accountId) {
+        target = { id: authUser.id, role: authUser.role as AccountRole, name: authUser.displayName || authUser.name, email: authUser.email };
+        set({ accounts: [target, ...get().accounts.filter(a => a.id !== accountId)] });
+      }
+    }
+
     if (!target) return;
-    const profile = get().profilesByAccount[accountId] ?? MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
-    set({ activeAccount: target, profile });
+
+    // Build profile from auth user data when no stored profile exists
+    let profile = get().profilesByAccount[accountId];
+    if (!profile && USE_API) {
+      const authUser = useAuthStore.getState().user;
+      if (authUser) {
+        const [firstName = '', ...lastParts] = authUser.name.split(' ');
+        profile = {
+          firstName,
+          lastName:    lastParts.join(' '),
+          displayName: authUser.displayName || authUser.name,
+          phone:       '',
+          phoneCode:   '+234',
+          about:       '',
+          socials:     { linkedin: '', facebook: '', instagram: '', twitter: '' },
+        };
+      }
+    }
+    if (!profile) {
+      profile = MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
+    }
+
+    set({
+      activeAccount: target,
+      profile,
+      profilesByAccount: { ...get().profilesByAccount, [accountId]: profile },
+    });
+
+    // Fetch full profile from /me in the background to fill in phone, socials etc.
+    if (USE_API) {
+      apiGet<BackendUser & { phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }>('/api/auth/me')
+        .then(me => {
+          const phone = me.phoneNumber?.replace(/^\+234/, '') ?? '';
+          const fullProfile: UserProfilePayload = {
+            firstName:   me.firstName ?? '',
+            lastName:    me.lastName ?? '',
+            displayName: me.displayName ?? '',
+            phone,
+            phoneCode:   '+234',
+            about:       '',
+            socials: {
+              linkedin:  me.linkedinUrl ?? '',
+              facebook:  me.facebookUrl ?? '',
+              instagram: me.instagramUrl ?? '',
+              twitter:   me.twitterUrl ?? '',
+            },
+          };
+          set({
+            profile: fullProfile,
+            profilesByAccount: { ...get().profilesByAccount, [accountId]: fullProfile },
+          });
+        })
+        .catch(() => { /* non-critical */ });
+    }
   },
 
   switchAccount: async (accountId) => {
-    const account = get().accounts.find(a => a.id === accountId);
-    if (!account) return;
+    let account = get().accounts.find(a => a.id === accountId);
     if (USE_API) {
-      // Backend expects linkedUserId (the target account's UUID)
-      const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
-      const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
-      const mappedUser: AuthUser = {
-        id:            rawUser.id,
-        name:          `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim() || rawUser.displayName || 'User',
-        email:         rawUser.email,
-        role:          mapRole(rawUser.roles?.[0] ?? ''),
-        displayName:   rawUser.displayName || `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim(),
-        avatarUrl:     rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
-        kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
-        accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
-      };
-      useAuthStore.getState().login(mappedUser);
-      const token = extractToken(data);
-      if (token) useAuthStore.getState().setToken(token, data.refreshToken ?? null);
+      try {
+        // Backend expects linkedUserId (the target account's UUID)
+        const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
+        const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
+        const mappedUser = {
+          id:            rawUser.id,
+          name:          `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim() || rawUser.displayName || 'User',
+          email:         rawUser.email,
+          role:          mapRole(rawUser.roles?.[0] ?? ''),
+          displayName:   rawUser.displayName || `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim(),
+          avatarUrl:     rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
+          kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
+          accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
+        } satisfies AuthUser;
+        useAuthStore.getState().login(mappedUser);
+        const token = extractToken(data);
+        if (token) {
+          useAuthStore.getState().setToken(token, data.refreshToken ?? null);
+          const { setTokenImmediate } = await import('@/lib/api/client');
+          setTokenImmediate(token);
+        }
+        // Ensure the switched account is in the list
+        if (!account) {
+          account = { id: mappedUser.id, role: mappedUser.role as AccountRole, name: mappedUser.displayName, email: mappedUser.email };
+          set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
+        }
+      } catch {
+        // switch-account failed — stay on current account
+        return;
+      }
     } else {
+      if (!account) return;
       await new Promise(r => setTimeout(r, 300));
       const mockUser = MOCK_ACCOUNT_USERS[accountId];
       if (mockUser) useAuthStore.getState().login(mockUser);
     }
-    const profile = get().profilesByAccount[accountId] ?? MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
-    set({ activeAccount: account, profile });
+    if (!account) return;
+    get().setActiveAccount(accountId);
   },
 
   fetchAccounts: async () => {
@@ -335,8 +413,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     await get().fetchAccounts();
   },
 
-  profile: MOCK_ACCOUNT_PROFILES['demo-admin'],
-  profilesByAccount: { ...MOCK_ACCOUNT_PROFILES },
+  profile: USE_API
+    ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
+    : MOCK_ACCOUNT_PROFILES['demo-admin'],
+  profilesByAccount: USE_API ? {} : { ...MOCK_ACCOUNT_PROFILES },
   payout: defaultPayout,
   security: defaultSecurity,
   helpTicket: defaultHelpTicket,
@@ -374,7 +454,17 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isSaving: true, error: null });
     try {
       if (USE_API) {
-        await apiPut('/api/settings/profile', get().profile);
+        const p = get().profile;
+        await apiPut('/api/auth/me', {
+          firstName:   p.firstName,
+          lastName:    p.lastName,
+          displayName: p.displayName,
+          phoneNumber: p.phoneCode + p.phone,
+          linkedinUrl:  p.socials.linkedin || undefined,
+          facebookUrl:  p.socials.facebook || undefined,
+          instagramUrl: p.socials.instagram || undefined,
+          twitterUrl:   p.socials.twitter || undefined,
+        });
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
