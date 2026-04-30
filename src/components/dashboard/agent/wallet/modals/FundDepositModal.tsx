@@ -2,14 +2,20 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useWalletStore } from '@/lib/store/useWalletStore';
-import { X, Copy, ChevronRight, Check } from 'lucide-react';
+import { X, Copy, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function FundDepositModal() {
-  const { setActiveModal, virtualAccount, fetchVirtualAccount } = useWalletStore();
+  const { setActiveModal, virtualAccount, fetchVirtualAccount, fetchLedger } = useWalletStore();
   const closeModal = useCallback(() => setActiveModal(null), [setActiveModal]);
   useEscapeKey(closeModal);
   const [copied, setCopied] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [isCharging, setIsCharging] = useState(false);
+  const [chargeError, setChargeError] = useState('');
 
   useEffect(() => {
     if (!virtualAccount) fetchVirtualAccount();
@@ -19,6 +25,31 @@ export default function FundDepositModal() {
   const accountNumber = virtualAccount?.accountNumber || '—';
   const bankName      = virtualAccount?.bankName      || 'i-Realty Bank';
   const accountName   = virtualAccount?.accountName   || 'i-Realty Account';
+
+  const handleCharge = async (method: 'card' | 'bank') => {
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) {
+      setChargeError('Please enter a valid amount.');
+      return;
+    }
+    setChargeError('');
+    if (!USE_API) {
+      setChargeError('Payment gateway is not available in demo mode.');
+      return;
+    }
+    setIsCharging(true);
+    try {
+      const endpoint = method === 'card' ? '/api/paystack/charge/card' : '/api/paystack/charge/bank';
+      await apiPost(endpoint, { amount: Math.round(numAmount * 100) }); // send in kobo
+      // Refresh wallet balance after successful charge
+      await fetchLedger();
+      setActiveModal(null);
+    } catch (err) {
+      setChargeError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
+    } finally {
+      setIsCharging(false);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -98,19 +129,23 @@ export default function FundDepositModal() {
              {/* Amount Input */}
              <div className="w-full flex flex-col mt-6 mb-4">
                  <span className="text-[13px] font-medium text-gray-400 mb-1.5">Amount</span>
-                 <input 
+                 <input
                     type="number"
                     placeholder="Enter amount"
+                    value={amount}
+                    onChange={(e) => { setAmount(e.target.value); setChargeError(''); }}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 focus:outline-none focus:border-gray-300 shadow-sm transition-colors placeholder:text-gray-400 font-medium"
                  />
+                 {chargeError && <p className="text-red-500 text-xs mt-1.5">{chargeError}</p>}
              </div>
 
              {/* Gateway Lists */}
              <div className="w-full flex flex-col gap-2 mt-2 border-t border-gray-100 pt-6">
 
                  <button
-                   onClick={() => {}}
-                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
+                   onClick={() => handleCharge('bank')}
+                   disabled={isCharging}
+                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group disabled:opacity-60"
                  >
                      <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
@@ -118,12 +153,13 @@ export default function FundDepositModal() {
                          </div>
                          <span className="font-bold text-gray-900 text-[14px]">Fund with flutterwave</span>
                      </div>
-                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                     {isCharging ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" /> : <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />}
                  </button>
 
                  <button
-                   onClick={() => {}}
-                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group"
+                   onClick={() => handleCharge('card')}
+                   disabled={isCharging}
+                   className="w-full flex items-center justify-between bg-white hover:bg-gray-50/50 p-4 border border-gray-100 rounded-xl transition-all shadow-sm group disabled:opacity-60"
                  >
                      <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
@@ -131,7 +167,7 @@ export default function FundDepositModal() {
                          </div>
                          <span className="font-bold text-gray-900 text-[14px]">Fund with paystack</span>
                      </div>
-                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                     {isCharging ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" /> : <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />}
                  </button>
 
              </div>

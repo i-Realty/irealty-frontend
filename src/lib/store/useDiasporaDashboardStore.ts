@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { apiGet, apiPost } from '@/lib/api/client';
 import { useNotificationStore } from './useNotificationStore';
 import { useTransactionLedger } from './useTransactionLedger';
+import {
+  usePropertyTransactionsStore,
+  mapBackendTransaction,
+  type BackendPropertyTransaction,
+} from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -178,8 +183,28 @@ export const useDiasporaDashboardStore = create<DiasporaDashboardState>((set, ge
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transaction: DiasporaTransactionDetail }>(`/api/diaspora/transactions/${id}`);
-        set({ selectedTransaction: data.transaction, isLoading: false });
+        // Use the unified property-transactions endpoint
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        const pt = mapBackendTransaction(raw);
+        const activeStep = pt.status === 'Completed' ? 7 : pt.step;
+        const statusMap: Record<string, PaymentStatus> = {
+          Pending: 'Pending', 'In-progress': 'In-progress',
+          Completed: 'Completed', Declined: 'Declined', Cancelled: 'Declined',
+        };
+        set({
+          selectedTransaction: {
+            id:              pt.id,
+            status:          statusMap[pt.status] ?? 'Pending',
+            transactionDate: pt.date,
+            amount:          pt.amount || pt.escrowAmount,
+            serviceType:     pt.type === 'inspection' ? 'Inspection' : pt.type === 'rental' ? 'Rental' : 'Purchase',
+            planTier:        'Premium',
+            timeline:        buildMockTimeline(activeStep),
+            repName:         pt.sellerName,
+            repAvatar:       pt.sellerAvatar,
+          },
+          isLoading: false,
+        });
       } else {
         await new Promise((r) => setTimeout(r, 400));
         const payments = get().payments.length > 0 ? get().payments : MOCK_PAYMENTS;

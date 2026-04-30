@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { apiGet } from '@/lib/api/client';
+import {
+  usePropertyTransactionsStore,
+  mapBackendTransaction,
+  type BackendPropertyTransaction,
+} from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -52,6 +57,29 @@ const mockProperties: LandlordProperty[] = [
   { id: 'lp-005', title: 'Studio Apartment, Yaba', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=600&auto=format&fit=crop', location: 'Yaba, Lagos', type: 'Residential', monthlyRent: 150000, status: 'Maintenance' },
   { id: 'lp-006', title: 'Shop Space, Wuse Market', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop', location: 'Wuse, Abuja', type: 'Commercial', monthlyRent: 200000, status: 'Vacant' },
 ];
+
+// ---------------------------------------------------------------------------
+// Adapter: BackendPropertyTransaction → LandlordTransaction
+// ---------------------------------------------------------------------------
+function mapToLandlordTransaction(t: BackendPropertyTransaction): LandlordTransaction {
+  const pt = mapBackendTransaction(t);
+  const typeMap: Record<string, LandlordTransactionType> = {
+    inspection: 'Service Fee', sale: 'Deposit', rental: 'Rent',
+  };
+  const statusMap: Record<string, LandlordTransactionStatus> = {
+    Pending: 'Pending', 'In-progress': 'Pending', Completed: 'Completed',
+    Declined: 'Failed', Cancelled: 'Failed',
+  };
+  return {
+    id:           pt.id,
+    date:         pt.date,
+    propertyName: pt.propertyTitle,
+    tenantName:   pt.buyerName,
+    amount:       pt.amount || pt.escrowAmount,
+    type:         typeMap[pt.type] ?? 'Rent',
+    status:       statusMap[pt.status] ?? 'Pending',
+  };
+}
 
 const mockTransactions: LandlordTransaction[] = [
   { id: 'LTX-1001', date: '28 Mar 2026', propertyName: '3-Bedroom Flat, Lekki Phase 1', tenantName: 'Adebayo Ogunlade', amount: 350000, type: 'Rent', status: 'Completed' },
@@ -188,15 +216,15 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
     set({ transactionsLoading: true });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: LandlordTransaction[] }>('/api/property-transactions');
-        set({ transactions: data.transactions, transactionsLoading: false });
+        await usePropertyTransactionsStore.getState().fetchTransactions();
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapToLandlordTransaction(pt.raw));
+        set({ transactions, transactionsLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
         set({ transactions: mockTransactions, transactionsLoading: false });
       }
     } catch (err) {
-      set({ transactionsLoading: false });
-      console.error('Failed to load transactions', err);
+      set({ transactionsLoading: false, error: err instanceof Error ? err.message : 'Failed to load transactions' });
     }
   },
 
@@ -204,8 +232,8 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
     set({ transactionsLoading: true });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transaction: LandlordTransaction }>(`/api/landlord/transactions/${id}`);
-        set({ selectedTransaction: data.transaction, transactionsLoading: false });
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        set({ selectedTransaction: mapToLandlordTransaction(raw), transactionsLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 400));
         const tx =
@@ -215,8 +243,7 @@ export const useLandlordDashboardStore = create<LandlordDashboardState>((set, ge
         set({ selectedTransaction: tx, transactionsLoading: false });
       }
     } catch (err) {
-      set({ transactionsLoading: false });
-      console.error('Failed to load transaction', err);
+      set({ transactionsLoading: false, error: err instanceof Error ? err.message : 'Failed to load transaction' });
     }
   },
 

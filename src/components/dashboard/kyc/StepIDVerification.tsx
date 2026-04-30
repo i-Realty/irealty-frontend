@@ -1,6 +1,7 @@
 'use client';
 
 import { useAgentDashboardStore } from '@/lib/store/useAgentDashboardStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import { useState, useRef } from 'react';
 import { UploadCloud, File, Trash2, ChevronDown, Loader2 } from 'lucide-react';
 import { apiPost } from '@/lib/api/client';
@@ -9,8 +10,11 @@ const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 // Map frontend labels → backend idType enum
 const ID_TYPE_BACKEND: Record<string, string> = {
+  'International passport': 'INTERNATIONAL_PASSPORT',
   'International Passport': 'INTERNATIONAL_PASSPORT',
+  "Driver's license": 'DRIVERS_LICENSE',
   "Driver's License": 'DRIVERS_LICENSE',
+  "Voter's card": 'VOTERS_CARD',
   "Voter's Card": 'VOTERS_CARD',
   NIN: 'NIN',
   BVN: 'BVN',
@@ -18,6 +22,7 @@ const ID_TYPE_BACKEND: Record<string, string> = {
 
 export default function StepIDVerification() {
   const { setCurrentKycStep, updateKycProgress } = useAgentDashboardStore();
+  const user = useAuthStore((s) => s.user);
 
   const [idNumber, setIdNumber] = useState('');
   const [idType, setIdType] = useState('');
@@ -37,10 +42,17 @@ export default function StepIDVerification() {
       try {
         const backendIdType = ID_TYPE_BACKEND[idType] ?? idType;
 
-        // Step 1: Verify ID against external records
+        // Extract user name for the verification endpoint
+        const nameParts = (user?.name ?? '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName  = nameParts.slice(1).join(' ') || '';
+
+        // Step 1: Verify ID against external records (requires name fields per apidocs)
         await apiPost('/api/verifications/id', {
-          idType:   backendIdType,
+          idType:      backendIdType,
           idNumber,
+          firstName,
+          lastName,
         });
 
         // Step 2: Submit ID to KYC flow (with file if available)

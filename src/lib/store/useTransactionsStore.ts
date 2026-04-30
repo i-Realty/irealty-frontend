@@ -175,7 +175,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
     try {
       if (USE_API) {
         await usePropertyTransactionsStore.getState().fetchTransactions();
-        const transactions = usePropertyTransactionsStore.getState().transactions.map(mapToTransactionDetail);
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapToTransactionDetail(pt.raw));
         set({ transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));

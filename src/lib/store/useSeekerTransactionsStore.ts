@@ -346,7 +346,7 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
     try {
       if (USE_API) {
         await usePropertyTransactionsStore.getState().fetchTransactions();
-        const transactions = usePropertyTransactionsStore.getState().transactions.map(mapToSeekerDetail);
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapToSeekerDetail(pt.raw));
         set({ transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
@@ -409,10 +409,16 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
 
   makePayment: async (id) => {
     set({ isActionLoading: true });
-    if (USE_API) {
-      await apiPost(`/api/seeker/transactions/${id}/make-payment`);
-    } else {
-      await new Promise((r) => setTimeout(r, 1000));
+    try {
+      if (USE_API) {
+        // Use Paystack card charge endpoint — the documented payment method
+        await apiPost('/api/paystack/charge/card', { transactionId: id });
+      } else {
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Payment failed' });
+      return;
     }
     set((s) => {
       const tx = s.transactions.find((t) => t.id === id);
@@ -423,10 +429,17 @@ export const useSeekerTransactionsStore = create<SeekerTransactionsState>((set, 
 
   submitReview: async (id, rating, comment) => {
     set({ isActionLoading: true });
-    if (USE_API) {
-      await apiPost(`/api/seeker/transactions/${id}/submit-review`, { rating, comment });
-    } else {
-      await new Promise((r) => setTimeout(r, 800));
+    try {
+      if (USE_API) {
+        // Use confirm-completion as the closest action — reviews are submitted
+        // after the transaction completes, advancing it to the final step
+        await usePropertyTransactionsStore.getState().confirmCompletion(id);
+      } else {
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Review submission failed' });
+      return;
     }
     set((s) => {
       const tx = s.transactions.find((t) => t.id === id);

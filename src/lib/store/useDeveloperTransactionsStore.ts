@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { apiGet, apiPost } from '@/lib/api/client';
+import {
+  usePropertyTransactionsStore,
+  mapBackendTransaction,
+  type BackendPropertyTransaction,
+} from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -94,6 +99,46 @@ function buildMilestones(
     if (i === completedCount) return { ...m, status: 'active' as const };
     return m;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Adapter: BackendPropertyTransaction → DeveloperTransactionDetail
+// ---------------------------------------------------------------------------
+function mapToDeveloperDetail(t: BackendPropertyTransaction): DeveloperTransactionDetail {
+  const pt = mapBackendTransaction(t);
+  const status: DeveloperTransactionStatus =
+    pt.status === 'Cancelled' ? 'Declined' : pt.status as DeveloperTransactionStatus;
+
+  // Derive milestone progress from step
+  const completedMilestones = Math.max(0, pt.step - 1);
+  const milestones = buildMilestones(status, completedMilestones);
+  const totalMilestones = milestones.length;
+  const doneMilestones = milestones.filter(m => m.status === 'completed').length;
+
+  return {
+    id:             pt.id,
+    date:           pt.date,
+    projectName:    pt.propertyTitle,
+    unitName:       `Unit ${pt.referenceNumber.slice(-3)}`,
+    propertyType:   pt.propertyType,
+    buyerName:      pt.buyerName,
+    buyerAvatar:    pt.buyerAvatar,
+    buyerVerified:  pt.buyerVerified,
+    totalAmount:    pt.escrowAmount,
+    paidAmount:     pt.amount,
+    progress:       `${doneMilestones}/${totalMilestones} Milestones`,
+    status,
+    currentStep:    pt.step,
+    milestones,
+    escrowAmount:   pt.amount,
+    propertyPrice:  pt.escrowAmount,
+    propertyImage:  pt.propertyImage,
+    propertyLocation: `${pt.raw.listing?.city ?? ''}, ${pt.raw.listing?.state ?? ''}`.replace(/^, |, $/, ''),
+    beds:           pt.propertyBeds,
+    baths:          pt.propertyBaths,
+    sqm:            pt.propertySqm,
+    tag:            pt.propertyTag,
+  };
 }
 
 const generateMockTransactions = (): DeveloperTransactionDetail[] => [
@@ -410,8 +455,9 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transactions: DeveloperTransactionDetail[] }>('/api/property-transactions');
-        set({ transactions: data.transactions, isLoading: false });
+        await usePropertyTransactionsStore.getState().fetchTransactions();
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapToDeveloperDetail(pt.raw));
+        set({ transactions, isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 600));
         set({ transactions: generateMockTransactions(), isLoading: false });
@@ -425,8 +471,8 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
     set({ isLoading: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ transaction: DeveloperTransactionDetail }>(`/api/developer/transactions/${id}`);
-        set({ selectedTransaction: data.transaction, isLoading: false });
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        set({ selectedTransaction: mapToDeveloperDetail(raw), isLoading: false });
       } else {
         await new Promise((r) => setTimeout(r, 400));
         const { transactions } = get();
@@ -440,10 +486,15 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
 
   acceptTransaction: async (id) => {
     set({ isActionLoading: true });
-    if (USE_API) {
-      await apiPost(`/api/property-transactions/${id}/accept`);
-    } else {
-      await new Promise((r) => setTimeout(r, 800));
+    try {
+      if (USE_API) {
+        await usePropertyTransactionsStore.getState().acceptTransaction(id);
+      } else {
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Action failed' });
+      return;
     }
     set((s) => {
       if (!s.selectedTransaction) return { isActionLoading: false };
@@ -456,10 +507,15 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
 
   declineTransaction: async (id) => {
     set({ isActionLoading: true });
-    if (USE_API) {
-      await apiPost(`/api/property-transactions/${id}/decline`);
-    } else {
-      await new Promise((r) => setTimeout(r, 800));
+    try {
+      if (USE_API) {
+        await usePropertyTransactionsStore.getState().declineTransaction(id);
+      } else {
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Action failed' });
+      return;
     }
     set((s) => ({
       selectedTransaction: s.selectedTransaction ? { ...s.selectedTransaction, status: 'Declined' } : null,
@@ -470,7 +526,9 @@ export const useDeveloperTransactionsStore = create<DeveloperTransactionsState>(
   uploadMilestoneDocs: async (id, milestoneIndex) => {
     set({ isActionLoading: true });
     if (USE_API) {
-      await apiPost(`/api/developer/transactions/${id}/milestones/${milestoneIndex}/docs`);
+      // NOTE: No documented backend endpoint for milestone docs yet.
+      // Using confirm-handover as the closest progression action.
+      await usePropertyTransactionsStore.getState().confirmHandover(id);
     } else {
       await new Promise((r) => setTimeout(r, 800));
     }
