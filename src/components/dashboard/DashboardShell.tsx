@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import TopNavBar from '@/components/dashboard/TopNavBar';
+import AddAccountModal from '@/components/dashboard/agent/settings/AddAccountModal';
 
 /**
  * Shared layout shell for all role dashboards.
@@ -22,6 +23,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      <AddAccountModal />
     </div>
   );
 }

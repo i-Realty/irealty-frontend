@@ -278,13 +278,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     let target = get().accounts.find(a => a.id === accountId);
 
     // In API mode the real user's UUID won't exist in mock accounts.
-    // Create an entry from the current auth user so the rest of the
-    // settings store works (profile tab, account switcher, etc.).
+    // Reset the accounts list to ONLY the current user — this clears
+    // stale entries from previous logins on the same device.
+    // fetchAccounts() will add linked accounts afterwards.
     if (!target && USE_API) {
       const authUser = useAuthStore.getState().user;
       if (authUser && authUser.id === accountId) {
         target = { id: authUser.id, role: authUser.role as AccountRole, name: authUser.displayName || authUser.name, email: authUser.email };
-        set({ accounts: [target, ...get().accounts.filter(a => a.id !== accountId)] });
+        set({ accounts: [target] });
       }
     }
 
@@ -392,13 +393,25 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     if (!USE_API) return; // mock mode keeps the static MOCK_ACCOUNTS list
     try {
       const data = await apiGet<BackendUser[]>('/api/auth/linked-accounts');
-      const accounts: AccountInfo[] = (Array.isArray(data) ? data : []).map(u => ({
+      const linked: AccountInfo[] = (Array.isArray(data) ? data : []).map(u => ({
         id:    u.id,
         role:  mapRole(u.roles?.[0] ?? '') as AccountRole,
         name:  u.displayName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || 'User',
         email: u.email,
       }));
-      if (accounts.length > 0) set({ accounts });
+      // Ensure the current user is always in the list even if the
+      // backend's linked-accounts endpoint doesn't include them.
+      const currentUser = useAuthStore.getState().user;
+      const currentId = currentUser?.id;
+      if (currentId && !linked.some(a => a.id === currentId)) {
+        linked.unshift({
+          id: currentId,
+          role: currentUser.role as AccountRole,
+          name: currentUser.displayName || currentUser.name,
+          email: currentUser.email,
+        });
+      }
+      set({ accounts: linked });
     } catch {
       // Non-critical — keep existing accounts list on failure
     }
