@@ -54,17 +54,28 @@ export default function StepPersonalInformation() {
         };
         const mm = monthMap[formData.dobMonth] ?? formData.dobMonth;
         const dd = formData.dobDay.padStart(2, '0');
+        const dob = `${formData.dobYear}-${mm}-${dd}`;
+
+        // Step 1: Verify BVN against external records
+        await apiPost('/api/verifications/bvn', {
+          bvn:         formData.bvn,
+          firstName:   formData.firstName,
+          lastName:    formData.lastName,
+          dateOfBirth: dob,
+        });
+
+        // Step 2: Submit personal info to KYC flow
         await apiPost('/api/kyc/personal-info', {
           bvn:         formData.bvn,
           firstName:   formData.firstName,
           lastName:    formData.lastName,
-          dateOfBirth: `${formData.dobYear}-${mm}-${dd}`,
+          dateOfBirth: dob,
           address:     formData.address,
           postCode:    formData.postCode,
           city:        formData.city,
         });
       } catch (err) {
-        setApiError(err instanceof Error ? err.message : 'Failed to submit. Please try again.');
+        setApiError(err instanceof Error ? err.message : 'Verification failed. Please check your details and try again.');
         setSubmitting(false);
         return;
       }

@@ -35,15 +35,22 @@ export default function StepIDVerification() {
     if (USE_API) {
       setSubmitting(true);
       try {
-        await apiPost('/api/kyc/id-verification', {
-          idType:  ID_TYPE_BACKEND[idType] ?? idType,
+        const backendIdType = ID_TYPE_BACKEND[idType] ?? idType;
+
+        // Step 1: Verify ID against external records
+        await apiPost('/api/verifications/id', {
+          idType:   backendIdType,
           idNumber,
-          // file is binary — send as base64 when file upload endpoint exists
-          // For now submit without file if not available
+        });
+
+        // Step 2: Submit ID to KYC flow (with file if available)
+        await apiPost('/api/kyc/id-verification', {
+          idType:  backendIdType,
+          idNumber,
           ...(fileData ? { file: fileData } : {}),
         });
       } catch (err) {
-        setApiError(err instanceof Error ? err.message : 'Failed to submit ID. Please try again.');
+        setApiError(err instanceof Error ? err.message : 'ID verification failed. Please check your details and try again.');
         setSubmitting(false);
         return;
       }
