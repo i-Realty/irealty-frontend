@@ -6,6 +6,9 @@ import Image from 'next/image';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import { validatePassword } from '@/lib/utils/authValidation';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 function ResetSuccessContent() {
   const router = useRouter();
@@ -28,28 +31,32 @@ function ResetSuccessContent() {
     return null;
   }
 
-  function handleSavePassword(e: React.FormEvent) {
+  async function handleSavePassword(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
     const pwdErr = validatePassword(password);
-    if (pwdErr) {
-      setError(pwdErr);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+    if (pwdErr) { setError(pwdErr); return; }
+    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
 
     setLoading(true);
-
-    // Simulate saving new password to backend
-    setTimeout(() => {
+    try {
+      if (USE_API) {
+        // PATCH /api/auth/reset-password — verifies code + sets new password
+        await apiPost('/api/auth/reset-password', {
+          email,
+          code,
+          password,
+        });
+      } else {
+        await new Promise(r => setTimeout(r, 800));
+      }
       setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   }
 
   // IF SUCCESS: Show the final success confirmation

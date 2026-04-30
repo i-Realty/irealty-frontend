@@ -6,6 +6,9 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { validateOtp } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
+import { apiPost } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 function ResetVerifyContent() {
   const router = useRouter();
@@ -18,7 +21,7 @@ function ResetVerifyContent() {
   const [error, setError] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
 
-  function handleResend() {
+  async function handleResend() {
     if (resendCountdown > 0) return;
     setResendCountdown(30);
     const interval = setInterval(() => {
@@ -27,19 +30,28 @@ function ResetVerifyContent() {
         return prev - 1;
       });
     }, 1000);
-    // TODO: replace with real API call to resend reset OTP
+    if (USE_API) {
+      try {
+        await apiPost('/api/auth/forgot-password', { email });
+      } catch {
+        // Silent — countdown still shown
+      }
+    }
   }
 
-  function handleVerify() {
+  async function handleVerify() {
     const otpErr = validateOtp(code);
     if (otpErr) { setError(otpErr); return; }
     setError('');
     setLoading(true);
-
-    // Simulate validation
-    setTimeout(() => {
+    // Code is passed to the new-password page which sends it alongside the new password.
+    // No separate verify-only endpoint assumed — the PATCH /auth/reset-password validates it.
+    try {
+      await new Promise(r => setTimeout(r, USE_API ? 0 : 600));
       router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
-    }, 600);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Guard: require email in URL param

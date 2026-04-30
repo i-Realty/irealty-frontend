@@ -6,6 +6,9 @@ import Link from 'next/link';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { validateEmail, validateRequired } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
+import { apiPost, ApiError } from '@/lib/api/client';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -16,23 +19,30 @@ export default function ResetPassword() {
 
   const canSubmit = email.trim() !== '' && !loading;
 
-  function handleReset(e: React.FormEvent) {
+  async function handleReset(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
     const emailErr = validateEmail(email) || validateRequired(email, 'Email address');
-    if (emailErr) {
-      setError(emailErr);
-      return;
-    }
+    if (emailErr) { setError(emailErr); return; }
 
     setLoading(true);
-
-    // Simulate API request
-    setTimeout(() => {
-      // Pass the email to the next view so we don't need another store for this 3-step feature
-      router.push(`/auth/reset/verify?email=${encodeURIComponent(email)}`);
-    }, 600);
+    try {
+      if (USE_API) {
+        await apiPost('/api/auth/forgot-password', { email: email.trim().toLowerCase() });
+      } else {
+        await new Promise(r => setTimeout(r, 600));
+      }
+      router.push(`/auth/reset/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setError('No account found with this email address.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to send reset code. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
