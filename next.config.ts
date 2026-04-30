@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const BACKEND_ORIGIN = process.env.BACKEND_API_ORIGIN ?? 'https://staging-api.i-realty.app';
+const BACKEND_ORIGIN = process.env.BACKEND_API_ORIGIN ?? 'https://api.i-realty.app';
 
 const nextConfig: NextConfig = {
   distDir: "dist",
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'staging-api.i-realty.app',
+        hostname: 'api.i-realty.app',
       },
     ],
   },
