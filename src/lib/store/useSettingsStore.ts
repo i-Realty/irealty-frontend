@@ -557,22 +557,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
-      const { profile, activeAccount, mainAccountId } = get();
-      const fullName = `${profile.firstName} ${profile.lastName}`.trim();
-      const displayName = profile.displayName || fullName || activeAccount.name;
-
-      // Sync name into the auth store
-      useAuthStore.getState().updateUser({ displayName, name: fullName || displayName });
-
-      // Update the active account. If this is the main account, propagate
-      // the new name to ALL linked accounts (they share the main's identity).
-      const isMain = activeAccount.id === mainAccountId;
+      const { profile, activeAccount } = get();
+      const displayName = profile.displayName;
+      // Sync the display name into the auth user and the accounts switcher list
+      useAuthStore.getState().updateUser({ displayName, name: displayName });
       set((state) => ({
         isSaving: false,
         activeAccount: { ...state.activeAccount, name: displayName },
-        accounts: state.accounts.map(a =>
-          a.id === activeAccount.id || isMain ? { ...a, name: displayName } : a
-        ),
+        accounts: state.accounts.map(a => a.id === activeAccount.id ? { ...a, name: displayName } : a),
       }));
     } catch (err) {
       set({ isSaving: false, error: err instanceof Error ? err.message : 'Failed to save profile' });
