@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { apiPost } from '@/lib/api/client';
+import { disconnectPusher } from '@/lib/services/pusher';
+
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export type UserRole = 'Agent' | 'Property Seeker' | 'Developer' | 'Landlord' | 'Diaspora' | 'Admin';
 export type AccountStatus = 'active' | 'suspended' | 'deactivated';
@@ -80,6 +84,12 @@ export const useAuthStore = create<AuthState>()(
         })),
 
       logout: () => {
+        // Invalidate the token on the backend (fire-and-forget)
+        if (USE_API) {
+          apiPost('/api/auth/logout').catch(() => {});
+        }
+        // Disconnect real-time channels
+        disconnectPusher();
         clearSessionCookie();
         set({ isLoggedIn: false, user: null, token: null, refreshToken: null });
       },

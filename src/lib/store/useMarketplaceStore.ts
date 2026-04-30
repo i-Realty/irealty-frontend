@@ -62,9 +62,14 @@ interface MarketplaceStore {
   totalCount: number;
   currentPage: number;
 
+  // Amenities cache (keyed by backend property type)
+  amenitiesCache: Record<string, string[]>;
+  isLoadingAmenities: boolean;
+
   fetchListings: (filters?: MarketplaceFilters) => Promise<void>;
   fetchListing: (id: string) => Promise<MarketplaceListing | null>;
   getListing: (id: string) => MarketplaceListing | undefined;
+  fetchAmenities: (propertyType: string) => Promise<string[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,12 +159,24 @@ function buildQueryString(filters: MarketplaceFilters): string {
 // ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
+// Map frontend property type labels → backend enum for amenities endpoint
+const AMENITY_TYPE_TO_BACKEND: Record<string, string> = {
+  Residential: 'RESIDENTIAL',
+  Commercial: 'COMMERCIAL',
+  'Plots/Lands': 'LAND',
+  'Service Apartments & Short Lets': 'SHORT_LET',
+  'PG/Hostel': 'PG_HOSTEL',
+};
+
 export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
   listings:    [],
   isLoading:   false,
   error:       null,
   totalCount:  0,
   currentPage: 1,
+
+  amenitiesCache: {},
+  isLoadingAmenities: false,
 
   fetchListings: async (filters = {}) => {
     if (!USE_API) return; // mock mode — pages use standardProperties directly
@@ -202,4 +219,31 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
   },
 
   getListing: (id) => get().listings.find(l => l.id === id),
+
+  fetchAmenities: async (propertyType) => {
+    const backendType = AMENITY_TYPE_TO_BACKEND[propertyType] ?? propertyType;
+    // Return cached result if available
+    const cached = get().amenitiesCache[backendType];
+    if (cached) return cached;
+
+    if (!USE_API) return [];
+
+    set({ isLoadingAmenities: true });
+    try {
+      const raw = await apiGet<unknown>(`/api/marketplace/amenities/${backendType}`);
+      const amenities: string[] = Array.isArray(raw)
+        ? raw.map(String)
+        : Array.isArray((raw as Record<string, unknown>)?.amenities)
+          ? ((raw as Record<string, unknown[]>).amenities as string[])
+          : [];
+      set((s) => ({
+        amenitiesCache: { ...s.amenitiesCache, [backendType]: amenities },
+        isLoadingAmenities: false,
+      }));
+      return amenities;
+    } catch {
+      set({ isLoadingAmenities: false });
+      return [];
+    }
+  },
 }));

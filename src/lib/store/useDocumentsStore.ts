@@ -71,6 +71,7 @@ interface DocumentsStore {
 
   // API-ready async methods
   fetchDocumentsList: () => Promise<void>;
+  fetchDocumentById: (id: string) => Promise<DocumentItem | null>;
   createDocument: () => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
 
@@ -176,6 +177,16 @@ export const useDocumentsStore = create<DocumentsStore>((set, get) => ({
       }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load documents', isLoadingList: false });
+    }
+  },
+
+  fetchDocumentById: async (id) => {
+    if (!USE_API) return null;
+    try {
+      const raw = await apiGet<BackendDocument>(`/api/documents/${id}`);
+      return mapDocument(raw);
+    } catch {
+      return null;
     }
   },
 

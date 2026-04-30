@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useCreatePropertyStore } from '@/lib/store/useCreatePropertyStore';
+import { useMarketplaceStore } from '@/lib/store/useMarketplaceStore';
 import { X } from 'lucide-react';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 
@@ -10,8 +12,8 @@ const AMENITIES_MAP: Record<string, string[]> = {
     'Swimming Pool', 'Gym Facility', 'Balcony', 'Boys Quarters'
   ],
   'Commercial': [
-    'Office Rooms / Workspaces', 'Conference Room', 'Reception Area', 
-    'Storage / Warehouse Space', 'Parking Space (Staff & Visitors)', 
+    'Office Rooms / Workspaces', 'Conference Room', 'Reception Area',
+    'Storage / Warehouse Space', 'Parking Space (Staff & Visitors)',
     'Security Access / CCTV', 'Elevator / Escalator', 'Power Backup (Inverter / Generator)',
     'Internet & Networking Infrastructure', 'Fire Safety (Alarms, Extinguishers)',
     'Air Conditioning / Ventilation', 'Loading Bay / Delivery Access', 'Restrooms'
@@ -39,10 +41,23 @@ const AMENITIES_MAP: Record<string, string[]> = {
 export default function AmenitiesModal({ onClose }: { onClose: () => void }) {
   useEscapeKey(onClose);
   const { propertyType, amenities, addAmenity, removeAmenity } = useCreatePropertyStore();
-  
-  const options = propertyType && AMENITIES_MAP[propertyType] 
-    ? AMENITIES_MAP[propertyType] 
+  const fetchAmenities = useMarketplaceStore((s) => s.fetchAmenities);
+  const [apiAmenities, setApiAmenities] = useState<string[] | null>(null);
+
+  // Try fetching amenities from the backend; fall back to local map on failure
+  useEffect(() => {
+    if (!propertyType) return;
+    let cancelled = false;
+    fetchAmenities(propertyType).then((result) => {
+      if (!cancelled && result.length > 0) setApiAmenities(result);
+    });
+    return () => { cancelled = true; };
+  }, [propertyType, fetchAmenities]);
+
+  const localOptions = propertyType && AMENITIES_MAP[propertyType]
+    ? AMENITIES_MAP[propertyType]
     : AMENITIES_MAP['fallback'];
+  const options = apiAmenities ?? localOptions;
 
   return (
     <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Select amenities">

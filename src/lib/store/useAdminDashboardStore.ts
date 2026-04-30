@@ -223,7 +223,10 @@ interface AdminDashboardState {
   approveKyc: (userId: string) => Promise<void>;
   rejectKyc: (userId: string, reason: string) => Promise<void>;
   suspendUser: (userId: string) => Promise<void>;
+  revokeUser: (userId: string, reason: string) => Promise<void>;
   reactivateUser: (userId: string) => Promise<void>;
+  suspendAdmin: (adminId: string, reason: string) => Promise<void>;
+  revokeAdmin: (adminId: string, reason: string) => Promise<void>;
   fetchProperties: () => Promise<void>;
   approveProperty: (id: string) => Promise<void>;
   rejectProperty: (id: string, reason: string) => Promise<void>;
@@ -249,6 +252,8 @@ interface AdminDashboardState {
   rejectKycMock: (userId: string, reason?: string) => Promise<void>;
   /** @deprecated Use suspendUser() */
   suspendUserMock: (userId: string) => Promise<void>;
+  /** @deprecated Use revokeUser() */
+  revokeUserMock: (userId: string, reason?: string) => Promise<void>;
   /** @deprecated Use reactivateUser() */
   reactivateUserMock: (userId: string) => Promise<void>;
   /** @deprecated Use fetchProperties() */
@@ -674,6 +679,80 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     );
   },
 
+  revokeUser: async (userId, reason) => {
+    set({ isActionLoading: true });
+    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    try {
+      if (USE_API) {
+        await apiPatch(`/api/admin/users/${userId}/revoke`, { reason });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to revoke user' });
+      return;
+    }
+    set((s) => ({
+      selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'suspended' } : s.selectedUser,
+      users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'suspended' as const } : u),
+      isActionLoading: false,
+    }));
+    useNotificationStore.getState().emit(
+      'system',
+      'Account revoked',
+      `Account for ${user?.name ?? 'user'} has been permanently revoked: ${reason}`,
+      '/dashboard/admin/users'
+    );
+  },
+
+  suspendAdmin: async (adminId, reason) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) {
+        await apiPatch(`/api/admin/admins/${adminId}/suspend`, { reason });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to suspend admin' });
+      return;
+    }
+    set((s) => ({
+      users: s.users.map((u) => u.id === adminId ? { ...u, accountStatus: 'suspended' as const } : u),
+      isActionLoading: false,
+    }));
+    useNotificationStore.getState().emit(
+      'system',
+      'Admin suspended',
+      `Admin account has been suspended: ${reason}`,
+      '/dashboard/admin/users'
+    );
+  },
+
+  revokeAdmin: async (adminId, reason) => {
+    set({ isActionLoading: true });
+    try {
+      if (USE_API) {
+        await apiPatch(`/api/admin/admins/${adminId}/revoke`, { reason });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to revoke admin' });
+      return;
+    }
+    set((s) => ({
+      users: s.users.map((u) => u.id === adminId ? { ...u, accountStatus: 'suspended' as const } : u),
+      isActionLoading: false,
+    }));
+    useNotificationStore.getState().emit(
+      'system',
+      'Admin revoked',
+      `Admin account has been permanently revoked: ${reason}`,
+      '/dashboard/admin/users'
+    );
+  },
+
   // ── Properties ──────────────────────────────────────────────────────
 
   fetchProperties: async () => {
@@ -912,6 +991,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   approveKycMock: async (userId) => get().approveKyc(userId),
   rejectKycMock: async (userId, reason) => get().rejectKyc(userId, reason ?? 'Rejected by admin'),
   suspendUserMock: async (userId) => get().suspendUser(userId),
+  revokeUserMock: async (userId, reason) => get().revokeUser(userId, reason ?? 'Revoked by admin'),
   reactivateUserMock: async (userId) => get().reactivateUser(userId),
   fetchPropertiesMock: async () => get().fetchProperties(),
   approvePropertyMock: async (id) => get().approveProperty(id),

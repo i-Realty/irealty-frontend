@@ -227,6 +227,17 @@ interface AgentPropertiesState {
   getPropertyById: (id: string) => AgentProperty | undefined;
   updateProperty: (prop: AgentProperty) => Promise<void>;
 
+  // Image management
+  deleteImage: (listingId: string, imageId: string) => Promise<void>;
+
+  // Inspection fee
+  getInspectionFee: (listingId: string) => Promise<{ amount: number; currency: string } | null>;
+  updateInspectionFee: (listingId: string, amount: number) => Promise<void>;
+
+  // Sharing & reporting
+  getShareLink: (listingId: string) => Promise<string | null>;
+  reportListing: (listingId: string, reason: string) => Promise<void>;
+
   /** @deprecated Use addProperty() */
   addPropertyLocally: (prop: AgentProperty) => void;
   /** @deprecated Use updateProperty() */
@@ -353,6 +364,50 @@ export const useAgentPropertiesStore = create<AgentPropertiesState>((set, get) =
       activeFilter: 'All',
       page: 1,
     }));
+  },
+
+  deleteImage: async (listingId, imageId) => {
+    if (USE_API) {
+      await apiDelete(`/api/listings/images/${imageId}`);
+    }
+    // Remove the image URL from the local property's media array
+    set((s) => ({
+      properties: s.properties.map((p) => {
+        if (p.id !== listingId) return p;
+        return { ...p, media: p.media.filter((_, i) => `img_${i}` !== imageId && _ !== imageId) };
+      }),
+    }));
+  },
+
+  getInspectionFee: async (listingId) => {
+    if (!USE_API) return null;
+    try {
+      return await apiGet<{ amount: number; currency: string }>(`/api/listings/${listingId}/inspection-fee`);
+    } catch {
+      return null;
+    }
+  },
+
+  updateInspectionFee: async (listingId, amount) => {
+    if (USE_API) {
+      await apiPatch(`/api/listings/${listingId}/inspection-fee`, { amount });
+    }
+  },
+
+  getShareLink: async (listingId) => {
+    if (!USE_API) return null;
+    try {
+      const data = await apiGet<{ url?: string; link?: string }>(`/api/listings/${listingId}/share-link`);
+      return data.url ?? data.link ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+  reportListing: async (listingId, reason) => {
+    if (USE_API) {
+      await apiPost(`/api/listings/${listingId}/report`, { reason });
+    }
   },
 
   // Backward-compatible aliases
