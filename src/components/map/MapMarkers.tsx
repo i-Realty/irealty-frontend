@@ -210,7 +210,7 @@ export default function MapMarkers({
     const age = p.listedAt ? daysSince(p.listedAt) : null;
     const isNew    = age !== null && age <= 7;
     const isStale  = age !== null && age > 90;
-    const liked    = likedIds.has(p.id);
+    const liked    = likedIds.has(String(p.id));
     const isViewed = recentlyViewed.includes(p.id);
     const colors   = categoryColor(p.category);
 
@@ -273,7 +273,7 @@ export default function MapMarkers({
         // Update heart icon immediately
         const btn = el.querySelector(`#popup-heart-${id}`);
         if (btn) {
-          const nowLiked = !likedIds.has(id);
+          const nowLiked = !likedIds.has(String(id));
           btn.innerHTML = nowLiked ? "❤️" : "🤍";
           (btn as HTMLElement).style.background = nowLiked ? "#FEF2F2" : "#f9fafb";
           (btn as HTMLElement).style.color = nowLiked ? "#EF4444" : "#6b7280";
@@ -344,7 +344,7 @@ export default function MapMarkers({
 
     // Check cache for landmarks first — show skeleton if not cached
     const cached = getCachedLandmarks(p.id);
-    const initialHTML = buildPopupHTML(p, likedIds.has(p.id), cached ?? [], listingHrefPrefix, !cached);
+    const initialHTML = buildPopupHTML(p, likedIds.has(String(p.id)), cached ?? [], listingHrefPrefix, !cached);
 
     const popup = new mapboxgl.Popup({ offset: 20, closeOnClick: true, maxWidth: "320px" })
       .setLngLat([p.lng, p.lat])

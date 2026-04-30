@@ -28,7 +28,7 @@ export default function SeekerFavoritesPage() {
   // When backend is integrated (NEXT_PUBLIC_USE_API=true), replace with GET /api/seeker/favorites
   const allProperties = useMemo(() => [...standardProperties, ...developerProperties], []);
   const likedProperties = useMemo(
-    () => allProperties.filter((p) => likedIds.has(p.id)),
+    () => allProperties.filter((p) => likedIds.has(String(p.id))),
     [likedIds, allProperties]
   );
 

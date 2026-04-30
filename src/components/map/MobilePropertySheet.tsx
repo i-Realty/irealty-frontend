@@ -76,7 +76,7 @@ export default function MobilePropertySheet({
 
   if (!property) return null;
 
-  const liked = likedIds.has(property.id);
+  const liked = likedIds.has(String(property.id));
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`;
 
   return (

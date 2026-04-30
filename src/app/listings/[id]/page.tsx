@@ -42,7 +42,7 @@ export default function PropertyDetails() {
   const propId = id;
 
   const { likedIds, toggleLike: toggleStoreLike } = useFavouritesStore();
-  const liked = likedIds.has(propId);
+  const liked = likedIds.has(String(propId));
   const modals = usePropertyModals();
 
   if (!prop) {

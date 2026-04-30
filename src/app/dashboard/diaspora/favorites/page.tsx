@@ -25,7 +25,7 @@ export default function DiasporaFavoritesPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const likedProperties = useMemo(
-    () => standardProperties.filter((p) => likedIds.has(p.id)),
+    () => standardProperties.filter((p) => likedIds.has(String(p.id))),
     [likedIds]
   );
 

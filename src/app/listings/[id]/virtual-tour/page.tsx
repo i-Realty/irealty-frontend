@@ -57,7 +57,7 @@ function VirtualTourContent() {
   const router = useRouter();
   const pid = typeof window !== 'undefined' ? Number(window.location.pathname.split('/')[2]) : 0;
   const { likedIds, toggleLike } = useFavouritesStore();
-  const fav = likedIds.has(pid);
+  const fav = likedIds.has(String(pid));
 
   function close() {
     try { router.back(); } catch { router.push('/listings'); }

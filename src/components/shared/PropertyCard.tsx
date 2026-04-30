@@ -26,7 +26,7 @@ type Props = {
 export default function PropertyCard({ property: p, href }: Props) {
   const { likedIds, toggleLike } = useFavouritesStore();
   const { hasItem, toggleItem } = useComparisonStore();
-  const isLiked = likedIds.has(p.id);
+  const isLiked = likedIds.has(String(p.id));
   const isComparing = hasItem(p.id);
   const isForSale = p.tag?.toLowerCase().includes("sale");
   const linkHref = href ?? `/listings/${p.id}`;
