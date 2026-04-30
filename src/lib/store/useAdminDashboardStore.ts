@@ -1,9 +1,15 @@
 import { create } from 'zustand';
-import { apiGet, apiPost } from '@/lib/api/client';
+import { apiGet, apiPost, apiPatch } from '@/lib/api/client';
 import type { UserRole } from './useAuthStore';
+import { mapRole, mapKycStatus, mapAccountStatus, formatDate } from '@/lib/api/adapters';
 import { useNotificationStore } from './useNotificationStore';
 import { usePropertyStore } from './usePropertyStore';
 import { useTransactionLedger } from './useTransactionLedger';
+import {
+  usePropertyTransactionsStore,
+  mapBackendTransaction,
+  type BackendPropertyTransaction,
+} from './usePropertyTransactionsStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -269,6 +275,79 @@ interface AdminDashboardState {
   refundTransactionMock: (id: string) => Promise<void>;
 }
 
+// ── Backend → Frontend Adapters ──────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendUser(u: Record<string, any>): AdminUser {
+  const name = u.displayName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.username || 'User';
+  return {
+    id:                u.id,
+    name,
+    email:             u.email ?? '',
+    role:              mapRole(u.roles?.[0] ?? ''),
+    kycStatus:         mapKycStatus(u.verificationStatus ?? ''),
+    joinDate:          u.createdAt ? formatDate(u.createdAt) : '',
+    accountStatus:     (!u.isActive || u.verificationStatus === 'SUSPENDED') ? 'suspended' : 'active',
+    totalListings:     u.totalListings ?? 0,
+    totalTransactions: u.totalTransactions ?? 0,
+  };
+}
+
+const ONBOARDING_STEP_MAP: Record<string, number> = {
+  PERSONAL_INFO: 20, PHONE_VERIFICATION: 40, ID_VERIFICATION: 60, LIVENESS: 80, PAYMENT: 90, COMPLETE: 100,
+};
+const ONBOARDING_STEP_DOCS: Record<string, { step: string; status: 'submitted' | 'verified' | 'pending' }> = {
+  PERSONAL_INFO:      { step: 'Personal Information (BVN)', status: 'pending' },
+  PHONE_VERIFICATION: { step: 'Phone Verification',        status: 'pending' },
+  ID_VERIFICATION:    { step: 'ID Verification',           status: 'pending' },
+  LIVENESS:           { step: 'Face Match',                status: 'pending' },
+  PAYMENT:            { step: 'Payment Details',           status: 'pending' },
+  COMPLETE:           { step: 'Payment Details',           status: 'verified' },
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendUserDetail(u: Record<string, any>, recentTx: AdminTransaction[]): AdminUserDetail {
+  const base = mapBackendUser(u);
+  const step = u.onboardingStep ?? 'PERSONAL_INFO';
+  const stepOrder = ['PERSONAL_INFO', 'PHONE_VERIFICATION', 'ID_VERIFICATION', 'LIVENESS', 'PAYMENT', 'COMPLETE'];
+  const currentIdx = stepOrder.indexOf(step);
+
+  const kycDocuments: KycDocument[] = [
+    { step: 'Personal Information (BVN)', status: currentIdx >= 1 ? 'verified' : (currentIdx === 0 ? 'submitted' : 'pending') },
+    { step: 'Phone Verification',        status: currentIdx >= 2 ? 'verified' : (currentIdx === 1 ? 'submitted' : 'pending') },
+    { step: 'ID Verification',           status: currentIdx >= 3 ? 'verified' : (currentIdx === 2 ? 'submitted' : 'pending'), data: u.idNumber ? `${u.idType ?? 'ID'} - ${u.idNumber}` : undefined },
+    { step: 'Face Match',                status: currentIdx >= 4 ? 'verified' : (currentIdx === 3 ? 'submitted' : 'pending') },
+    { step: 'Payment Details',           status: currentIdx >= 5 ? 'verified' : (currentIdx === 4 ? 'submitted' : 'pending') },
+  ];
+
+  return {
+    ...base,
+    avatarUrl:          u.avatarUrl ?? '/images/demo-avatar.jpg',
+    phone:              u.phoneNumber ?? '',
+    kycProgress:        ONBOARDING_STEP_MAP[step] ?? 0,
+    kycDocuments,
+    recentTransactions: recentTx,
+    lastLogin:          u.updatedAt ? formatDate(u.updatedAt) : '',
+  };
+}
+
+function mapBackendTxToAdmin(t: BackendPropertyTransaction): AdminTransaction {
+  const pt = mapBackendTransaction(t);
+  const typeMap: Record<string, TransactionType> = {
+    inspection: 'Inspection', sale: 'Sale', rental: 'Rental',
+  };
+  return {
+    id:         pt.id,
+    date:       pt.date,
+    type:       typeMap[pt.type] ?? 'Inspection',
+    partyA:     pt.buyerName,
+    partyB:     pt.sellerName,
+    amount:     pt.amount || pt.escrowAmount,
+    irealtyFee: 0,
+    status:     pt.status === 'Cancelled' ? 'Declined' : pt.status as TransactionStatus,
+  };
+}
+
 // ── Mock Data ─────────────────────────────────────────────────────────
 
 const MOCK_USERS: AdminUser[] = [
@@ -434,8 +513,24 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   fetchUsers: async () => {
     set({ isLoading: true, error: null });
     if (USE_API) {
-      try { const d = await apiGet<{ users: AdminUser[] }>('/api/admin/users'); set({ users: d.users, isLoading: false }); return; }
-      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+      try {
+        const { userFilters } = get();
+        const params = new URLSearchParams();
+        if (userFilters.role !== 'all') params.set('role', userFilters.role);
+        if (userFilters.accountStatus !== 'all') params.set('status', userFilters.accountStatus);
+        if (userFilters.search) params.set('search', userFilters.search);
+        params.set('page', String(userFilters.page));
+        params.set('limit', '20');
+        const raw = await apiGet<unknown>(`/api/admin/users?${params}`);
+        // Handle both flat array and { items/data/users: [...] } response shapes
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const list: Record<string, any>[] = Array.isArray(raw) ? raw
+          : Array.isArray((raw as Record<string, unknown>)?.items) ? (raw as Record<string, unknown[]>).items as Record<string, unknown>[]
+          : Array.isArray((raw as Record<string, unknown>)?.users) ? (raw as Record<string, unknown[]>).users as Record<string, unknown>[]
+          : [];
+        set({ users: list.map(mapBackendUser), isLoading: false });
+        return;
+      } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
     }
     await new Promise((r) => setTimeout(r, 500));
     set({ users: MOCK_USERS, isLoading: false });
@@ -443,6 +538,27 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   fetchUserById: async (id) => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = await apiGet<Record<string, any>>(`/api/admin/users/${id}`);
+        // Fetch recent transactions for this user from the property-transactions endpoint
+        let recentTx: AdminTransaction[] = [];
+        try {
+          const txRaw = await apiGet<BackendPropertyTransaction[]>('/api/property-transactions');
+          const txList = Array.isArray(txRaw) ? txRaw : [];
+          recentTx = txList
+            .filter(t => t.buyerId === id || t.sellerId === id)
+            .slice(0, 5)
+            .map(mapBackendTxToAdmin);
+        } catch { /* non-critical */ }
+        set({ selectedUser: mapBackendUserDetail(raw, recentTx), isLoading: false });
+        return;
+      } catch (err) {
+        set({ error: err instanceof Error ? err.message : 'Failed to load user', isLoading: false });
+        return;
+      }
+    }
     await new Promise((r) => setTimeout(r, 400));
     const user = MOCK_USERS.find((u) => u.id === id) ?? MOCK_USERS[0];
     set({
@@ -506,8 +622,18 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   suspendUser: async (userId) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
     const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    try {
+      if (USE_API) {
+        // apidocs: PATCH /api/v1/admin/users/{id}/suspend with { reason }
+        await apiPatch(`/api/admin/users/${userId}/suspend`, { reason: 'Suspended by admin' });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to suspend user' });
+      return;
+    }
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'suspended' } : s.selectedUser,
       users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'suspended' as const } : u),
@@ -523,8 +649,18 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   reactivateUser: async (userId) => {
     set({ isActionLoading: true });
-    await new Promise((r) => setTimeout(r, 600));
     const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    try {
+      if (USE_API) {
+        // apidocs: PATCH /api/v1/admin/users/{id}/reactivate
+        await apiPatch(`/api/admin/users/${userId}/reactivate`);
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to reactivate user' });
+      return;
+    }
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId ? { ...s.selectedUser, accountStatus: 'active' } : s.selectedUser,
       users: s.users.map((u) => u.id === userId ? { ...u, accountStatus: 'active' as const } : u),
@@ -586,8 +722,13 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   fetchTransactions: async () => {
     set({ isLoading: true, error: null });
     if (USE_API) {
-      try { const d = await apiGet<{ transactions: AdminTransaction[] }>('/api/admin/transactions'); set({ transactions: d.transactions, isLoading: false }); return; }
-      catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
+      try {
+        // Use the documented GET /api/property-transactions endpoint
+        await usePropertyTransactionsStore.getState().fetchTransactions();
+        const transactions = usePropertyTransactionsStore.getState().transactions.map(pt => mapBackendTxToAdmin(pt.raw));
+        set({ transactions, isLoading: false });
+        return;
+      } catch (err) { set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false }); return; }
     }
     await new Promise((r) => setTimeout(r, 500));
     set({ transactions: MOCK_TRANSACTIONS, isLoading: false });
@@ -595,6 +736,33 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   fetchTransactionById: async (id) => {
     set({ isLoading: true, error: null });
+    if (USE_API) {
+      try {
+        const raw = await apiGet<BackendPropertyTransaction>(`/api/property-transactions/${id}`);
+        const pt = mapBackendTransaction(raw);
+        const tx = mapBackendTxToAdmin(raw);
+        set({
+          selectedTransaction: {
+            ...tx,
+            escrowAmount: pt.escrowAmount,
+            netToParties: pt.amount,
+            partyAAvatar: pt.buyerAvatar,
+            partyBAvatar: pt.sellerAvatar,
+            auditLog: [
+              { timestamp: formatDate(raw.createdAt), action: 'Transaction created', by: 'System' },
+              ...(raw.acceptedAt ? [{ timestamp: formatDate(raw.acceptedAt), action: 'Transaction accepted', by: pt.sellerName }] : []),
+              ...(raw.declinedAt ? [{ timestamp: formatDate(raw.declinedAt), action: 'Transaction declined', by: pt.sellerName }] : []),
+              ...(raw.completedAt ? [{ timestamp: formatDate(raw.completedAt), action: 'Transaction completed', by: 'System' }] : []),
+            ],
+          },
+          isLoading: false,
+        });
+        return;
+      } catch (err) {
+        set({ error: err instanceof Error ? err.message : 'Failed', isLoading: false });
+        return;
+      }
+    }
     await new Promise((r) => setTimeout(r, 400));
     const tx = MOCK_TRANSACTIONS.find((t) => t.id === id) ?? MOCK_TRANSACTIONS[0];
     set({
