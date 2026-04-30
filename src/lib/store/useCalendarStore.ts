@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { apiGet, apiPost } from '@/lib/api/client';
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from '@/lib/api/client';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -24,6 +24,55 @@ export type AvailabilityPayload = {
   time: string;
 };
 
+// ---------------------------------------------------------------------------
+// BACKEND TYPES (from apidocs.md)
+// ---------------------------------------------------------------------------
+interface BackendCalendarEvent {
+  id: string;
+  userId: string;
+  title: string;
+  startAt: string;
+  endAt: string;
+  listingId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listing?: Record<string, any>;
+  eventType: 'INSPECTION' | 'TOUR' | 'MEETING' | 'OTHER';
+  description?: string;
+  createdAt: string;
+}
+
+interface BackendAvailabilitySlot {
+  id: string;
+  dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  startTime: string;
+  endTime: string;
+}
+
+// ---------------------------------------------------------------------------
+// ADAPTERS
+// ---------------------------------------------------------------------------
+const EVENT_TYPE_MAP: Record<string, CalendarEventType> = {
+  INSPECTION: 'Inspection', TOUR: 'Tour', MEETING: 'Meeting', OTHER: 'Other',
+};
+const EVENT_TYPE_TO_BACKEND: Record<string, string> = {
+  Inspection: 'INSPECTION', Tour: 'TOUR', Meeting: 'MEETING', Other: 'OTHER', Viewing: 'TOUR',
+};
+
+function mapBackendEvent(e: BackendCalendarEvent): CalendarEvent {
+  const start = new Date(e.startAt);
+  const end   = new Date(e.endAt);
+  const fmtTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  return {
+    id:         e.id,
+    type:       EVENT_TYPE_MAP[e.eventType] ?? 'Other',
+    clientName: e.title || e.listing?.title || 'Event',
+    dateISO:    start.toISOString().split('T')[0],
+    startTime:  fmtTime(start),
+    endTime:    fmtTime(end),
+    bookingId:  e.listingId,
+  };
+}
+
 interface CalendarStore {
   events: CalendarEvent[];
   isLoadingEvents: boolean;
@@ -36,6 +85,9 @@ interface CalendarStore {
 
   fetchEvents: (month: Date) => Promise<void>;
   saveAvailability: (availabilities: AvailabilityPayload[]) => Promise<void>;
+  createEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<CalendarEvent | null>;
+  updateEvent: (id: string, patch: Partial<CalendarEvent>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   addTourEvent: (event: CalendarEvent) => void;
   removeEvent: (id: string) => void;
 
@@ -81,12 +133,18 @@ export const useCalendarStore = create<CalendarStore>()(
         set({ isLoadingEvents: true, error: null });
         try {
           if (USE_API) {
-            const ym = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
-            const data = await apiGet<{ events: CalendarEvent[] }>(`/api/agent/calendar/events?month=${ym}`);
+            // apidocs: GET /api/v1/calendar/events?month=N&year=N
+            const raw = await apiGet<unknown>(
+              `/api/calendar/events?month=${month.getMonth() + 1}&year=${month.getFullYear()}`
+            );
+            const list: BackendCalendarEvent[] = Array.isArray(raw) ? raw
+              : Array.isArray((raw as Record<string, unknown>)?.items) ? (raw as Record<string, unknown[]>).items as BackendCalendarEvent[]
+              : [];
+            const apiEvents = list.map(mapBackendEvent);
             set((s) => {
-              const tourEvents = s.events.filter((e) => e.type === 'Tour' || e.bookingId);
-              const merged = [...data.events, ...tourEvents];
-              return { events: merged, isLoadingEvents: false };
+              // Keep locally-added tour events that aren't from the API
+              const localOnly = s.events.filter(e => (e.type === 'Tour' || e.bookingId) && !apiEvents.some(a => a.id === e.id));
+              return { events: [...apiEvents, ...localOnly], isLoadingEvents: false };
             });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 600));
@@ -106,13 +164,85 @@ export const useCalendarStore = create<CalendarStore>()(
         set({ isSavingAvailability: true, error: null });
         try {
           if (USE_API) {
-            await apiPost('/api/agent/calendar/availability', { availabilities });
+            // apidocs: PUT /api/v1/calendar/availability with { slots: [...] }
+            const DAY_MAP: Record<string, number> = {
+              Sun: 7, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+              Sunday: 7, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
+            };
+            const slots = availabilities.map(a => {
+              const d = new Date(a.date);
+              const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+              return {
+                dayOfWeek: DAY_MAP[dayName] ?? (d.getDay() === 0 ? 7 : d.getDay()),
+                startTime: a.time.split(' - ')[0] || '09:00',
+                endTime:   a.time.split(' - ')[1] || '17:00',
+              };
+            });
+            await apiPut('/api/calendar/availability', { slots });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
           }
           set({ isSavingAvailability: false, isAvailabilityModalOpen: false });
         } catch (err: unknown) {
           set({ error: err instanceof Error ? err.message : 'Failed', isSavingAvailability: false });
+        }
+      },
+
+      createEvent: async (event) => {
+        try {
+          if (USE_API) {
+            // apidocs: POST /api/v1/calendar/events
+            const startDate = new Date(`${event.dateISO}T${event.startTime.replace(/am|pm/i, ':00')}`);
+            const endDate   = new Date(`${event.dateISO}T${event.endTime.replace(/am|pm/i, ':00')}`);
+            const raw = await apiPost<BackendCalendarEvent>('/api/calendar/events', {
+              title:     event.clientName,
+              startAt:   startDate.toISOString(),
+              endAt:     endDate.toISOString(),
+              eventType: EVENT_TYPE_TO_BACKEND[event.type] ?? 'OTHER',
+              ...(event.bookingId ? { listingId: event.bookingId } : {}),
+            });
+            const mapped = mapBackendEvent(raw);
+            set((s) => ({ events: [...s.events, mapped] }));
+            return mapped;
+          }
+          // Mock mode
+          const newEvent: CalendarEvent = { ...event, id: `evt_${Date.now()}` };
+          set((s) => ({ events: [...s.events, newEvent] }));
+          return newEvent;
+        } catch (err) {
+          set({ error: err instanceof Error ? err.message : 'Failed to create event' });
+          return null;
+        }
+      },
+
+      updateEvent: async (id, patch) => {
+        try {
+          if (USE_API) {
+            // apidocs: PATCH /api/v1/calendar/events/{id}
+            const body: Record<string, unknown> = {};
+            if (patch.clientName) body.title = patch.clientName;
+            if (patch.type) body.eventType = EVENT_TYPE_TO_BACKEND[patch.type] ?? 'OTHER';
+            if (patch.dateISO && patch.startTime) body.startAt = new Date(`${patch.dateISO}T${patch.startTime.replace(/am|pm/i, ':00')}`).toISOString();
+            if (patch.dateISO && patch.endTime)   body.endAt   = new Date(`${patch.dateISO}T${patch.endTime.replace(/am|pm/i, ':00')}`).toISOString();
+            await apiPatch(`/api/calendar/events/${id}`, body);
+          }
+          set((s) => ({
+            events: s.events.map(e => e.id === id ? { ...e, ...patch } : e),
+          }));
+        } catch (err) {
+          set({ error: err instanceof Error ? err.message : 'Failed to update event' });
+        }
+      },
+
+      deleteEvent: async (id) => {
+        try {
+          if (USE_API) {
+            // apidocs: DELETE /api/v1/calendar/events/{id}
+            await apiDelete(`/api/calendar/events/${id}`);
+          }
+          set((s) => ({ events: s.events.filter(e => e.id !== id) }));
+        } catch (err) {
+          set({ error: err instanceof Error ? err.message : 'Failed to delete event' });
         }
       },
 
