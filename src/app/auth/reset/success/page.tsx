@@ -13,8 +13,8 @@ const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 function ResetSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams?.get('email') || '';
-  const code = searchParams?.get('code') || '';
+  const email      = searchParams?.get('email')      || '';
+  const resetToken = searchParams?.get('resetToken') || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,8 +23,8 @@ function ResetSuccessContent() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Guard: require email & code
-  if (!email || !code) {
+  // Guard: require email & resetToken
+  if (!email || !resetToken) {
     if (typeof window !== 'undefined') {
       router.replace('/auth/reset');
     }
@@ -42,10 +42,10 @@ function ResetSuccessContent() {
     setLoading(true);
     try {
       if (USE_API) {
-        // POST /api/v1/auth/reset-password — sets new password using verified code
+        // POST /api/v1/auth/reset-password — { email, resetToken, newPassword }
         await apiPost('/api/auth/reset-password', {
           email,
-          code,
+          resetToken,
           newPassword: password,
         });
       } else {

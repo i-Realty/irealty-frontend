@@ -46,12 +46,14 @@ function ResetVerifyContent() {
     setLoading(true);
     try {
       if (USE_API) {
-        // Verify the OTP code before proceeding to new password page
-        await apiPost('/api/auth/verify-reset-otp', { email, code });
+        // Verify the OTP — backend returns { resetToken } to use in the next step
+        const data = await apiPost<{ resetToken?: string; token?: string }>('/api/auth/verify-reset-otp', { email, code });
+        const resetToken = data.resetToken ?? data.token ?? '';
+        router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&resetToken=${encodeURIComponent(resetToken)}`);
       } else {
         await new Promise(r => setTimeout(r, 600));
+        router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&resetToken=mock`);
       }
-      router.push(`/auth/reset/success?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.');
       setLoading(false);
