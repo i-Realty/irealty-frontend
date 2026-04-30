@@ -296,21 +296,32 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
     if (!target) return;
 
-    // Build profile from auth user data when no stored profile exists
+    // Linked accounts share the main account's personal details.
+    // Only fetch /me for the main account; linked accounts reuse its profile.
+    const mainId = get().mainAccountId;
+    const isMainAccount = !mainId || accountId === mainId;
+
     let profile = get().profilesByAccount[accountId];
+
     if (!profile && USE_API) {
-      const authUser = useAuthStore.getState().user;
-      if (authUser) {
-        const [firstName = '', ...lastParts] = authUser.name.split(' ');
-        profile = {
-          firstName,
-          lastName:    lastParts.join(' '),
-          displayName: authUser.displayName || authUser.name,
-          phone:       '',
-          phoneCode:   '+234',
-          about:       '',
-          socials:     { linkedin: '', facebook: '', instagram: '', twitter: '' },
-        };
+      // For linked accounts, copy the main account's profile
+      const mainProfile = mainId ? get().profilesByAccount[mainId] : null;
+      if (mainProfile && !isMainAccount) {
+        profile = { ...mainProfile };
+      } else {
+        const authUser = useAuthStore.getState().user;
+        if (authUser) {
+          const [firstName = '', ...lastParts] = authUser.name.split(' ');
+          profile = {
+            firstName,
+            lastName:    lastParts.join(' '),
+            displayName: authUser.displayName || authUser.name,
+            phone:       '',
+            phoneCode:   '+234',
+            about:       '',
+            socials:     { linkedin: '', facebook: '', instagram: '', twitter: '' },
+          };
+        }
       }
     }
     if (!profile) {
@@ -323,8 +334,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       profilesByAccount: { ...get().profilesByAccount, [accountId]: profile },
     });
 
-    // Fetch full profile from /me in the background to fill in phone, socials etc.
-    if (USE_API) {
+    // Fetch full profile from /me only for the main account.
+    // Linked accounts reuse the main account's profile.
+    if (USE_API && isMainAccount) {
       apiGet<BackendUser & { phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }>('/api/auth/me')
         .then(me => {
           const phone = me.phoneNumber?.replace(/^\+234/, '') ?? '';
@@ -358,13 +370,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         // Backend expects linkedUserId (the target account's UUID)
         const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
         const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
+        // Use the main account's personal details for linked accounts
+        const mainProfile = get().profilesByAccount[get().mainAccountId];
+        const mainUser = mainProfile
+          ? { name: `${mainProfile.firstName} ${mainProfile.lastName}`.trim(), displayName: mainProfile.displayName, email: '' }
+          : null;
+        const prevUser = useAuthStore.getState().user;
+
+        const rawName = `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim();
         const mappedUser = {
           id:            rawUser.id,
-          name:          `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim() || rawUser.displayName || 'User',
-          email:         rawUser.email,
+          name:          mainUser?.name || rawName || rawUser.displayName || 'User',
+          email:         prevUser?.email ?? rawUser.email,
           role:          mapRole(rawUser.roles?.[0] ?? ''),
-          displayName:   rawUser.displayName || `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim(),
-          avatarUrl:     rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
+          displayName:   mainUser?.displayName || rawUser.displayName || rawName,
+          avatarUrl:     prevUser?.avatarUrl ?? rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
           kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
           accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
         } satisfies AuthUser;
