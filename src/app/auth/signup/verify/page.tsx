@@ -6,21 +6,26 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import ProgressPill from '@/components/auth/ProgressPill';
 import OtpInput from '@/components/auth/OtpInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateOtp } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
+import { apiPost } from '@/lib/api/client';
+import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
 
 export default function VerifyCode() {
   const router = useRouter();
   const { email } = useSignupStore();
+  const { login, setToken } = useAuthStore();
   const { t } = useI18n();
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
 
-  function handleResend() {
-    if (resendCountdown > 0) return;
+  function startResendCountdown() {
     setResendCountdown(30);
     const interval = setInterval(() => {
       setResendCountdown((prev) => {
@@ -28,7 +33,23 @@ export default function VerifyCode() {
         return prev - 1;
       });
     }, 1000);
-    // TODO: replace with real API call to resend OTP
+  }
+
+  async function handleResend() {
+    if (resendCountdown > 0 || resending) return;
+    startResendCountdown();
+
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+    if (!USE_API) return; // mock mode — countdown is the only feedback needed
+
+    setResending(true);
+    try {
+      await apiPost('/api/auth/resend-verification', { email });
+    } catch {
+      // Silently fail — user can retry after countdown
+    } finally {
+      setResending(false);
+    }
   }
 
   // Guard: if no email in store, they skipped steps
@@ -38,13 +59,37 @@ export default function VerifyCode() {
     }
   }, [email, router]);
 
-  function verifyBase() {
+  async function verifyBase() {
     const otpErr = validateOtp(code);
     if (otpErr) { setError(otpErr); return; }
     setError('');
     setLoading(true);
 
-    // Simulate API validation
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+    if (USE_API) {
+      // ── Live API mode ────────────────────────────────────────────
+      try {
+        const data = await apiPost<BackendAuthResponse>('/api/auth/verify-email', { email, code });
+        // If backend returns a token+user on verification, log in immediately
+        const token = extractToken(data);
+        if (token) {
+          const authUser = mapAuthResponse(data);
+          login(authUser);
+          setToken(token, data.refreshToken ?? null);
+          useSettingsStore.getState().setActiveAccount(authUser.id);
+          await useSettingsStore.getState().fetchAccounts();
+        }
+        router.push('/auth/signup/success');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+        setError(msg);
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ── Mock mode ────────────────────────────────────────────────
     setTimeout(() => {
       router.push('/auth/signup/success');
     }, 1000);

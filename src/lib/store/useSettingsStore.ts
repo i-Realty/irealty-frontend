@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { apiPost, apiPut } from '@/lib/api/client';
+import { apiGet, apiPost, apiPut } from '@/lib/api/client';
 import { useAuthStore, type AuthUser } from '@/lib/store/useAuthStore';
+import { mapRole, mapKycStatus, mapAccountStatus, extractToken, type BackendAuthResponse, type BackendUser, ROLE_TO_BACKEND } from '@/lib/api/adapters';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
@@ -93,6 +94,10 @@ interface SettingsStore {
   setActiveAccount: (accountId: string) => void;
   /** API-ready: switches the active account and updates the auth user. */
   switchAccount: (accountId: string) => Promise<void>;
+  /** Fetch linked accounts from the backend (no-op in mock mode). */
+  fetchAccounts: () => Promise<void>;
+  /** Add a new linked account role (API mode only). */
+  addLinkedAccount: (role: AccountRole) => Promise<void>;
 
   // Payloads
   profile: UserProfilePayload;
@@ -280,8 +285,22 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const account = get().accounts.find(a => a.id === accountId);
     if (!account) return;
     if (USE_API) {
-      const user = await apiPost<AuthUser>('/api/auth/switch-account', { accountId });
-      useAuthStore.getState().login(user);
+      // Backend expects linkedUserId (the target account's UUID)
+      const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
+      const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
+      const mappedUser: AuthUser = {
+        id:            rawUser.id,
+        name:          `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim() || rawUser.displayName || 'User',
+        email:         rawUser.email,
+        role:          mapRole(rawUser.roles?.[0] ?? ''),
+        displayName:   rawUser.displayName || `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim(),
+        avatarUrl:     rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
+        kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
+        accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
+      };
+      useAuthStore.getState().login(mappedUser);
+      const token = extractToken(data);
+      if (token) useAuthStore.getState().setToken(token, data.refreshToken ?? null);
     } else {
       await new Promise(r => setTimeout(r, 300));
       const mockUser = MOCK_ACCOUNT_USERS[accountId];
@@ -289,6 +308,31 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
     const profile = get().profilesByAccount[accountId] ?? MOCK_ACCOUNT_PROFILES[accountId] ?? MOCK_ACCOUNT_PROFILES['demo-admin'];
     set({ activeAccount: account, profile });
+  },
+
+  fetchAccounts: async () => {
+    if (!USE_API) return; // mock mode keeps the static MOCK_ACCOUNTS list
+    try {
+      const data = await apiGet<BackendUser[]>('/api/auth/linked-accounts');
+      const accounts: AccountInfo[] = (Array.isArray(data) ? data : []).map(u => ({
+        id:    u.id,
+        role:  mapRole(u.roles?.[0] ?? '') as AccountRole,
+        name:  u.displayName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || 'User',
+        email: u.email,
+      }));
+      if (accounts.length > 0) set({ accounts });
+    } catch {
+      // Non-critical — keep existing accounts list on failure
+    }
+  },
+
+  addLinkedAccount: async (role) => {
+    if (!USE_API) return;
+    await apiPost('/api/auth/linked-accounts', {
+      role:        ROLE_TO_BACKEND[role],
+      displayName: undefined,
+    });
+    await get().fetchAccounts();
   },
 
   profile: MOCK_ACCOUNT_PROFILES['demo-admin'],

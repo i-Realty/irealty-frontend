@@ -18,11 +18,20 @@ export interface AuthUser {
 interface AuthState {
   isLoggedIn: boolean;
   user: AuthUser | null;
+  /** JWT access token — read by API client for Authorization header. */
+  token: string | null;
+  /** Refresh token — used by API client to silently renew expired tokens. */
+  refreshToken: string | null;
   /**
    * Call after successful login/signup API response.
    * Also sets the irealty-session cookie for middleware route protection.
    */
   login: (user: AuthUser) => void;
+  /**
+   * Store tokens returned by the backend (login / refresh / switch-account).
+   * Call this alongside login() when USE_API=true.
+   */
+  setToken: (token: string | null, refreshToken?: string | null) => void;
   /**
    * Clears auth state and removes the session cookie.
    */
@@ -56,15 +65,23 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isLoggedIn: false,
       user: null,
+      token: null,
+      refreshToken: null,
 
       login: (user) => {
         setSessionCookie(user.role);
         set({ isLoggedIn: true, user });
       },
 
+      setToken: (token, refreshToken) =>
+        set((s) => ({
+          token,
+          refreshToken: refreshToken !== undefined ? refreshToken : s.refreshToken,
+        })),
+
       logout: () => {
         clearSessionCookie();
-        set({ isLoggedIn: false, user: null });
+        set({ isLoggedIn: false, user: null, token: null, refreshToken: null });
       },
 
       updateUser: (data) =>

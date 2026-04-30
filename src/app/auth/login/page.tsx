@@ -10,6 +10,8 @@ import { useAuthStore, AuthUser, UserRole } from '@/lib/store/useAuthStore';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
+import { apiPost } from '@/lib/api/client';
+import { mapAuthResponse, extractToken, type BackendAuthResponse } from '@/lib/api/adapters';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
 // When NEXT_PUBLIC_USE_API=true, this block is bypassed and a real API call is
@@ -35,7 +37,7 @@ const ROLE_DASHBOARD_MAP: Record<UserRole, string> = {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login: doLogin, logout, isLoggedIn } = useAuthStore();
+  const { login: doLogin, logout, isLoggedIn, setToken } = useAuthStore();
   const login = doLogin;
   const { t } = useI18n();
   const [email, setEmail] = useState('');
@@ -71,18 +73,35 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // Simulate network delay — when NEXT_PUBLIC_USE_API=true, replace with real API call
-    setTimeout(() => {
-      const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
-      if (USE_API) {
-        // TODO: Replace with real API call
-        // fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+    if (USE_API) {
+      // ── Live API mode ──────────────────────────────────────────────
+      try {
+        const data = await apiPost<BackendAuthResponse>('/api/auth/login', {
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        const authUser = mapAuthResponse(data);
+        const token    = extractToken(data);
+        login(authUser);
+        if (token) setToken(token, data.refreshToken ?? null);
+        useSettingsStore.getState().setActiveAccount(authUser.id);
+        await useSettingsStore.getState().fetchAccounts();
+        const params    = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
+        router.push(redirectTo);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Login failed. Please try again.';
+        setErrors({ general: msg });
+      } finally {
         setLoading(false);
-        return;
       }
+      return;
+    }
 
-      // Mock mode: validate against demo credentials
+    // ── Mock mode ──────────────────────────────────────────────────
+    setTimeout(() => {
       const normalizedEmail = email.trim().toLowerCase();
       const cred = MOCK_CREDENTIALS[normalizedEmail];
 
@@ -172,15 +191,25 @@ export default function LoginPage() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
-          <button
-            type="button"
-            disabled
-            title="Google sign-in is coming soon"
-            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60"
-          >
-            <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-            {t('auth.continueWithGoogle')}
-          </button>
+          {process.env.NEXT_PUBLIC_USE_API === 'true' ? (
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '')}/api/v1/auth/google`}
+              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+              {t('auth.continueWithGoogle')}
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="Google sign-in is coming soon"
+              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60"
+            >
+              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+              {t('auth.continueWithGoogle')}
+            </button>
+          )}
         </form>
       </div>
     </AuthLayout>

@@ -13,17 +13,70 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
-// ── Token helper ──────────────────────────────────────────────────────
+// ── Token helpers ─────────────────────────────────────────────────────
 
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
+function getAuthState(): { token: string | null; refreshToken: string | null } {
+  if (typeof window === 'undefined') return { token: null, refreshToken: null };
   try {
     const raw = localStorage.getItem('irealty-auth');
-    if (!raw) return null;
+    if (!raw) return { token: null, refreshToken: null };
     const parsed = JSON.parse(raw);
-    return parsed?.state?.token ?? null;
+    return {
+      token:        parsed?.state?.token        ?? null,
+      refreshToken: parsed?.state?.refreshToken ?? null,
+    };
   } catch {
-    return null;
+    return { token: null, refreshToken: null };
+  }
+}
+
+function getToken(): string | null {
+  return getAuthState().token;
+}
+
+// ── Token refresh ─────────────────────────────────────────────────────
+
+let isRefreshing = false;
+
+/**
+ * Attempt a silent token refresh using the stored refreshToken.
+ * Writes the new tokens directly to localStorage so the next request
+ * picks them up without a circular store import.
+ * Returns true if the refresh succeeded.
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  if (isRefreshing) return false;
+  isRefreshing = true;
+  try {
+    const { refreshToken } = getAuthState();
+    if (!refreshToken) return false;
+
+    const resp = await fetch(`${BASE_URL}/auth/refresh`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refreshToken }),
+    });
+
+    if (!resp.ok) return false;
+
+    const data = await resp.json();
+    const newToken        = data.token ?? data.accessToken;
+    const newRefreshToken = data.refreshToken;
+    if (!newToken) return false;
+
+    // Patch localStorage directly to avoid a circular import of useAuthStore
+    const raw = localStorage.getItem('irealty-auth');
+    if (!raw) return false;
+    const stored = JSON.parse(raw);
+    stored.state.token = newToken;
+    if (newRefreshToken) stored.state.refreshToken = newRefreshToken;
+    localStorage.setItem('irealty-auth', JSON.stringify(stored));
+
+    return true;
+  } catch {
+    return false;
+  } finally {
+    isRefreshing = false;
   }
 }
 
@@ -66,7 +119,16 @@ async function request<T>(
   });
 
   if (response.status === 401) {
-    // Token expired — clear session and redirect
+    // Only attempt refresh once — the X-Retry header flags the retry
+    const isRetry = !!extraHeaders?.['X-Retry'];
+    if (!isRetry) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        // Retry original request with the new token
+        return request<T>(method, path, body, { ...extraHeaders, 'X-Retry': '1' });
+      }
+    }
+    // Refresh failed (or already retried) — clear session and redirect
     if (typeof window !== 'undefined') {
       document.cookie = 'irealty-session=; path=/; max-age=0';
       localStorage.removeItem('irealty-auth');

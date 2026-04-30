@@ -10,6 +10,8 @@ import PasswordInput from '@/components/auth/PasswordInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
 import { validateEmail, validatePassword, validatePhone, validateRequired, validateUsername } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
+import { apiPost } from '@/lib/api/client';
+import { SIGNUP_ROLE_TO_BACKEND } from '@/lib/api/adapters';
 
 export default function SignupAccount() {
   const router = useRouter();
@@ -45,28 +47,55 @@ export default function SignupAccount() {
 
   // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
-  function saveAndNext() {
+  async function saveAndNext() {
     setErrors({});
 
     // Validate fields
     const newErrors: Record<string, string> = {};
-    if (validateUsername(username)) newErrors.username = validateUsername(username);
-    if (validateRequired(firstName, 'First Name')) newErrors.firstName = validateRequired(firstName, 'First Name');
-    if (validateRequired(lastName, 'Last Name')) newErrors.lastName = validateRequired(lastName, 'Last Name');
-    if (validateEmail(email) || validateRequired(email, 'Email')) newErrors.email = validateEmail(email) || validateRequired(email, 'Email');
-    if (validatePhone(phone) || validateRequired(phone, 'Phone')) newErrors.phone = validatePhone(phone) || validateRequired(phone, 'Phone');
-    if (validatePassword(password)) newErrors.password = validatePassword(password);
+    if (validateUsername(username)) newErrors.username = validateUsername(username)!;
+    if (validateRequired(firstName, 'First Name')) newErrors.firstName = validateRequired(firstName, 'First Name')!;
+    if (validateRequired(lastName, 'Last Name')) newErrors.lastName = validateRequired(lastName, 'Last Name')!;
+    if (validateEmail(email) || validateRequired(email, 'Email')) newErrors.email = (validateEmail(email) || validateRequired(email, 'Email'))!;
+    if (validatePhone(phone) || validateRequired(phone, 'Phone')) newErrors.phone = (validatePhone(phone) || validateRequired(phone, 'Phone'))!;
+    if (validatePassword(password)) newErrors.password = validatePassword(password)!;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      return; // Stop if errors
+      return;
     }
 
     // Persist to Memory Store (NO PLAINTEXT LOCAL STORAGE)
     setAccountInfo({ username, firstName, lastName, email, phone, password });
 
-    // Proceed
+    const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+    if (USE_API) {
+      // ── Live API mode: call register endpoint ───────────────────
+      setLoading(true);
+      try {
+        await apiPost('/api/auth/register', {
+          username:    username || undefined,
+          firstName,
+          lastName,
+          email:       email.trim().toLowerCase(),
+          phoneNumber: `+234${phone.replace(/^0/, '')}`,
+          password,
+          roles:       [SIGNUP_ROLE_TO_BACKEND[role] ?? 'PROPERTY_SEEKER'],
+        });
+        // Backend sends OTP to email — proceed to verify step
+        router.push('/auth/signup/verify');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+        setErrors({ general: msg });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ── Mock mode: skip API, go straight to verify ──────────────
     router.push('/auth/signup/verify');
   }
 
@@ -84,6 +113,11 @@ export default function SignupAccount() {
         </p>
 
         <div className="flex flex-col gap-4">
+          {(errors as Record<string, string>).general && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg text-sm">
+              {(errors as Record<string, string>).general}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.userNameCompany')} <span className="text-red-500">*</span></label>
             <input
@@ -166,11 +200,11 @@ export default function SignupAccount() {
 
           <button
             onClick={saveAndNext}
-            disabled={!agree}
-            className={`w-full py-3 mt-4 rounded-lg font-bold text-white transition-all cursor-pointer ${agree ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'
-              }`}
+            disabled={!agree || loading}
+            className={`w-full py-3 mt-4 rounded-lg font-bold text-white transition-all cursor-pointer ${agree && !loading ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'
+              } ${loading ? 'opacity-80' : ''}`}
           >
-            {t('common.proceed')}
+            {loading ? 'Creating account…' : t('common.proceed')}
           </button>
 
           <div className="flex items-center gap-4 my-2">
@@ -179,15 +213,25 @@ export default function SignupAccount() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
-          <button
-            type="button"
-            disabled
-            title="Google sign-in is coming soon"
-            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60"
-          >
-            <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-            {t('auth.continueWithGoogle')}
-          </button>
+          {process.env.NEXT_PUBLIC_USE_API === 'true' ? (
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '')}/api/v1/auth/google`}
+              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+              {t('auth.continueWithGoogle')}
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="Google sign-in is coming soon"
+              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60"
+            >
+              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
+              {t('auth.continueWithGoogle')}
+            </button>
+          )}
         </div>
       </div>
     </AuthLayout>
