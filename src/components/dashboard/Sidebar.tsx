@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -39,9 +39,19 @@ export default function Sidebar() {
     mainAccountId,
     setAddAccountModalOpen,
     switchAccount,
+    fetchAccounts,
   } = useSettingsStore();
 
   const [isMobileAccountMenuOpen, setIsMobileAccountMenuOpen] = useState(false);
+
+  // Re-fetch linked accounts on mount so they survive a page refresh.
+  // (useSettingsStore is not persisted — accounts reset to [] on refresh)
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_USE_API === 'true' && user && accounts.length <= 1) {
+      fetchAccounts().catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Derive nav from URL pathname — always correct regardless of auth store state
   const navItems = getNavItems(getRoleFromPath(pathname ?? ''));

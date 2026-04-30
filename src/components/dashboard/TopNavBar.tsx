@@ -30,7 +30,16 @@ export default function TopNavBar() {
     mainAccountId,
     setAddAccountModalOpen,
     switchAccount,
+    fetchAccounts,
   } = useSettingsStore();
+
+  // Re-fetch linked accounts on mount so they survive a page refresh
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_USE_API === 'true' && user && accounts.length <= 1) {
+      fetchAccounts().catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

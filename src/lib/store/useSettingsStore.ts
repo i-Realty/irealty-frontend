@@ -91,6 +91,12 @@ interface SettingsStore {
   accounts: AccountInfo[];
   /** The original account the user registered with (first login). */
   mainAccountId: string;
+  /**
+   * JWT for the main account — stored so all switch-account calls are
+   * always authenticated as the main account regardless of which linked
+   * account is currently active.
+   */
+  mainToken: string | null;
   isAddAccountModalOpen: boolean;
   setAddAccountModalOpen: (open: boolean) => void;
   setActiveAccount: (accountId: string) => void;
@@ -280,6 +286,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
   accounts: USE_API ? [] : MOCK_ACCOUNTS,
   mainAccountId: '',
+  mainToken: null,
   isAddAccountModalOpen: false,
   setAddAccountModalOpen: (open) => set({ isAddAccountModalOpen: open }),
   setActiveAccount: (accountId) => {
@@ -294,8 +301,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (authUser && authUser.id === accountId) {
         target = { id: authUser.id, role: authUser.role as AccountRole, name: authUser.displayName || authUser.name, email: authUser.email };
         // Fresh login — this user is the main account. Clear all stale
-        // data from any previous user's session.
-        set({ accounts: [target], mainAccountId: accountId, profilesByAccount: {} });
+        // data from any previous user's session. Capture the current
+        // JWT so all subsequent switch-account calls can use it.
+        set({
+          accounts: [target],
+          mainAccountId: accountId,
+          mainToken: useAuthStore.getState().token,
+          profilesByAccount: {},
+        });
       }
     }
 
@@ -381,48 +394,62 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     let newRole: UserRole;
 
     if (USE_API) {
+      const prevUser = useAuthStore.getState().user;
+
+      // Always use the main account's token for the switch-account call.
+      // Linked-account tokens may lack permission to switch to sibling accounts.
+      const mainToken = get().mainToken;
+      if (mainToken) setTokenImmediate(mainToken);
+
       // Backend expects linkedUserId (the target account's UUID)
       const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
-      const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
 
-      // Use the main account's real identity for linked accounts
+      // Extract new token from response and activate it immediately
+      const token = extractToken(data);
+      const refreshToken = data.refreshToken ?? (data as Record<string, string>).refresh_token ?? null;
+      if (token) {
+        useAuthStore.getState().setToken(token, refreshToken);
+        setTokenImmediate(token);
+      }
+
+      // Call /api/auth/me to get authoritative user data with the new token —
+      // the switch-account response body is undocumented and unreliable.
+      const me = await apiGet<BackendUser & {
+        phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string;
+        instagramUrl?: string; twitterUrl?: string;
+      }>('/api/auth/me');
+
       const mainProfile = get().profilesByAccount[get().mainAccountId];
-      const prevUser = useAuthStore.getState().user;
       const realName = mainProfile
         ? (`${mainProfile.firstName} ${mainProfile.lastName}`.trim() || mainProfile.displayName)
         : (prevUser?.name || prevUser?.displayName || '');
       const realDisplayName = mainProfile?.displayName || realName;
       const realEmail = prevUser?.email || '';
 
-      const rawName = `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim();
-      const isPlaceholder = rawName === 'Linked Account' || rawUser.displayName === 'Linked Account';
+      const meName = `${me.firstName ?? ''} ${me.lastName ?? ''}`.trim();
+      const isPlaceholder = meName === 'Linked Account' || me.displayName === 'Linked Account';
 
-      // Determine the new role — prefer response roles, fall back to the
-      // pre-fetched account's role so we never default to 'Property Seeker'
+      // Role from /api/auth/me is authoritative; fall back to pre-known role
       const preKnownRole = account?.role as UserRole | undefined;
-      const responseRole = rawUser.roles?.length
-        ? mapRole(rawUser.roles[0])
-        : null;
-      newRole = responseRole ?? preKnownRole ?? 'Property Seeker';
+      const meRole = me.roles?.length ? mapRole(me.roles[0]) : null;
+      newRole = meRole ?? preKnownRole ?? 'Property Seeker';
 
       const mappedUser = {
-        id:            rawUser.id,
-        name:          isPlaceholder ? (realName || 'User') : (rawName || rawUser.displayName || realName || 'User'),
-        email:         realEmail || rawUser.email,
+        id:            me.id,
+        name:          isPlaceholder ? (realName || 'User') : (meName || me.displayName || realName || 'User'),
+        email:         realEmail || me.email,
         role:          newRole,
-        displayName:   isPlaceholder ? (realDisplayName || 'User') : (rawUser.displayName || rawName || realDisplayName || 'User'),
-        avatarUrl:     prevUser?.avatarUrl ?? rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
-        kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
-        accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
+        displayName:   isPlaceholder ? (realDisplayName || 'User') : (me.displayName || meName || realDisplayName || 'User'),
+        avatarUrl:     prevUser?.avatarUrl ?? me.avatarUrl ?? '/images/demo-avatar.jpg',
+        kycStatus:     mapKycStatus(me.verificationStatus ?? ''),
+        accountStatus: mapAccountStatus(me.isActive ?? true, me.verificationStatus ?? ''),
       } satisfies AuthUser;
 
       useAuthStore.getState().login(mappedUser);
 
-      const token = extractToken(data);
-      if (token) {
-        const refreshToken = data.refreshToken ?? data.refresh_token ?? null;
-        useAuthStore.getState().setToken(token, refreshToken);
-        setTokenImmediate(token);
+      // If switching back to main account, refresh the stored main token
+      if (accountId === get().mainAccountId && token) {
+        set({ mainToken: token });
       }
 
       // Ensure the switched account is in the list
@@ -430,6 +457,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         account = { id: mappedUser.id, role: newRole as AccountRole, name: mappedUser.displayName, email: mappedUser.email };
         set({ accounts: [account, ...get().accounts.filter(a => a.id !== accountId)] });
       }
+
+      // Refresh the linked accounts list using the new token (non-blocking)
+      get().fetchAccounts().catch(() => {});
     } else {
       const mockUser = MOCK_ACCOUNT_USERS[accountId];
       if (!mockUser) throw new Error(`No mock account found for id: ${accountId}`);
@@ -510,6 +540,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   resetUserData: () => {
     set({
       mainAccountId: '',
+      mainToken: null,
       accounts: USE_API ? [] : MOCK_ACCOUNTS,
       activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
       profilesByAccount: USE_API ? {} : { ...MOCK_ACCOUNT_PROFILES },
