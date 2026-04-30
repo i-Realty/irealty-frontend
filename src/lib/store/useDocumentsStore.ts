@@ -82,6 +82,38 @@ interface DocumentsStore {
   deleteDocumentMock: (id: string) => Promise<void>;
 }
 
+// ---------------------------------------------------------------------------
+// BACKEND TYPES & ADAPTER
+// ---------------------------------------------------------------------------
+interface BackendDocument {
+  id: string;
+  title: string;
+  documentType?: string;
+  type?: string;
+  updatedAt?: string;
+  createdAt?: string;
+  fileSizeBytes?: number;
+  listing?: { title?: string };
+  fileUrl?: string;
+}
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return '—';
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function mapDocument(d: BackendDocument): DocumentItem {
+  return {
+    id:                d.id,
+    title:             d.title,
+    dateUpdated:       d.updatedAt ? new Date(d.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : (d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'),
+    type:              d.documentType ?? d.type ?? 'Custom',
+    propertyReference: d.listing?.title ?? 'Unlinked',
+    size:              formatFileSize(d.fileSizeBytes),
+  };
+}
+
 const defaultFormData: Partial<DocumentPayload> = {
   includeUtilities: true,
   includePetPolicy: true,
@@ -124,8 +156,11 @@ export const useDocumentsStore = create<DocumentsStore>((set, get) => ({
     set({ isLoadingList: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiGet<{ documents: DocumentItem[] }>('/api/documents');
-        set({ documents: data.documents, isLoadingList: false });
+        // Backend returns array or { data: [...] } — client auto-unwraps the envelope
+        const raw = await apiGet<BackendDocument[] | { items?: BackendDocument[]; data?: BackendDocument[] }>('/api/documents');
+        const list: BackendDocument[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
+        const documents: DocumentItem[] = list.map(mapDocument);
+        set({ documents, isLoadingList: false });
       } else {
         await new Promise((resolve) => setTimeout(resolve, 600));
         const types = ['Standard Rental Agreement', 'Property Sale Agreement', 'Broker Commission Agreement', 'Property Management Agreement', 'Custom'];
@@ -153,16 +188,30 @@ export const useDocumentsStore = create<DocumentsStore>((set, get) => ({
     set({ isSubmitting: true, error: null });
     try {
       if (USE_API) {
-        const data = await apiPost<{ document: DocumentItem }>('/api/documents', {
-          ...payload,
-          templateType: get().templateType,
-        });
-        set((state) => ({
-          documents: [data.document, ...state.documents],
-          isSubmitting: false,
-          isWizardOpen: false,
-        }));
-      } else {
+        // Documents require an uploaded fileUrl. The wizard generates
+        // documents from templates — file upload endpoint not yet available.
+        // Call POST /api/documents only when a fileUrl is present in formData;
+        // otherwise fall through to mock (template generation is Phase 5).
+        const fileUrl = (payload as Record<string, unknown>).fileUrl as string | undefined;
+        if (fileUrl) {
+          const raw = await apiPost<BackendDocument>('/api/documents', {
+            title:         payload.title,
+            fileUrl,
+            fileSizeBytes: 0,
+            mimeType:      'application/pdf',
+          });
+          set((state) => ({
+            documents: [mapDocument(raw), ...state.documents],
+            isSubmitting: false,
+            isWizardOpen: false,
+          }));
+          get().resetWizard();
+          return;
+        }
+        // No file available — fall through to local template-based creation
+      }
+      // Local (mock) document creation — used when no fileUrl is provided
+      {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const newDoc: DocumentItem = {
           id: `doc-${Date.now()}`,

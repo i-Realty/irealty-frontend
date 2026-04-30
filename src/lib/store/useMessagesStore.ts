@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiGet, apiPost } from '@/lib/api/client';
+import { mapRole } from '@/lib/api/adapters';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import type { UserRole } from './useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
@@ -32,7 +34,7 @@ export type FilePayload = {
   sizeMb: number;
   pages?: number;
   format: string;
-  audioDuration?: number; // seconds — set for audio messages
+  audioDuration?: number;
 };
 
 export interface StagedFile {
@@ -70,10 +72,6 @@ export type ChatThread = {
   createdAt: string;
 };
 
-/**
- * Message permission matrix.
- * Defines which roles can initiate messages to which other roles.
- */
 export const MESSAGE_PERMISSION_MATRIX: Partial<Record<UserRole, UserRole[]>> = {
   Admin:             ['Agent', 'Developer', 'Landlord', 'Property Seeker', 'Diaspora'],
   Agent:             ['Admin', 'Landlord', 'Property Seeker', 'Diaspora'],
@@ -106,7 +104,6 @@ interface MessagesStore {
   uploadModalState: UploadModalState;
   stagedFiles: StagedFile[];
 
-  // Actions
   fetchThreads: () => Promise<void>;
   sendMessage: (chatId: string, content: string, type: MessageContentType, files?: FilePayload[]) => Promise<void>;
 
@@ -115,10 +112,6 @@ interface MessagesStore {
   /** @deprecated Use sendMessage() */
   sendMessageMock: (chatId: string, content: string, type: MessageContentType, files?: FilePayload[]) => Promise<void>;
 
-  /**
-   * Start a new thread with a specific user.
-   * Returns null if the role permission matrix blocks this conversation.
-   */
   startThread: (
     fromRole: UserRole,
     participant: UserBase,
@@ -139,6 +132,116 @@ interface MessagesStore {
 }
 
 // ---------------------------------------------------------------------------
+// BACKEND TYPES
+// ---------------------------------------------------------------------------
+interface BackendParticipantUser {
+  id: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  roles?: string[];
+}
+
+interface BackendParticipant {
+  userId: string;
+  user?: BackendParticipantUser;
+}
+
+interface BackendAttachment {
+  url: string;
+  mimeType?: string;
+  filename?: string;
+}
+
+interface BackendMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type: 'TEXT' | 'SYSTEM';
+  attachments: BackendAttachment[];
+  createdAt: string;
+}
+
+interface BackendConversation {
+  id: string;
+  type: 'DIRECT' | 'LISTING';
+  listingId?: string;
+  participants: BackendParticipant[];
+  messages: BackendMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// ADAPTERS
+// ---------------------------------------------------------------------------
+function formatRelativeTime(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function mapBackendMessage(m: BackendMessage, currentUserId: string): Message {
+  const date = new Date(m.createdAt);
+  return {
+    id:          m.id,
+    chatId:      m.conversationId,
+    senderId:    m.senderId === currentUserId ? 'ME' : m.senderId,
+    content:     m.content,
+    contentType: 'text',
+    files: (m.attachments ?? []).map(a => ({
+      name:   a.filename ?? 'attachment',
+      url:    a.url,
+      sizeMb: 0,
+      format: a.mimeType?.split('/')[1] ?? 'file',
+    })),
+    createdAt: m.createdAt,
+    timestamp: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+  };
+}
+
+function mapConversation(conv: BackendConversation, currentUserId: string): ChatThread {
+  // Find the other participant (not current user)
+  const other = conv.participants.find(p => p.userId !== currentUserId) ?? conv.participants[0];
+  const ou = other?.user;
+  const participantName = ou?.displayName
+    || `${ou?.firstName ?? ''} ${ou?.lastName ?? ''}`.trim()
+    || 'User';
+
+  const messages = (conv.messages ?? []).map(m => mapBackendMessage(m, currentUserId));
+  const lastMsg  = messages[messages.length - 1];
+
+  return {
+    id: conv.id,
+    participant: {
+      id:         ou?.id ?? other?.userId ?? 'unknown',
+      name:       participantName,
+      avatar:     ou?.avatarUrl ?? '/images/demo-avatar.jpg',
+      isVerified: false,
+      role:       mapRole(ou?.roles?.[0] ?? '') as UserRole,
+    },
+    lastMessage:     lastMsg?.content ?? '',
+    lastMessageTime: lastMsg ? formatRelativeTime(lastMsg.createdAt) : '',
+    unreadCount:     0,
+    propertyContext: {
+      id:             conv.listingId ?? '',
+      title:          '',
+      priceRaw:       0,
+      priceFormatted: '',
+      image:          '',
+    },
+    contextType: conv.type === 'LISTING' ? 'property' : 'general',
+    contextId:   conv.listingId,
+    messages,
+    createdAt:   conv.createdAt,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // SEED DATA
 // ---------------------------------------------------------------------------
 export const generateMockThreads = (): ChatThread[] => {
@@ -146,53 +249,24 @@ export const generateMockThreads = (): ChatThread[] => {
   return [
     {
       id: 'chat_1',
-      participant: {
-        id: 'u1',
-        name: 'Wade Warren',
-        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150&h=150',
-        isVerified: true,
-        role: 'Property Seeker',
-      },
-      lastMessage: 'Hello, please let try to...',
-      lastMessageTime: '2h',
-      unreadCount: 2,
-      contextType: 'property',
-      contextId: 'prop_seed_001',
-      propertyContext: {
-        id: 'prop_seed_001',
-        title: '3-Bed Duplex, Lekki',
-        priceRaw: 45000000,
-        priceFormatted: '₦45,000,000',
-        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80',
-      },
+      participant: { id: 'u1', name: 'Wade Warren', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150&h=150', isVerified: true, role: 'Property Seeker' },
+      lastMessage: 'Hello, please let try to...', lastMessageTime: '2h', unreadCount: 2,
+      contextType: 'property', contextId: 'prop_seed_001',
+      propertyContext: { id: 'prop_seed_001', title: '3-Bed Duplex, Lekki', priceRaw: 45000000, priceFormatted: '₦45,000,000', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80' },
       messages: [
         { id: 'm1', chatId: 'chat_1', senderId: 'u1', content: 'Hi Sir', contentType: 'text', createdAt: now, timestamp: '1:10PM' },
         { id: 'm2', chatId: 'chat_1', senderId: 'u1', content: 'I am interested in the 3-bed duplex. Is it still available?', contentType: 'text', createdAt: now, timestamp: '1:10PM' },
         { id: 'm3', chatId: 'chat_1', senderId: 'u1', content: 'Can we schedule a tour this weekend?', contentType: 'text', createdAt: now, timestamp: '1:11PM' },
-        { id: 'm4', chatId: 'chat_1', senderId: 'ME', content: 'Yes, the property is available. I can do Saturday 11am. Let me know if that works.', contentType: 'text', createdAt: now, timestamp: '1:12PM' },
+        { id: 'm4', chatId: 'chat_1', senderId: 'ME', content: 'Yes, the property is available. I can do Saturday 11am.', contentType: 'text', createdAt: now, timestamp: '1:12PM' },
       ],
       createdAt: now,
     },
     {
       id: 'chat_2',
-      participant: {
-        id: 'u2',
-        name: 'Alena B',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150',
-        role: 'Property Seeker',
-      },
-      lastMessage: 'Hello, is the mansion still listed?',
-      lastMessageTime: '2h',
-      unreadCount: 1,
-      contextType: 'property',
-      contextId: 'prop_seed_002',
-      propertyContext: {
-        id: 'prop_seed_002',
-        title: '5-Bed Mansion, Ikoyi',
-        priceRaw: 85000000,
-        priceFormatted: '₦85,000,000',
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80',
-      },
+      participant: { id: 'u2', name: 'Alena B', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150', role: 'Property Seeker' },
+      lastMessage: 'Hello, is the mansion still listed?', lastMessageTime: '2h', unreadCount: 1,
+      contextType: 'property', contextId: 'prop_seed_002',
+      propertyContext: { id: 'prop_seed_002', title: '5-Bed Mansion, Ikoyi', priceRaw: 85000000, priceFormatted: '₦85,000,000', image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80' },
       messages: [
         { id: 'c2m1', chatId: 'chat_2', senderId: 'u2', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '10:02AM' },
         { id: 'c2m2', chatId: 'chat_2', senderId: 'u2', content: 'Hello, is the mansion still listed?', contentType: 'text', createdAt: now, timestamp: '10:03AM' },
@@ -201,24 +275,10 @@ export const generateMockThreads = (): ChatThread[] => {
     },
     {
       id: 'chat_3',
-      participant: {
-        id: 'u3',
-        name: 'Cameron W',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150',
-        role: 'Property Seeker',
-      },
-      lastMessage: 'What is the annual rent for the office space?',
-      lastMessageTime: '2h',
-      unreadCount: 1,
-      contextType: 'property',
-      contextId: 'prop_seed_005',
-      propertyContext: {
-        id: 'prop_seed_005',
-        title: 'Office Space, Ikeja',
-        priceRaw: 5000000,
-        priceFormatted: '₦5,000,000/yr',
-        image: 'https://images.unsplash.com/photo-1600607687920-4e2a09be15f1?auto=format&fit=crop&q=80',
-      },
+      participant: { id: 'u3', name: 'Cameron W', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150', role: 'Property Seeker' },
+      lastMessage: 'What is the annual rent for the office space?', lastMessageTime: '2h', unreadCount: 1,
+      contextType: 'property', contextId: 'prop_seed_005',
+      propertyContext: { id: 'prop_seed_005', title: 'Office Space, Ikeja', priceRaw: 5000000, priceFormatted: '₦5,000,000/yr', image: 'https://images.unsplash.com/photo-1600607687920-4e2a09be15f1?auto=format&fit=crop&q=80' },
       messages: [
         { id: 'c3m1', chatId: 'chat_3', senderId: 'u3', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '9:15AM' },
         { id: 'c3m2', chatId: 'chat_3', senderId: 'ME', content: 'Hi Cameron, how can I help you?', contentType: 'text', createdAt: now, timestamp: '9:20AM' },
@@ -228,24 +288,10 @@ export const generateMockThreads = (): ChatThread[] => {
     },
     {
       id: 'chat_4',
-      participant: {
-        id: 'u4',
-        name: 'Ronald R',
-        avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=150&h=150',
-        role: 'Property Seeker',
-      },
-      lastMessage: 'Can I get a virtual tour link?',
-      lastMessageTime: '2h',
-      unreadCount: 1,
-      contextType: 'property',
-      contextId: 'prop_seed_001',
-      propertyContext: {
-        id: 'prop_seed_001',
-        title: '3-Bed Duplex, Lekki',
-        priceRaw: 45000000,
-        priceFormatted: '₦45,000,000',
-        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80',
-      },
+      participant: { id: 'u4', name: 'Ronald R', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=150&h=150', role: 'Property Seeker' },
+      lastMessage: 'Can I get a virtual tour link?', lastMessageTime: '2h', unreadCount: 1,
+      contextType: 'property', contextId: 'prop_seed_001',
+      propertyContext: { id: 'prop_seed_001', title: '3-Bed Duplex, Lekki', priceRaw: 45000000, priceFormatted: '₦45,000,000', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80' },
       messages: [
         { id: 'c4m1', chatId: 'chat_4', senderId: 'u4', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '8:30AM' },
         { id: 'c4m2', chatId: 'chat_4', senderId: 'ME', content: 'Good morning Ronald, happy to assist!', contentType: 'text', createdAt: now, timestamp: '8:45AM' },
@@ -255,24 +301,10 @@ export const generateMockThreads = (): ChatThread[] => {
     },
     {
       id: 'chat_5',
-      participant: {
-        id: 'u5',
-        name: 'Dianne R',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150',
-        role: 'Diaspora',
-      },
-      lastMessage: 'Interested in the Asokoro Villas project.',
-      lastMessageTime: '2h',
-      unreadCount: 1,
-      contextType: 'service',
-      contextId: 'plan_premium',
-      propertyContext: {
-        id: 'prop_seed_003',
-        title: 'Asokoro Villas Phase 2',
-        priceRaw: 90000000,
-        priceFormatted: '₦90,000,000',
-        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80',
-      },
+      participant: { id: 'u5', name: 'Dianne R', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150', role: 'Diaspora' },
+      lastMessage: 'Interested in the Asokoro Villas project.', lastMessageTime: '2h', unreadCount: 1,
+      contextType: 'service', contextId: 'plan_premium',
+      propertyContext: { id: 'prop_seed_003', title: 'Asokoro Villas Phase 2', priceRaw: 90000000, priceFormatted: '₦90,000,000', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80' },
       messages: [
         { id: 'c5m1', chatId: 'chat_5', senderId: 'u5', content: 'Hello', contentType: 'text', createdAt: now, timestamp: '7:00AM' },
         { id: 'c5m2', chatId: 'chat_5', senderId: 'ME', content: 'Hi Dianne, welcome! How can I help?', contentType: 'text', createdAt: now, timestamp: '7:10AM' },
@@ -306,18 +338,18 @@ export const useMessagesStore = create<MessagesStore>()(
         set({ isLoadingChats: true, error: null });
         try {
           if (USE_API) {
-            const data = await apiGet<{ threads: ChatThread[] }>('/api/messages/threads');
-            set({ threads: data.threads, isLoadingChats: false });
+            const currentUserId = useAuthStore.getState().user?.id ?? '';
+            const data = await apiGet<BackendConversation[]>('/api/messages/conversations');
+            const convs = Array.isArray(data) ? data : [];
+            const threads = convs.map(c => mapConversation(c, currentUserId));
+            set({ threads, isLoadingChats: false });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
             const { threads } = get();
             const seedThreads = generateMockThreads();
             if (threads.length === 0) {
-              // Fresh load — use full seed data
               set({ threads: seedThreads, isLoadingChats: false });
             } else {
-              // Patch any persisted threads whose messages array is still empty
-              // (fixes users who loaded before seed messages were added)
               const patched = threads.map((t) => {
                 if (t.messages.length > 0) return t;
                 const seed = seedThreads.find((s) => s.id === t.id);
@@ -335,13 +367,19 @@ export const useMessagesStore = create<MessagesStore>()(
         set({ isSendingMessage: true, error: null });
         try {
           if (USE_API) {
-            const data = await apiPost<{ message: Message }>(`/api/messages/${chatId}/send`, { content, type, files });
+            const currentUserId = useAuthStore.getState().user?.id ?? '';
+            // Backend expects { content, attachments? } — file uploads not yet implemented
+            const raw = await apiPost<BackendMessage>(
+              `/api/messages/conversations/${chatId}/messages`,
+              { content }
+            );
+            const newMessage = mapBackendMessage(raw, currentUserId);
             set((state) => ({
               threads: state.threads.map((thread) => {
                 if (thread.id !== chatId) return thread;
                 return {
                   ...thread,
-                  messages: [...thread.messages, data.message],
+                  messages: [...thread.messages, newMessage],
                   lastMessage: type === 'text' ? content : `[${type} attachment]`,
                   lastMessageTime: 'Just now',
                   unreadCount: 0,
@@ -421,6 +459,28 @@ export const useMessagesStore = create<MessagesStore>()(
           threads: [newThread, ...s.threads],
           activeChatId: newThread.id,
         }));
+
+        // In API mode, create the conversation on the backend and update the thread ID
+        if (USE_API) {
+          const payload: Record<string, unknown> = {
+            type: contextId ? 'LISTING' : 'DIRECT',
+            participantUserId: participant.id,
+          };
+          if (contextId) payload.listingId = contextId;
+
+          apiPost<BackendConversation>('/api/messages/conversations', payload)
+            .then(conv => {
+              // Replace temp ID with the real backend ID
+              set((s) => ({
+                threads: s.threads.map(t =>
+                  t.id === newThread.id ? { ...t, id: conv.id } : t
+                ),
+                activeChatId: conv.id,
+              }));
+            })
+            .catch(() => { /* keep temp thread — user can still chat locally */ });
+        }
+
         return newThread;
       },
 
@@ -430,6 +490,10 @@ export const useMessagesStore = create<MessagesStore>()(
             t.id === chatId ? { ...t, unreadCount: 0 } : t
           ),
         }));
+        // Notify backend in API mode (fire-and-forget)
+        if (USE_API) {
+          apiPost(`/api/messages/conversations/${chatId}/read`, {}).catch(() => {});
+        }
       },
 
       setActiveChatId: (id) => set({ activeChatId: id, isMobileContextOpen: false }),

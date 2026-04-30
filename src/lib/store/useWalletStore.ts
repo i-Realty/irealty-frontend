@@ -114,8 +114,13 @@ export const useWalletStore = create<WalletStore>()(
         set({ isLoadingLedger: true, error: null });
         try {
           if (USE_API) {
-            const data = await apiGet<{ transactions: WalletTransaction[]; walletBalance: number; escrowBalance: number }>('/api/wallet/ledger');
-            set({ transactions: data.transactions, walletBalance: data.walletBalance, escrowBalance: data.escrowBalance, isLoadingLedger: false });
+            // Balance returned in kobo — divide by 100 for naira display
+            const data = await apiGet<{ availableBalance: number; escrowBalance: number }>('/api/wallet/balance');
+            set({
+              walletBalance: (data.availableBalance ?? 0) / 100,
+              escrowBalance: (data.escrowBalance ?? 0) / 100,
+              isLoadingLedger: false,
+            });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 800));
             const { transactions } = get();
@@ -149,7 +154,12 @@ export const useWalletStore = create<WalletStore>()(
         try {
           if (USE_API) {
             const { currentWithdrawMethod, fiatDetails, cryptoDetails } = get();
-            await apiPost('/api/wallet/withdraw', { amount, method: currentWithdrawMethod, fiatDetails, cryptoDetails });
+            // Amount sent in kobo (smallest NGN unit)
+            await apiPost('/api/paystack/withdraw', {
+              amount: Math.round(amount * 100),
+              method: currentWithdrawMethod,
+              ...(currentWithdrawMethod === 'Fiat' ? { bankDetails: fiatDetails } : { cryptoDetails }),
+            });
           } else {
             await new Promise((resolve) => setTimeout(resolve, 1500));
           }
@@ -177,7 +187,8 @@ export const useWalletStore = create<WalletStore>()(
         set({ isProcessingAction: true, error: null });
         try {
           if (USE_API) {
-            await apiPut('/api/wallet/fiat-details', details);
+            // Register bank account as a Paystack transfer recipient
+            await apiPost('/api/paystack/transfer/recipient', details);
           } else {
             await new Promise((resolve) => setTimeout(resolve, 600));
           }

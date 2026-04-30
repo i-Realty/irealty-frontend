@@ -12,6 +12,7 @@ import { validateEmail, validateRequired, validatePassword } from '@/lib/utils/a
 import { useI18n } from '@/lib/i18n';
 import { apiPost, apiGet, ApiError, setTokenImmediate } from '@/lib/api/client';
 import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
+import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
 // When NEXT_PUBLIC_USE_API=true, this block is bypassed and a real API call is
@@ -106,6 +107,7 @@ export default function LoginPage() {
         login(authUser);
         useSettingsStore.getState().setActiveAccount(authUser.id);
         useSettingsStore.getState().fetchAccounts(); // non-blocking
+        useFavouritesStore.getState().hydrate();     // non-blocking
         const params     = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
         router.push(redirectTo);
