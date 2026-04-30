@@ -378,20 +378,24 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         // Backend expects linkedUserId (the target account's UUID)
         const data = await apiPost<BackendAuthResponse>('/api/auth/switch-account', { linkedUserId: accountId });
         const rawUser: BackendUser = data.user ?? (data as unknown as BackendUser);
-        // Use the main account's personal details for linked accounts
+        // Use the main account's real identity for linked accounts
         const mainProfile = get().profilesByAccount[get().mainAccountId];
-        const mainUser = mainProfile
-          ? { name: `${mainProfile.firstName} ${mainProfile.lastName}`.trim(), displayName: mainProfile.displayName, email: '' }
-          : null;
         const prevUser = useAuthStore.getState().user;
+        const realName = mainProfile
+          ? (`${mainProfile.firstName} ${mainProfile.lastName}`.trim() || mainProfile.displayName)
+          : (prevUser?.name || prevUser?.displayName || '');
+        const realDisplayName = mainProfile?.displayName || realName;
+        const realEmail = prevUser?.email || '';
 
         const rawName = `${rawUser.firstName ?? ''} ${rawUser.lastName ?? ''}`.trim();
+        const isPlaceholder = rawName === 'Linked Account' || rawUser.displayName === 'Linked Account';
+
         const mappedUser = {
           id:            rawUser.id,
-          name:          mainUser?.name || rawName || rawUser.displayName || 'User',
-          email:         prevUser?.email ?? rawUser.email,
+          name:          isPlaceholder ? (realName || 'User') : (rawName || rawUser.displayName || realName || 'User'),
+          email:         realEmail || rawUser.email,
           role:          mapRole(rawUser.roles?.[0] ?? ''),
-          displayName:   mainUser?.displayName || rawUser.displayName || rawName,
+          displayName:   isPlaceholder ? (realDisplayName || 'User') : (rawUser.displayName || rawName || realDisplayName || 'User'),
           avatarUrl:     prevUser?.avatarUrl ?? rawUser.avatarUrl ?? '/images/demo-avatar.jpg',
           kycStatus:     mapKycStatus(rawUser.verificationStatus ?? ''),
           accountStatus: mapAccountStatus(rawUser.isActive ?? true, rawUser.verificationStatus ?? ''),
@@ -429,11 +433,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const linked: AccountInfo[] = (Array.isArray(data) ? data : []).map(u => ({
         id:    u.id,
         role:  mapRole(u.roles?.[0] ?? '') as AccountRole,
-        name:  u.displayName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || 'User',
+        name:  u.displayName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || '',
         email: u.email,
       }));
-      // Ensure the current user is always in the list even if the
-      // backend's linked-accounts endpoint doesn't include them.
+
+      // Ensure the current user is always in the list
       const currentUser = useAuthStore.getState().user;
       const currentId = currentUser?.id;
       if (currentId && !linked.some(a => a.id === currentId)) {
@@ -445,15 +449,23 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         });
       }
 
-      // All linked accounts share the main account's personal details.
+      // The reliable source for the user's real name is either the
+      // main account's stored profile or the auth store — NOT the
+      // backend's linked-accounts list which has placeholder data.
       const mainId = get().mainAccountId;
-      const mainAcc = linked.find(a => a.id === mainId) ?? linked[0];
-      if (mainAcc) {
-        for (const acc of linked) {
-          if (acc.id !== mainAcc.id) {
-            acc.name  = mainAcc.name;
-            acc.email = mainAcc.email;
-          }
+      const mainProfile = mainId ? get().profilesByAccount[mainId] : null;
+      const realName = mainProfile
+        ? (mainProfile.displayName || `${mainProfile.firstName} ${mainProfile.lastName}`.trim())
+        : (currentUser?.displayName || currentUser?.name || '');
+      const realEmail = currentUser?.email || '';
+
+      // Apply the real name/email to ALL accounts (main + linked)
+      for (const acc of linked) {
+        if (!acc.name || acc.name === 'Linked Account' || acc.name === 'User') {
+          acc.name = realName || acc.name || 'User';
+        }
+        if (!acc.email || acc.email.includes('@internal')) {
+          acc.email = realEmail || acc.email;
         }
       }
 
