@@ -296,17 +296,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
     if (!target) return;
 
-    // Linked accounts share the main account's personal details.
-    // Only fetch /me for the main account; linked accounts reuse its profile.
     const mainId = get().mainAccountId;
-    const isMainAccount = !mainId || accountId === mainId;
 
+    // Use any previously stored profile as the immediate value
     let profile = get().profilesByAccount[accountId];
 
     if (!profile && USE_API) {
-      // For linked accounts, copy the main account's profile
+      // Seed linked accounts with the main account's profile as default
       const mainProfile = mainId ? get().profilesByAccount[mainId] : null;
-      if (mainProfile && !isMainAccount) {
+      if (mainProfile && accountId !== mainId) {
         profile = { ...mainProfile };
       } else {
         const authUser = useAuthStore.getState().user;
@@ -334,13 +332,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       profilesByAccount: { ...get().profilesByAccount, [accountId]: profile },
     });
 
-    // Fetch full profile from /me only for the main account.
-    // Linked accounts reuse the main account's profile.
-    if (USE_API && isMainAccount) {
+    // Always fetch /me in the background to get the latest data for this account.
+    // If the backend returns placeholder data (linked accounts that haven't been
+    // customized yet), keep the main account's profile as default.
+    if (USE_API) {
       apiGet<BackendUser & { phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }>('/api/auth/me')
         .then(me => {
           const phone = me.phoneNumber?.replace(/^\+234/, '') ?? '';
-          const fullProfile: UserProfilePayload = {
+          const fetched: UserProfilePayload = {
             firstName:   me.firstName ?? '',
             lastName:    me.lastName ?? '',
             displayName: me.displayName ?? '',
@@ -354,9 +353,18 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
               twitter:   me.twitterUrl ?? '',
             },
           };
+
+          // Detect placeholder linked accounts ("Linked Account", "linked-...@internal")
+          const isPlaceholder = fetched.firstName === 'Linked' && fetched.lastName === 'Account';
+
+          if (isPlaceholder && accountId !== mainId) {
+            // Keep the main account's profile as default — don't overwrite
+            return;
+          }
+
           set({
-            profile: fullProfile,
-            profilesByAccount: { ...get().profilesByAccount, [accountId]: fullProfile },
+            profile: fetched,
+            profilesByAccount: { ...get().profilesByAccount, [accountId]: fetched },
           });
         })
         .catch(() => { /* non-critical */ });
