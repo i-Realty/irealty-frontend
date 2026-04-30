@@ -100,6 +100,8 @@ interface SettingsStore {
   fetchAccounts: () => Promise<void>;
   /** Add a new linked account role (API mode only). */
   addLinkedAccount: (role: AccountRole) => Promise<void>;
+  /** Clear all user-specific data (call on logout). */
+  resetUserData: () => void;
 
   // Payloads
   profile: UserProfilePayload;
@@ -288,9 +290,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const authUser = useAuthStore.getState().user;
       if (authUser && authUser.id === accountId) {
         target = { id: authUser.id, role: authUser.role as AccountRole, name: authUser.displayName || authUser.name, email: authUser.email };
-        // The first account set after login is the main (original) account.
-        const mainId = get().mainAccountId || accountId;
-        set({ accounts: [target], mainAccountId: mainId });
+        // Fresh login — this user is the main account. Clear all stale
+        // data from any previous user's session.
+        set({ accounts: [target], mainAccountId: accountId, profilesByAccount: {} });
       }
     }
 
@@ -485,6 +487,19 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       displayName: undefined,
     });
     await get().fetchAccounts();
+  },
+
+  resetUserData: () => {
+    set({
+      mainAccountId: '',
+      accounts: USE_API ? [] : MOCK_ACCOUNTS,
+      activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
+      profilesByAccount: USE_API ? {} : { ...MOCK_ACCOUNT_PROFILES },
+      profile: USE_API
+        ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
+        : MOCK_ACCOUNT_PROFILES['demo-admin'],
+      isAddAccountModalOpen: false,
+    });
   },
 
   profile: USE_API

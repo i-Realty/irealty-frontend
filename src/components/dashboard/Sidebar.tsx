@@ -47,8 +47,10 @@ export default function Sidebar() {
   const navItems = getNavItems(getRoleFromPath(pathname ?? ''));
   const { t } = useI18n();
 
+  const { resetUserData } = useSettingsStore();
   const handleLogout = () => {
     logout();
+    resetUserData();
     close();
     router.push('/auth/login');
   };
