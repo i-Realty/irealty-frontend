@@ -66,12 +66,14 @@ function VerifyCodeContent() {
     }
   }
 
-  // Guard: if no email anywhere, they skipped steps
+  // Guard: if no email on initial mount, they skipped steps.
+  // Only check once — don't react to email clearing after signupStore.reset().
+  const hadEmailOnMount = React.useRef(!!email);
   useEffect(() => {
-    if (!email) {
+    if (!hadEmailOnMount.current) {
       router.replace('/auth/signup');
     }
-  }, [email, router]);
+  }, [router]);
 
   async function verifyBase() {
     const otpErr = validateOtp(code);
