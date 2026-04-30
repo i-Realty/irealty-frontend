@@ -269,7 +269,7 @@ export default function MapMarkers({
       if (action === "toggle-like") {
         e.preventDefault();
         e.stopPropagation();
-        toggleLike(id);
+        toggleLike(String(id));
         // Update heart icon immediately
         const btn = el.querySelector(`#popup-heart-${id}`);
         if (btn) {

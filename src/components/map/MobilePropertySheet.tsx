@@ -104,7 +104,7 @@ export default function MobilePropertySheet({
               className="object-cover"
             />
             <button
-              onClick={(e) => { e.stopPropagation(); toggleLike(property.id); }}
+              onClick={(e) => { e.stopPropagation(); toggleLike(String(property.id)); }}
               className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow"
             >
               {liked ? "❤️" : "🤍"}

@@ -77,7 +77,7 @@ function VirtualTourContent() {
               <button className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
                 <Image src="/icons/share.svg" width={24} height={24} alt="share" />
               </button>
-              <button onClick={() => toggleLike(pid)} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+              <button onClick={() => toggleLike(String(pid))} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
                 <Image src={fav ? '/icons/favorite-filled.svg' : '/icons/favorite-dark.svg'} width={16} height={16} alt="fav" />
               </button>
             </div>

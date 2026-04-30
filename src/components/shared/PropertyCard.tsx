@@ -50,7 +50,7 @@ export default function PropertyCard({ property: p, href }: Props) {
           </div>
         )}
         <button
-          onClick={(e) => { e.preventDefault(); toggleLike(p.id); }}
+          onClick={(e) => { e.preventDefault(); toggleLike(String(p.id)); }}
           aria-pressed={isLiked}
           className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#160B0B]/80 p-1 z-30"
           aria-label={isLiked ? "Unfavorite" : "Favorite"}

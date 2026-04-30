@@ -58,12 +58,12 @@ export default function PropertyDetails() {
 
   function toggleLike(arg?: React.MouseEvent | number) {
     if (typeof arg === 'number') {
-      toggleStoreLike(arg);
+      toggleStoreLike(String(arg));
       return;
     }
     const e = arg as React.MouseEvent | undefined;
     e?.stopPropagation();
-    toggleStoreLike(propId);
+    toggleStoreLike(String(propId));
   }
 
   return (

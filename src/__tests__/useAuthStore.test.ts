@@ -9,6 +9,7 @@ const mockUser: AuthUser = {
   displayName: 'Jane',
   avatarUrl: 'https://example.com/avatar.jpg',
   kycStatus: 'verified',
+  accountStatus: 'active',
 };
 
 describe('useAuthStore', () => {
