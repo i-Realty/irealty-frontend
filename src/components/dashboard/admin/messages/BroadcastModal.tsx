@@ -5,6 +5,7 @@ import { X, Send, Users } from 'lucide-react';
 import type { UserRole } from '@/lib/store/useAuthStore';
 import { useEscapeKey } from '@/lib/hooks/useEscapeKey';
 import { useNotificationStore } from '@/lib/store/useNotificationStore';
+import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 
 const ROLE_OPTIONS: { value: 'all' | UserRole; label: string }[] = [
   { value: 'all', label: 'All Users' },
@@ -45,9 +46,13 @@ export default function BroadcastModal({ isOpen, onClose }: Props) {
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) return;
     setIsSending(true);
-    await new Promise((r) => setTimeout(r, 1200));
 
-    // Emit broadcast notification into the current session
+    // Send broadcast via backend API (POST /api/admin/messages/broadcast)
+    await useAdminDashboardStore.getState().broadcastMessage(
+      `${subject.trim()}: ${message.trim()}`
+    );
+
+    // Also emit locally so admins see it in their session
     useNotificationStore.getState().broadcast(
       subject.trim(),
       message.trim()

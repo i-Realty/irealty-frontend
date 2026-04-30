@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 import { platformFeeSchema, extractErrors } from '@/lib/validations/settings';
 import { Loader2, Percent, Info } from 'lucide-react';
@@ -34,8 +34,11 @@ const FEE_DESCRIPTIONS: Record<string, { label: string; description: string; uni
 };
 
 export default function AdminPlatformFees() {
-  const { platformFees, updatePlatformFees, submitPlatformFees } = useAdminDashboardStore();
+  const { platformFees, updatePlatformFees, submitPlatformFees, fetchPlatformFees } = useAdminDashboardStore();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Load current fees from backend on mount
+  useEffect(() => { fetchPlatformFees(); }, [fetchPlatformFees]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
