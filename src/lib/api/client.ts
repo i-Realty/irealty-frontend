@@ -175,7 +175,16 @@ async function request<T>(
   // 204 No Content — return empty object
   if (response.status === 204) return {} as T;
 
-  return response.json() as Promise<T>;
+  const json = await response.json();
+
+  // Many NestJS backends wrap responses in { statusCode, message, data }.
+  // Unwrap automatically so callers always get the actual payload.
+  if (json && typeof json === 'object' && 'data' in json && json.data !== undefined
+      && ('statusCode' in json || 'message' in json)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 // ── Public helpers ────────────────────────────────────────────────────

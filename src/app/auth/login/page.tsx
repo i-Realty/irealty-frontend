@@ -100,11 +100,8 @@ export default function LoginPage() {
         // X-Skip-Auth-Redirect prevents the 401 handler from hard-redirecting
         // back to /auth/login if the /me call fails — we want the catch block
         // below to handle it instead.
-        const meRaw    = await apiGet<BackendUser & { data?: BackendUser }>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
-        // Unwrap NestJS { data: { … } } envelope if present
-        const meData   = (meRaw.data && typeof meRaw.data === 'object' && 'id' in meRaw.data) ? meRaw.data : meRaw;
+        const meData   = await apiGet<BackendUser>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
         const authUser = mapUser(meData);
-        console.log('[i-Realty] /me role:', meData.roles, '→', authUser.role, '→', ROLE_DASHBOARD_MAP[authUser.role]);
 
         login(authUser);
         useSettingsStore.getState().setActiveAccount(authUser.id);
