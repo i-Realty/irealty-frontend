@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { User, Home, Users, Globe, Building2, X, Loader2 } from 'lucide-react';
 import { useSettingsStore, type AccountRole } from '@/lib/store/useSettingsStore';
