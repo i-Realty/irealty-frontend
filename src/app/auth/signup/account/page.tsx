@@ -10,8 +10,21 @@ import PasswordInput from '@/components/auth/PasswordInput';
 import { useSignupStore } from '@/lib/store/useSignupStore';
 import { validateEmail, validatePassword, validatePhone, validateRequired, validateUsername } from '@/lib/utils/authValidation';
 import { useI18n } from '@/lib/i18n';
-import { apiPost, ApiError } from '@/lib/api/client';
-import { SIGNUP_ROLE_TO_BACKEND } from '@/lib/api/adapters';
+import { apiPost, apiGet, ApiError, setTokenImmediate } from '@/lib/api/client';
+import { SIGNUP_ROLE_TO_BACKEND, mapUser, extractToken, extractRefreshToken, type BackendUser } from '@/lib/api/adapters';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useSettingsStore } from '@/lib/store/useSettingsStore';
+import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
+import { signInWithGoogle } from '@/lib/services/firebase';
+
+const ROLE_DASHBOARD_MAP: Record<string, string> = {
+  'Admin':           '/dashboard/admin',
+  'Agent':           '/dashboard/agent',
+  'Developer':       '/dashboard/developer',
+  'Property Seeker': '/dashboard/seeker',
+  'Landlord':        '/dashboard/landlord',
+  'Diaspora':        '/dashboard/diaspora',
+};
 
 export default function SignupAccount() {
   const router = useRouter();
@@ -48,6 +61,8 @@ export default function SignupAccount() {
   // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login, setToken } = useAuthStore();
 
   async function saveAndNext() {
     setErrors({});
@@ -100,6 +115,38 @@ export default function SignupAccount() {
 
     // ── Mock mode: skip API, go straight to verify ──────────────
     router.push('/auth/signup/verify');
+  }
+
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    setErrors({});
+    try {
+      const { backendResponse } = await signInWithGoogle();
+      const token        = extractToken(backendResponse);
+      const refreshToken = extractRefreshToken(backendResponse);
+      if (!token) throw new Error('No access token returned from Google sign-in.');
+      setToken(token, refreshToken);
+      setTokenImmediate(token);
+      const meData   = await apiGet<BackendUser>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
+      const authUser = mapUser(meData);
+      login(authUser);
+      useSettingsStore.getState().setActiveAccount(authUser.id);
+      useSettingsStore.getState().fetchAccounts();
+      useFavouritesStore.getState().hydrate();
+      router.push(ROLE_DASHBOARD_MAP[authUser.role] ?? '/dashboard/seeker');
+    } catch (err: unknown) {
+      if (err instanceof Error && (
+        err.message.includes('popup_closed_by_user') ||
+        err.message.includes('cancelled-popup-request')
+      )) {
+        setGoogleLoading(false);
+        return;
+      }
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
+      setErrors({ general: msg });
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   // Hide the page if redirecting
@@ -216,25 +263,23 @@ export default function SignupAccount() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
-          {process.env.NEXT_PUBLIC_USE_API === 'true' ? (
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '')}/api/v1/auth/google`}
-              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
+          <button
+            type="button"
+            onClick={process.env.NEXT_PUBLIC_USE_API === 'true' ? handleGoogleSignIn : undefined}
+            disabled={googleLoading || loading || process.env.NEXT_PUBLIC_USE_API !== 'true'}
+            className={`w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border font-medium transition-colors
+              ${process.env.NEXT_PUBLIC_USE_API === 'true'
+                ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+              }`}
+          >
+            {googleLoading ? (
+              <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
               <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-              {t('auth.continueWithGoogle')}
-            </a>
-          ) : (
-            <button
-              type="button"
-              disabled
-              title="Google sign-in is coming soon"
-              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60"
-            >
-              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-              {t('auth.continueWithGoogle')}
-            </button>
-          )}
+            )}
+            {googleLoading ? 'Signing in…' : t('auth.continueWithGoogle')}
+          </button>
         </div>
       </div>
     </AuthLayout>

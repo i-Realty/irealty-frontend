@@ -13,6 +13,7 @@ import { useI18n } from '@/lib/i18n';
 import { apiPost, apiGet, ApiError, setTokenImmediate } from '@/lib/api/client';
 import { mapUser, extractToken, extractRefreshToken, type BackendAuthResponse, type BackendUser } from '@/lib/api/adapters';
 import { useFavouritesStore } from '@/lib/store/useFavouritesStore';
+import { signInWithGoogle } from '@/lib/services/firebase';
 
 // ── Mock credentials (until backend is integrated) ──────────────────────────
 // When NEXT_PUBLIC_USE_API=true, this block is bypassed and a real API call is
@@ -44,6 +45,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Clear any stale session when the user *intentionally* navigates to login.
   // Only fires on initial mount — does NOT react to isLoggedIn changing later
@@ -55,9 +57,18 @@ export default function LoginPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   // Errors state
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>(() => {
+    // Surface errors forwarded from the Google OAuth callback page
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('error');
+      if (err === 'google_auth_failed') return { general: 'Google sign-in failed. Please try again or use email and password.' };
+      if (err) return { general: decodeURIComponent(err) };
+    }
+    return {};
+  });
 
   const canSubmit = email.trim() !== '' && password.trim() !== '' && !loading;
 
@@ -157,6 +168,41 @@ export default function LoginPage() {
     }, 500);
   }
 
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    setErrors({});
+    try {
+      const { backendResponse } = await signInWithGoogle();
+      const token        = extractToken(backendResponse);
+      const refreshToken = extractRefreshToken(backendResponse);
+      if (!token) throw new Error('No access token returned from Google sign-in.');
+      setToken(token, refreshToken);
+      setTokenImmediate(token);
+      const meData   = await apiGet<BackendUser>('/api/auth/me', { 'X-Skip-Auth-Redirect': '1' });
+      const authUser = mapUser(meData);
+      login(authUser);
+      useSettingsStore.getState().setActiveAccount(authUser.id);
+      useSettingsStore.getState().fetchAccounts();
+      useFavouritesStore.getState().hydrate();
+      const params     = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect') || ROLE_DASHBOARD_MAP[authUser.role];
+      router.push(redirectTo);
+    } catch (err: unknown) {
+      // User closed the popup — not an error worth showing
+      if (err instanceof Error && (
+        err.message.includes('popup_closed_by_user') ||
+        err.message.includes('cancelled-popup-request')
+      )) {
+        setGoogleLoading(false);
+        return;
+      }
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
+      setErrors({ general: msg });
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <AuthLayout maxWidth={500}>
       <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-8 sm:p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-700">
@@ -216,25 +262,23 @@ export default function LoginPage() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
-          {process.env.NEXT_PUBLIC_USE_API === 'true' ? (
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '')}/api/v1/auth/google`}
-              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
+          <button
+            type="button"
+            onClick={process.env.NEXT_PUBLIC_USE_API === 'true' ? handleGoogleSignIn : undefined}
+            disabled={googleLoading || loading || process.env.NEXT_PUBLIC_USE_API !== 'true'}
+            className={`w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border font-medium transition-colors
+              ${process.env.NEXT_PUBLIC_USE_API === 'true'
+                ? 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
+                : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60'
+              }`}
+          >
+            {googleLoading ? (
+              <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
               <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-              {t('auth.continueWithGoogle')}
-            </a>
-          ) : (
-            <button
-              type="button"
-              disabled
-              title="Google sign-in is coming soon"
-              className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 font-medium text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60"
-            >
-              <Image src="/icons/google.svg" alt="Google" width={20} height={20} />
-              {t('auth.continueWithGoogle')}
-            </button>
-          )}
+            )}
+            {googleLoading ? 'Signing in…' : t('auth.continueWithGoogle')}
+          </button>
         </form>
       </div>
     </AuthLayout>
