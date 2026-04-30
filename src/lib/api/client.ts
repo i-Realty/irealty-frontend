@@ -136,18 +136,17 @@ function extractErrorMessage(body: unknown, status: number): string {
     const val = obj[key];
     if (typeof val === 'string' && val.trim()) return val;
     if (Array.isArray(val)) {
-      // Array of strings (NestJS validation) or array of objects
       const strs = val.map(v =>
         typeof v === 'string' ? v : (v as Record<string, unknown>)?.message ?? ''
       ).filter(Boolean);
-      if (strs.length) return strs.join('. ');
+      // Use first meaningful entry — subsequent ones are often generic
+      // labels like "Unauthorized", "Bad Request", etc.
+      if (strs.length) return strs[0];
     }
-    // Nested object like { message: { email: "..." } }
     if (val && typeof val === 'object' && !Array.isArray(val)) {
       const nested = Object.values(val as Record<string, unknown>)
-        .filter(v => typeof v === 'string')
-        .join('. ');
-      if (nested) return nested;
+        .filter(v => typeof v === 'string');
+      if (nested.length) return nested[0] as string;
     }
   }
 
