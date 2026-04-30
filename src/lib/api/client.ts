@@ -136,11 +136,9 @@ function extractErrorMessage(body: unknown, status: number): string {
     const val = obj[key];
     if (typeof val === 'string' && val.trim()) return val;
     if (Array.isArray(val)) {
-      const strs = val.map(v =>
-        typeof v === 'string' ? v : (v as Record<string, unknown>)?.message ?? ''
-      ).filter(Boolean);
-      // Use first meaningful entry — subsequent ones are often generic
-      // labels like "Unauthorized", "Bad Request", etc.
+      const strs: string[] = val
+        .map(v => typeof v === 'string' ? v : String((v as Record<string, unknown>)?.message ?? ''))
+        .filter(s => s.length > 0);
       if (strs.length) return strs[0];
     }
     if (val && typeof val === 'object' && !Array.isArray(val)) {
