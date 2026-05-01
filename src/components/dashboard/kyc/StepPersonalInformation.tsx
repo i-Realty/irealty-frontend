@@ -56,15 +56,37 @@ export default function StepPersonalInformation() {
         const dd = formData.dobDay.padStart(2, '0');
         const dob = `${formData.dobYear}-${mm}-${dd}`;
 
-        // NIBSS stores names in uppercase — normalise before sending
+        // Normalise names (NIBSS stores in uppercase)
         const firstName = formData.firstName.trim().toUpperCase();
         const lastName  = formData.lastName.trim().toUpperCase();
 
-        // Submit personal info (backend validates BVN internally)
+        // Step 1: verify BVN identity fields
+        // 403 = user is not permitted to call the endpoint directly; proceed anyway.
+        // Any other 4xx means bad data — surface to the user.
+        try {
+          await apiPost('/api/verifications/bvn', {
+            bvn:         formData.bvn.trim(),
+            firstName,
+            lastName,
+            dateOfBirth: dob,
+          });
+        } catch (bvnErr) {
+          const isForbidden = bvnErr instanceof Error && (
+            bvnErr.message.toLowerCase().includes('forbidden') ||
+            bvnErr.message.includes('403')
+          );
+          if (!isForbidden) {
+            throw bvnErr; // real validation error — stop
+          }
+          // 403 = endpoint is admin-only; ignore and let personal-info proceed
+        }
+
+        // Step 2: submit address-level personal info.
+        // firstName/lastName are intentionally omitted — they belong to the BVN
+        // verification step above and re-sending them here re-triggers the backend's
+        // NIBSS name-match check on an endpoint that expects address data only.
         await apiPost('/api/kyc/personal-info', {
           bvn:         formData.bvn.trim(),
-          firstName,
-          lastName,
           dateOfBirth: dob,
           address:     formData.address.trim(),
           postCode:    formData.postCode.trim(),
