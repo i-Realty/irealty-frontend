@@ -1,25 +1,39 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { Camera, Loader2, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
+import { uploadFile } from '@/lib/services/upload';
+import { apiPut } from '@/lib/api/client';
 
 const FALLBACK_AVATAR = '/images/demo-avatar.jpg';
+const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function AdminProfileSettings() {
   const { profile, updateProfile, updateSocials, submitProfileMock, isSaving } = useSettingsStore();
   const { user, updateUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const avatarSrc = user?.avatarUrl ?? FALLBACK_AVATAR;
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const localUrl = URL.createObjectURL(file);
-    updateUser({ avatarUrl: localUrl });
+    updateUser({ avatarUrl: URL.createObjectURL(file) });
+    if (!USE_API) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadFile(file);
+      updateUser({ avatarUrl: url });
+      await apiPut('/api/auth/me', { avatarUrl: url });
+    } catch {
+      // Blob preview stays
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -58,7 +72,9 @@ export default function AdminProfileSettings() {
                      className="w-20 h-20 rounded-full border-4 border-white shadow-sm object-cover group-hover:opacity-90 transition-opacity"
                   />
                   <div className="absolute bottom-0 right-0 w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                     <Camera className="w-3.5 h-3.5 text-blue-600" />
+                     {isUploadingAvatar
+                       ? <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                       : <Camera className="w-3.5 h-3.5 text-blue-600" />}
                   </div>
                </div>
                <div className="flex flex-col">

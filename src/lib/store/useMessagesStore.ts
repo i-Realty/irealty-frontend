@@ -3,9 +3,14 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiGet, apiPost } from '@/lib/api/client';
 import { mapRole } from '@/lib/api/adapters';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { initPusher, subscribeToConversation } from '@/lib/services/pusher';
 import type { UserRole } from './useAuthStore';
 
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
+
+// Module-level unsubscribe handle — lives outside the store to avoid
+// Zustand serialization and to survive hot-reloads cleanly.
+let pusherUnsub: (() => void) | null = null;
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -552,7 +557,46 @@ export const useMessagesStore = create<MessagesStore>()(
         }
       },
 
-      setActiveChatId: (id) => set({ activeChatId: id, isMobileContextOpen: false }),
+      setActiveChatId: (id) => {
+        // Unsubscribe from the previous conversation channel
+        if (pusherUnsub) { pusherUnsub(); pusherUnsub = null; }
+
+        set({ activeChatId: id, isMobileContextOpen: false });
+
+        // Subscribe to the new conversation channel via Pusher (API mode only)
+        if (id && USE_API) {
+          initPusher().then(() => {
+            const currentUserId = useAuthStore.getState().user?.id ?? '';
+            pusherUnsub = subscribeToConversation(id, (raw: unknown) => {
+              const m = raw as Record<string, unknown>;
+              const createdAt = String(m.createdAt ?? new Date().toISOString());
+              const newMsg: Message = {
+                id:          String(m.id ?? `pusher_${Date.now()}`),
+                chatId:      id,
+                senderId:    String(m.senderId ?? '') === currentUserId ? 'ME' : String(m.senderId ?? ''),
+                content:     String(m.content ?? ''),
+                contentType: 'text',
+                files:       [],
+                createdAt,
+                timestamp:   new Date(createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+              };
+              // Only add if not already in the thread (dedup with optimistic messages)
+              const alreadyPresent = (useMessagesStore.getState().threads
+                .find(t => t.id === id)?.messages ?? [])
+                .some(existing => existing.id === newMsg.id);
+              if (!alreadyPresent) {
+                useMessagesStore.setState((s) => ({
+                  threads: s.threads.map(t =>
+                    t.id === id
+                      ? { ...t, messages: [...t.messages, newMsg], lastMessage: newMsg.content, lastMessageTime: 'Just now' }
+                      : t
+                  ),
+                }));
+              }
+            });
+          }).catch(() => {});
+        }
+      },
       setSearchQuery: (query) => set({ searchQuery: query }),
       toggleMobileContext: (isOpen) => set({ isMobileContextOpen: isOpen }),
 
