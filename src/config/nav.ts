@@ -13,6 +13,8 @@ import {
   LayoutGrid,
   Users,
   Coins,
+  ShieldCheck,
+  ClipboardList,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { UserRole } from '@/lib/store/useAuthStore';
@@ -115,12 +117,16 @@ const adminNav: NavItem[] = [
   { label: 'OVERVIEW', isHeader: true },
   { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/admin', i18nKey: 'nav.dashboard' },
   { label: 'Users', icon: Users, href: '/dashboard/admin/users', i18nKey: 'admin.allUsers' },
+  { label: 'Admins', icon: ShieldCheck, href: '/dashboard/admin/admins' },
   { label: 'Properties', icon: Home, href: '/dashboard/admin/properties', i18nKey: 'nav.properties' },
   { label: 'Messages', icon: MessageSquare, href: '/dashboard/admin/messages', i18nKey: 'nav.messages' },
 
   { label: 'FINANCIAL', isHeader: true },
   { label: 'Transactions', icon: ArrowRightLeft, href: '/dashboard/admin/transactions', i18nKey: 'nav.transactions' },
   { label: 'Finance', icon: Coins, href: '/dashboard/admin/finance' },
+
+  { label: 'SYSTEM', isHeader: true },
+  { label: 'Audit Logs', icon: ClipboardList, href: '/dashboard/admin/audit-logs' },
 
   { label: 'ACCOUNT', isHeader: true },
   { label: 'Settings', icon: Settings, href: '/dashboard/admin/settings', i18nKey: 'nav.settings' },
@@ -168,6 +174,8 @@ export const PAGE_TITLE_MAP: Record<string, string> = {
   '/dashboard/admin/messages': 'Messages',
   '/dashboard/admin/transactions': 'Transactions',
   '/dashboard/admin/finance': 'Finance',
+  '/dashboard/admin/admins': 'Admins',
+  '/dashboard/admin/audit-logs': 'Audit Logs',
   '/dashboard/admin/settings': 'Settings',
   '/dashboard/landlord': 'Dashboard',
   '/dashboard/landlord/properties': 'Properties',

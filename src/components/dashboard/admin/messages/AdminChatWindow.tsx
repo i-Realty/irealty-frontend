@@ -16,8 +16,11 @@ import {
   Play,
   Pause,
   Video,
+  ArrowRightLeft,
+  X,
 } from 'lucide-react';
 import { useAdminMessagesStore } from '@/lib/store/useAdminMessagesStore';
+import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 import type { AdminMessage, AdminMessageFile } from '@/lib/store/useAdminMessagesStore';
 
 // ── Audio helpers ──────────────────────────────────────────────────────────
@@ -167,6 +170,71 @@ const STATUS_ACTIONS = {
   Resolved:    [{ label: 'Reopen', icon: RotateCcw, action: 'reopen' as const, style: 'bg-gray-600 hover:bg-gray-700 text-white' }],
 };
 
+// ── Transfer modal ────────────────────────────────────────────────────────
+function TransferModal({ threadId, onClose }: { threadId: string; onClose: () => void }) {
+  const { admins, fetchAdmins } = useAdminDashboardStore();
+  const { transferTicket, isActionLoading } = useAdminMessagesStore();
+  const [selectedId, setSelectedId] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => { if (admins.length === 0) fetchAdmins(); }, [admins.length, fetchAdmins]);
+
+  const handleTransfer = async () => {
+    if (!selectedId) return;
+    await transferTicket(threadId, selectedId);
+    setDone(true);
+    setTimeout(() => { setDone(false); onClose(); }, 1200);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm mx-4 p-5 shadow-xl animate-in fade-in zoom-in-95">
+        <button onClick={onClose} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+          <X className="w-4 h-4" />
+        </button>
+        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">Transfer Ticket</h3>
+        <p className="text-[12px] text-gray-400 mb-4">Assign this ticket to another admin</p>
+        {done ? (
+          <div className="py-6 text-center">
+            <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Ticket transferred</p>
+          </div>
+        ) : (
+          <>
+            {admins.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">No admins available</p>
+            ) : (
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto mb-4">
+                {admins.map(a => (
+                  <button key={a.id} onClick={() => setSelectedId(a.id)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${selectedId === a.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold text-[13px] flex-shrink-0">
+                      {a.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.name}</p>
+                      <p className="text-[11px] text-gray-400">{a.email}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+              <button onClick={handleTransfer} disabled={!selectedId || isActionLoading}
+                className="flex-1 bg-blue-600 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />}
+                Transfer
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 export default function AdminChatWindow() {
   const {
@@ -178,6 +246,7 @@ export default function AdminChatWindow() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [micError, setMicError] = useState<string | null>(null);
+  const [showTransfer, setShowTransfer] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -231,6 +300,7 @@ export default function AdminChatWindow() {
   }, [activeThreadId, sendReplyMock]);
 
   if (!thread) return null;
+  const canTransfer = thread.status !== 'Resolved';
 
   // ── Audio recording ──────────────────────────────────────────────────────
   const startRecording = async () => {
@@ -279,6 +349,9 @@ export default function AdminChatWindow() {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#1e1e1e] relative">
+      {showTransfer && activeThreadId && (
+        <TransferModal threadId={activeThreadId} onClose={() => setShowTransfer(false)} />
+      )}
       {/* Header */}
       <div className="flex-none px-4 py-3 bg-white dark:bg-[#1e1e1e] border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shadow-sm z-10 sticky top-0">
         <div className="flex items-center gap-3">
@@ -306,6 +379,13 @@ export default function AdminChatWindow() {
               </button>
             );
           })}
+          {canTransfer && (
+            <button onClick={() => setShowTransfer(true)} disabled={isActionLoading}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors disabled:opacity-50">
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              Transfer
+            </button>
+          )}
           <button onClick={() => toggleMobileDetail(!isMobileDetailOpen)} className={`p-2 rounded-full transition-colors ${isMobileDetailOpen ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:bg-gray-100'}`}>
             <Info className="w-5 h-5" />
           </button>
@@ -324,6 +404,13 @@ export default function AdminChatWindow() {
             </button>
           );
         })}
+        {canTransfer && (
+          <button onClick={() => setShowTransfer(true)} disabled={isActionLoading}
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors disabled:opacity-50">
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            Transfer
+          </button>
+        )}
       </div>
 
       {/* Ticket meta strip */}
