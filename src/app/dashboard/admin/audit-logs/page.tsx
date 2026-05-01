@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
+
+type AuditLog = { id: string; timestamp: string; action: string; actor: string; details?: string };
 import { Search, RefreshCw, Loader2, ClipboardList } from 'lucide-react';
 
 export default function AuditLogsPage() {
@@ -17,7 +19,7 @@ export default function AuditLogsPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return auditLogs;
     const q = search.toLowerCase();
-    return auditLogs.filter(l =>
+    return auditLogs.filter((l: AuditLog) =>
       l.action.toLowerCase().includes(q) ||
       l.actor.toLowerCase().includes(q) ||
       (l.details ?? '').toLowerCase().includes(q)
