@@ -635,8 +635,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   approveKyc: async (userId) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
-    const user = (useAdminDashboardStore.getState().users.find((u) => u.id === userId) ??
-      useAdminDashboardStore.getState().selectedUser) as AdminUser | null;
+    const user = (get().users.find((u: AdminUser) => u.id === userId) ??
+      get().selectedUser) as AdminUser | null;
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId
         ? { ...s.selectedUser, kycStatus: 'verified', kycProgress: 100, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'verified' as const })) }
@@ -655,7 +655,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   rejectKyc: async (userId, reason = 'Rejected by admin') => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
-    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    const user = get().users.find((u: AdminUser) => u.id === userId);
     set((s) => ({
       selectedUser: s.selectedUser?.id === userId
         ? { ...s.selectedUser, kycStatus: 'unverified', kycProgress: 0, kycDocuments: s.selectedUser.kycDocuments.map((d) => ({ ...d, status: 'rejected' as const })) }
@@ -673,7 +673,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   suspendUser: async (userId) => {
     set({ isActionLoading: true });
-    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    const user = get().users.find((u: AdminUser) => u.id === userId);
     try {
       if (USE_API) {
         // apidocs: PATCH /api/v1/admin/users/{id}/suspend with { reason }
@@ -700,7 +700,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   reactivateUser: async (userId) => {
     set({ isActionLoading: true });
-    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    const user = get().users.find((u: AdminUser) => u.id === userId);
     try {
       if (USE_API) {
         // apidocs: PATCH /api/v1/admin/users/{id}/reactivate
@@ -727,7 +727,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   revokeUser: async (userId, reason) => {
     set({ isActionLoading: true });
-    const user = useAdminDashboardStore.getState().users.find((u) => u.id === userId);
+    const user = get().users.find((u: AdminUser) => u.id === userId);
     try {
       if (USE_API) {
         await apiPatch(`/api/admin/users/${userId}/revoke`, { reason });
@@ -1049,7 +1049,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   approvePayout: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
-    const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
+    const payout = get().payouts.find((p: PayoutRequest) => p.id === id);
     set((s) => ({
       payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Approved' as const } : p),
       isActionLoading: false,
@@ -1067,7 +1067,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   rejectPayout: async (id) => {
     set({ isActionLoading: true });
     await new Promise((r) => setTimeout(r, 600));
-    const payout = useAdminDashboardStore.getState().payouts.find((p) => p.id === id);
+    const payout = get().payouts.find((p: PayoutRequest) => p.id === id);
     set((s) => ({
       payouts: s.payouts.map((p) => p.id === id ? { ...p, status: 'Rejected' as const } : p),
       isActionLoading: false,
@@ -1243,7 +1243,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   fetchPropertyById: async (id) => {
     try {
       if (!USE_API) {
-        return useAdminDashboardStore.getState().properties.find(p => p.id === id) ?? null;
+        return get().properties.find((p: AdminProperty) => p.id === id) ?? null;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = await apiGet<Record<string, any>>(`/api/admin/properties/${id}`);

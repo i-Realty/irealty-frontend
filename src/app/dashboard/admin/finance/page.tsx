@@ -59,9 +59,9 @@ export default function AdminFinancePage() {
     fetchDashboardDataMock();
   }, [fetchFinanceMock, fetchDashboardDataMock]);
 
-  const totalRevenue = revenueBreakdown.reduce((s, r) => s + r.amount, 0);
-  const totalEscrow = escrowItems.filter((e) => e.status === 'Held').reduce((s, e) => s + e.amount, 0);
-  const pendingPayoutTotal = payouts.filter((p) => p.status === 'Pending').reduce((s, p) => s + p.amount, 0);
+  const totalRevenue = revenueBreakdown.reduce((s: number, r) => s + r.amount, 0);
+  const totalEscrow = escrowItems.filter((e) => e.status === 'Held').reduce((s: number, e) => s + e.amount, 0);
+  const pendingPayoutTotal = payouts.filter((p) => p.status === 'Pending').reduce((s: number, p) => s + p.amount, 0);
 
   const filteredPayouts = useMemo(() => {
     if (payoutFilter === 'all') return payouts;
