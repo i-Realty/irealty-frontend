@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
+import { Search, RefreshCw, Loader2, ClipboardList } from 'lucide-react';
 
 type AuditLog = { id: string; timestamp: string; action: string; actor: string; details?: string };
-import { Search, RefreshCw, Loader2, ClipboardList } from 'lucide-react';
 
 export default function AuditLogsPage() {
   const { auditLogs, isLoading, fetchAuditLogs } = useAdminDashboardStore();
@@ -117,7 +117,7 @@ export default function AuditLogsPage() {
 
             {/* Mobile cards */}
             <div className="md:hidden p-4 space-y-3">
-              {paginated.map((log) => (
+              {paginated.map((log: AuditLog) => (
                 <div key={log.id} className="border border-gray-100 rounded-xl p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <span className={`text-xs font-medium border px-2.5 py-1 rounded-full ${getActionStyle(log.action)}`}>
