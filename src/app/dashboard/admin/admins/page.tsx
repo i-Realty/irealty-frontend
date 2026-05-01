@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
-import { Search, Plus, CheckCircle2, Clock, ShieldOff, X, Loader2, ChevronDown } from 'lucide-react';
+import { Search, Plus, CheckCircle2, Clock, ShieldOff, X, Loader2 } from 'lucide-react';
 
 // ── Invite modal ──────────────────────────────────────────────────────────────
 function InviteAdminModal({ onClose }: { onClose: () => void }) {
@@ -31,7 +31,7 @@ function InviteAdminModal({ onClose }: { onClose: () => void }) {
           <X className="w-5 h-5" />
         </button>
         <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-100 mb-1">Invite New Admin</h3>
-        <p className="text-[12px] text-gray-400 mb-5">Create a new admin account. They'll need approval before access is granted.</p>
+        <p className="text-[12px] text-gray-400 mb-5">Create a new admin account. They&apos;ll need approval before access is granted.</p>
 
         {done ? (
           <div className="py-8 text-center">
