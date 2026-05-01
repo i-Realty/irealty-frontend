@@ -81,19 +81,24 @@ export default function StepPersonalInformation() {
           // 403 = endpoint is admin-only; ignore and let personal-info proceed
         }
 
-        // Step 2: submit address-level personal info.
-        // firstName/lastName are intentionally omitted — they belong to the BVN
-        // verification step above and re-sending them here re-triggers the backend's
-        // NIBSS name-match check on an endpoint that expects address data only.
+        // Step 2: submit personal info with all required fields
         await apiPost('/api/kyc/personal-info', {
           bvn:         formData.bvn.trim(),
+          firstName,
+          lastName,
           dateOfBirth: dob,
           address:     formData.address.trim(),
           postCode:    formData.postCode.trim(),
           city:        formData.city.trim(),
         });
       } catch (err) {
-        setApiError(err instanceof Error ? err.message : 'Verification failed. Please check your details and try again.');
+        const msg = err instanceof Error ? err.message : '';
+        const isNameMismatch = msg.toLowerCase().includes('first name') || msg.toLowerCase().includes('last name') || msg.toLowerCase().includes('match');
+        setApiError(
+          isNameMismatch
+            ? 'Names do not match your BVN record. Enter your name exactly as registered with your bank (e.g. JESSY not Jessy C.).'
+            : msg || 'Verification failed. Please check your details and try again.'
+        );
         setSubmitting(false);
         return;
       }
@@ -158,6 +163,7 @@ export default function StepPersonalInformation() {
           {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
         </div>
       </div>
+      <p className="text-xs text-gray-400 -mt-1">Enter your name exactly as registered with your bank for your BVN.</p>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Birth date <span className="text-red-500">*</span></label>
