@@ -99,7 +99,7 @@ export default function AuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((log) => (
+                  {paginated.map((log: AuditLog) => (
                     <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/40 transition-colors">
                       <td className="py-3.5 px-6 text-gray-400 whitespace-nowrap font-mono text-[12px]">{log.timestamp}</td>
                       <td className="py-3.5 px-6">
