@@ -755,11 +755,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   submitHelpTicket: async () => {
     set({ isSaving: true, error: null });
     try {
+      const ticket = get().helpTicket;
       if (USE_API) {
-        // Help ticket endpoint not yet available — save locally only
-        await new Promise(r => setTimeout(r, 600));
-        set({ isSaving: false, helpTicket: defaultHelpTicket });
-        return;
+        // POST /api/v1/support/tickets — { subject, content, category? }
+        const { useSupportTicketsStore } = await import('./useSupportTicketsStore');
+        await useSupportTicketsStore.getState().createTicket({
+          subject: ticket.subject,
+          content: ticket.description,
+          category: 'GENERAL',
+        });
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }

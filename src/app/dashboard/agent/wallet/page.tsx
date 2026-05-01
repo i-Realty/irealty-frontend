@@ -7,6 +7,7 @@ import TransactionHistory from '@/components/dashboard/agent/wallet/TransactionH
 
 // Modals
 import FundDepositModal from '@/components/dashboard/agent/wallet/modals/FundDepositModal';
+import DirectDebitMandates from '@/components/dashboard/agent/wallet/DirectDebitMandates';
 import WithdrawModal from '@/components/dashboard/agent/wallet/modals/WithdrawModal';
 import ChangeWithdrawMethodModal from '@/components/dashboard/agent/wallet/modals/ChangeWithdrawMethodModal';
 import EditBankDetailsModal from '@/components/dashboard/agent/wallet/modals/EditBankDetailsModal';
@@ -29,6 +30,9 @@ export default function WalletPage() {
 
       {/* Lower Searchable Ledger */}
       <TransactionHistory />
+
+      {/* Direct Debit Mandates */}
+      <DirectDebitMandates />
 
       {/* Global Modal Controller */}
       {activeModal === 'deposit' && <FundDepositModal />}
