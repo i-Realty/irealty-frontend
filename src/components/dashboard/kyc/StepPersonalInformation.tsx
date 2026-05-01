@@ -56,15 +56,19 @@ export default function StepPersonalInformation() {
         const dd = formData.dobDay.padStart(2, '0');
         const dob = `${formData.dobYear}-${mm}-${dd}`;
 
+        // NIBSS stores names in uppercase — normalise before sending
+        const firstName = formData.firstName.trim().toUpperCase();
+        const lastName  = formData.lastName.trim().toUpperCase();
+
         // Submit personal info (backend validates BVN internally)
         await apiPost('/api/kyc/personal-info', {
-          bvn:         formData.bvn,
-          firstName:   formData.firstName,
-          lastName:    formData.lastName,
+          bvn:         formData.bvn.trim(),
+          firstName,
+          lastName,
           dateOfBirth: dob,
-          address:     formData.address,
-          postCode:    formData.postCode,
-          city:        formData.city,
+          address:     formData.address.trim(),
+          postCode:    formData.postCode.trim(),
+          city:        formData.city.trim(),
         });
       } catch (err) {
         setApiError(err instanceof Error ? err.message : 'Verification failed. Please check your details and try again.');
