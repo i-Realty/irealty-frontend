@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
+import { useAdminDashboardStore, type AdminUser } from '@/lib/store/useAdminDashboardStore';
 import { Search, Plus, CheckCircle2, Clock, ShieldOff, X, Loader2 } from 'lucide-react';
 
 // ── Invite modal ──────────────────────────────────────────────────────────────
@@ -119,10 +119,10 @@ export default function AdminsPage() {
     fetchAdmins();
   }, [confirmAction, reasonInput, suspendAdmin, revokeAdmin, fetchAdmins]);
 
-  const filteredAll = admins.filter(a =>
+  const filteredAll = admins.filter((a: AdminUser) =>
     !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase())
   );
-  const filteredPending = pendingAdmins.filter(a =>
+  const filteredPending = pendingAdmins.filter((a: AdminUser) =>
     !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase())
   );
 
