@@ -238,7 +238,12 @@ interface AdminDashboardState {
   fetchAuditLogs: () => Promise<void>;
   fetchPlatformFees: () => Promise<void>;
   broadcastMessage: (message: string) => Promise<void>;
+  // Admin settings
+  adminProfile: { firstName: string; lastName: string; displayName: string; email: string; phoneNumber: string; avatarUrl: string } | null;
+  fetchAdminProfile: () => Promise<void>;
+  updateAdminProfile: (data: { firstName?: string; lastName?: string; displayName?: string; phoneNumber?: string; bio?: string; avatarUrl?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }) => Promise<void>;
   fetchProperties: () => Promise<void>;
+  fetchPropertyById: (id: string) => Promise<AdminProperty | null>;
   approveProperty: (id: string) => Promise<void>;
   rejectProperty: (id: string, reason: string) => Promise<void>;
   flagProperty: (id: string) => Promise<void>;
@@ -468,6 +473,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
   admins: [],
   pendingAdmins: [],
   auditLogs: [],
+  adminProfile: null,
 
   // Platform fees
   platformFees: { inspection: 10, sale: 2.5, rental: 2.5, developer: 3, diaspora: 100 },
@@ -1193,6 +1199,79 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
       else await new Promise((r) => setTimeout(r, 600));
       set({ isActionLoading: false });
     } catch (err) { set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed' }); }
+  },
+
+  // ── Admin Settings Profile ───────────────────────────────────────────
+
+  fetchAdminProfile: async () => {
+    if (!USE_API) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiGet<Record<string, any>>('/api/admin/settings/profile');
+      set({
+        adminProfile: {
+          firstName:   raw.firstName   ?? '',
+          lastName:    raw.lastName    ?? '',
+          displayName: raw.displayName ?? '',
+          email:       raw.email       ?? '',
+          phoneNumber: raw.phoneNumber ?? '',
+          avatarUrl:   raw.avatarUrl   ?? '',
+        },
+      });
+    } catch { /* non-critical */ }
+  },
+
+  updateAdminProfile: async (data) => {
+    set({ isActionLoading: true, error: null });
+    try {
+      if (USE_API) {
+        await apiPatch('/api/admin/settings/profile', data);
+      } else {
+        await new Promise(r => setTimeout(r, 800));
+      }
+      set((s) => ({
+        adminProfile: s.adminProfile ? { ...s.adminProfile, ...data } : s.adminProfile,
+        isActionLoading: false,
+      }));
+    } catch (err) {
+      set({ isActionLoading: false, error: err instanceof Error ? err.message : 'Failed to update profile' });
+    }
+  },
+
+  // ── Admin Property Detail ────────────────────────────────────────────
+
+  fetchPropertyById: async (id) => {
+    try {
+      if (!USE_API) {
+        return useAdminDashboardStore.getState().properties.find(p => p.id === id) ?? null;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = await apiGet<Record<string, any>>(`/api/admin/properties/${id}`);
+      const TYPE_MAP: Record<string, string> = { RESIDENTIAL: 'Residential', COMMERCIAL: 'Commercial', LAND: 'Plots/Lands', SHORT_LET: 'Service Apartments & Short Lets', PG_HOSTEL: 'PG/Hostel' };
+      const STATUS_MAP: Record<string, ModerationStatus> = { PENDING: 'Pending Review', APPROVED: 'Verified', REJECTED: 'Rejected', FLAGGED: 'Flagged', ACTIVE: 'Verified', PUBLISHED: 'Verified' };
+      const property: AdminProperty = {
+        id:               String(raw.id ?? ''),
+        title:            raw.title ?? '',
+        type:             (raw.user?.roles ?? []).includes('DEVELOPER') ? 'Project' : 'Property',
+        ownerName:        raw.user?.displayName || `${raw.user?.firstName ?? ''} ${raw.user?.lastName ?? ''}`.trim() || 'Owner',
+        ownerRole:        ((raw.user?.roles ?? []).includes('DEVELOPER') ? 'Developer' : 'Agent') as 'Agent' | 'Developer',
+        category:         TYPE_MAP[raw.propertyType] ?? raw.propertyType ?? 'Residential',
+        price:            (raw.price ?? 0) / 100,
+        moderationStatus: STATUS_MAP[raw.moderationStatus ?? raw.status ?? ''] ?? 'Pending Review',
+        dateListed:       raw.createdAt ? formatDate(raw.createdAt) : '',
+        image:            raw.images?.[0]?.url ?? '',
+        location:         [raw.city, raw.state].filter(Boolean).join(', '),
+      };
+      // Cache it in local properties list
+      set(s => ({
+        properties: s.properties.some(p => p.id === id)
+          ? s.properties.map(p => p.id === id ? property : p)
+          : [...s.properties, property],
+      }));
+      return property;
+    } catch {
+      return null;
+    }
   },
 
   // Backward-compatible aliases

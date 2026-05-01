@@ -149,11 +149,44 @@ export default function ProfileSettings() {
 
               <div className="flex flex-col gap-2 md:col-span-2">
                  <label className="text-[12px] font-bold text-gray-900 ml-1">About</label>
-                 <textarea 
+                 <textarea
                     value={profile.about}
                     onChange={(e) => updateProfile({ about: e.target.value })}
                     placeholder="Tell us about yourself..."
                     className="w-full border border-gray-200 rounded-xl px-4 py-4 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors placeholder:text-gray-300 min-h-[140px] resize-y"
+                 />
+              </div>
+
+              <div className="flex flex-col gap-2 md:col-span-2">
+                 <label className="text-[12px] font-bold text-gray-900 ml-1">Office Address</label>
+                 <input
+                    type="text"
+                    value={profile.address}
+                    onChange={(e) => updateProfile({ address: e.target.value })}
+                    placeholder="e.g. 12 Ahmadu Bello Way"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors placeholder:text-gray-300"
+                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                 <label className="text-[12px] font-bold text-gray-900 ml-1">City</label>
+                 <input
+                    type="text"
+                    value={profile.city}
+                    onChange={(e) => updateProfile({ city: e.target.value })}
+                    placeholder="e.g. Lagos"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors placeholder:text-gray-300"
+                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                 <label className="text-[12px] font-bold text-gray-900 ml-1">State</label>
+                 <input
+                    type="text"
+                    value={profile.state}
+                    onChange={(e) => updateProfile({ state: e.target.value })}
+                    placeholder="e.g. Lagos State"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-blue-500 shadow-sm transition-colors placeholder:text-gray-300"
                  />
               </div>
            </div>

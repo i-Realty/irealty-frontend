@@ -24,6 +24,9 @@ export type UserProfilePayload = {
   phone: string;
   phoneCode: string;
   about: string;
+  address: string;
+  city: string;
+  state: string;
   socials: { linkedin: string; facebook: string; instagram: string; twitter: string };
 };
 
@@ -199,31 +202,37 @@ const MOCK_ACCOUNT_PROFILES: Record<string, UserProfilePayload> = {
   'demo-admin': {
     firstName: 'Waden', lastName: 'Warren', displayName: 'Waden Warren',
     phone: '8012345678', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
   'demo-agent': {
     firstName: 'Marcus', lastName: 'Bell', displayName: 'Marcus Bell',
     phone: '8023456789', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
   'demo-seeker': {
     firstName: 'Sarah', lastName: 'Homes', displayName: 'Sarah Homes',
     phone: '8034567890', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
   'demo-developer': {
     firstName: 'Chidi', lastName: 'Okeke', displayName: 'Chidi Okeke',
     phone: '8045678901', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
   'demo-diaspora': {
     firstName: 'Ngozi', lastName: 'Adeyemi', displayName: 'Ngozi Adeyemi',
     phone: '8056789012', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
   'demo-landlord': {
     firstName: 'Tunde', lastName: 'Bakare', displayName: 'Tunde Bakare',
     phone: '8067890123', phoneCode: '+234', about: '',
+    address: '', city: '', state: '',
     socials: { linkedin: '', facebook: '', instagram: '', twitter: '' },
   },
 };
@@ -356,6 +365,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             phone:       '',
             phoneCode:   '+234',
             about:       '',
+            address:     '',
+            city:        '',
+            state:       '',
             socials:     { linkedin: '', facebook: '', instagram: '', twitter: '' },
           };
         }
@@ -375,7 +387,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     // If the backend returns placeholder data (linked accounts that haven't been
     // customized yet), keep the main account's profile as default.
     if (USE_API) {
-      apiGet<BackendUser & { phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }>('/api/auth/me')
+      apiGet<BackendUser & { phoneNumber?: string; address?: string; city?: string; state?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string }>('/api/auth/me')
         .then(me => {
           const phone = me.phoneNumber?.replace(/^\+234/, '') ?? '';
           const fetched: UserProfilePayload = {
@@ -385,6 +397,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             phone,
             phoneCode:   '+234',
             about:       '',
+            address:     me.address ?? '',
+            city:        me.city ?? '',
+            state:       me.state ?? '',
             socials: {
               linkedin:  me.linkedinUrl ?? '',
               facebook:  me.facebookUrl ?? '',
@@ -564,7 +579,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const currentRole = useAuthStore.getState().user?.role;
     if (currentRole !== 'Agent') return;
     try {
-      type AgentUser = BackendUser & { bio?: string; phoneNumber?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string };
+      type AgentUser = BackendUser & { bio?: string; phoneNumber?: string; address?: string; city?: string; state?: string; linkedinUrl?: string; facebookUrl?: string; instagramUrl?: string; twitterUrl?: string };
       const data = await apiGet<{ user?: AgentUser }>('/api/agents/profile');
       const u = (data.user ?? data) as AgentUser;
       if (!u?.firstName && !u?.displayName) return;
@@ -576,6 +591,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         phone,
         phoneCode:   '+234',
         about:       u.bio ?? '',
+        address:     u.address ?? '',
+        city:        u.city ?? '',
+        state:       u.state ?? '',
         socials: {
           linkedin:  u.linkedinUrl  ?? '',
           facebook:  u.facebookUrl  ?? '',
@@ -628,14 +646,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       activeAccount: USE_API ? { id: '', role: 'Agent' as AccountRole, name: '', email: '' } : MOCK_ACCOUNTS[0],
       profilesByAccount: USE_API ? {} : { ...MOCK_ACCOUNT_PROFILES },
       profile: USE_API
-        ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
+        ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', address: '', city: '', state: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
         : MOCK_ACCOUNT_PROFILES['demo-admin'],
       isAddAccountModalOpen: false,
     });
   },
 
   profile: USE_API
-    ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
+    ? { firstName: '', lastName: '', displayName: '', phone: '', phoneCode: '+234', about: '', address: '', city: '', state: '', socials: { linkedin: '', facebook: '', instagram: '', twitter: '' } }
     : MOCK_ACCOUNT_PROFILES['demo-admin'],
   profilesByAccount: USE_API ? {} : { ...MOCK_ACCOUNT_PROFILES },
   payout: defaultPayout,
@@ -676,16 +694,34 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     try {
       if (USE_API) {
         const p = get().profile;
-        await apiPut('/api/auth/me', {
-          firstName:   p.firstName,
-          lastName:    p.lastName,
-          displayName: p.displayName,
-          phoneNumber: p.phoneCode + p.phone,
-          linkedinUrl:  p.socials.linkedin || undefined,
-          facebookUrl:  p.socials.facebook || undefined,
-          instagramUrl: p.socials.instagram || undefined,
-          twitterUrl:   p.socials.twitter || undefined,
-        });
+        const role = get().activeAccount.role;
+        if (role === 'Agent') {
+          await apiPut('/api/agents/profile', {
+            firstName:   p.firstName,
+            lastName:    p.lastName,
+            displayName: p.displayName,
+            phoneNumber: p.phoneCode + p.phone,
+            bio:         p.about || undefined,
+            address:     p.address || undefined,
+            city:        p.city || undefined,
+            state:       p.state || undefined,
+            linkedinUrl:  p.socials.linkedin || undefined,
+            facebookUrl:  p.socials.facebook || undefined,
+            instagramUrl: p.socials.instagram || undefined,
+            twitterUrl:   p.socials.twitter || undefined,
+          });
+        } else {
+          await apiPut('/api/auth/me', {
+            firstName:   p.firstName,
+            lastName:    p.lastName,
+            displayName: p.displayName,
+            phoneNumber: p.phoneCode + p.phone,
+            linkedinUrl:  p.socials.linkedin || undefined,
+            facebookUrl:  p.socials.facebook || undefined,
+            instagramUrl: p.socials.instagram || undefined,
+            twitterUrl:   p.socials.twitter || undefined,
+          });
+        }
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }

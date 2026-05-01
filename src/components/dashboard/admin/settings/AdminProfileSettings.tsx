@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useSettingsStore } from '@/lib/store/useSettingsStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useAdminDashboardStore } from '@/lib/store/useAdminDashboardStore';
 import { Camera, Loader2, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { uploadFile } from '@/lib/services/upload';
@@ -12,10 +13,24 @@ const FALLBACK_AVATAR = '/images/demo-avatar.jpg';
 const USE_API = process.env.NEXT_PUBLIC_USE_API === 'true';
 
 export default function AdminProfileSettings() {
-  const { profile, updateProfile, updateSocials, submitProfileMock, isSaving } = useSettingsStore();
+  const { profile, updateProfile, updateSocials } = useSettingsStore();
   const { user, updateUser } = useAuthStore();
+  const { adminProfile, isActionLoading, fetchAdminProfile, updateAdminProfile } = useAdminDashboardStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Load admin-specific profile on mount
+  useEffect(() => { fetchAdminProfile(); }, [fetchAdminProfile]);
+
+  // Seed the form with admin profile data on first load
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (!adminProfile || seededRef.current) return;
+    seededRef.current = true;
+    const rawPhone = adminProfile.phoneNumber ?? '';
+    const phone = rawPhone.startsWith('+234') ? rawPhone.slice(4) : rawPhone.replace(/^\+\d{1,3}/, '');
+    updateProfile({ firstName: adminProfile.firstName, lastName: adminProfile.lastName, displayName: adminProfile.displayName, phone });
+  }, [adminProfile, updateProfile]);
 
   const avatarSrc = user?.avatarUrl ?? FALLBACK_AVATAR;
 
@@ -38,7 +53,20 @@ export default function AdminProfileSettings() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitProfileMock();
+    // Use the dedicated admin settings endpoint
+    await updateAdminProfile({
+      firstName:    profile.firstName,
+      lastName:     profile.lastName,
+      displayName:  profile.displayName,
+      phoneNumber:  profile.phoneCode + profile.phone,
+      bio:          profile.about || undefined,
+      linkedinUrl:  profile.socials.linkedin || undefined,
+      facebookUrl:  profile.socials.facebook || undefined,
+      instagramUrl: profile.socials.instagram || undefined,
+      twitterUrl:   profile.socials.twitter || undefined,
+    });
+    // Sync display name to auth store
+    updateUser({ displayName: profile.displayName, name: profile.displayName });
   };
 
   return (
@@ -145,10 +173,10 @@ export default function AdminProfileSettings() {
            <div className="w-full flex justify-end mt-4">
               <button 
                 type="submit"
-                disabled={isSaving}
+                disabled={isActionLoading}
                 className="w-full md:w-auto min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-3.5 md:py-2.5 px-6 rounded-xl md:rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
               >
-                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                 {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
               </button>
            </div>
        </form>
@@ -205,10 +233,10 @@ export default function AdminProfileSettings() {
              <div className="w-full flex justify-end">
                 <button 
                   type="submit"
-                  disabled={isSaving}
+                  disabled={isActionLoading}
                   className="w-full md:w-auto min-w-[140px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-[14px] py-3.5 md:py-2.5 px-6 rounded-xl md:rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
                 >
-                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                   {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                 </button>
              </div>
           </form>

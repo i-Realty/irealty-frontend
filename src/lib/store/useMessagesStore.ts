@@ -563,6 +563,11 @@ export const useMessagesStore = create<MessagesStore>()(
 
         set({ activeChatId: id, isMobileContextOpen: false });
 
+        if (id && USE_API) {
+          // Fetch fresh messages for this thread immediately
+          get().fetchThread(id);
+        }
+
         // Subscribe to the new conversation channel via Pusher (API mode only)
         if (id && USE_API) {
           initPusher().then(() => {
