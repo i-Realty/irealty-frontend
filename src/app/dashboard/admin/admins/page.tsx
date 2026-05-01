@@ -219,7 +219,7 @@ export default function AdminsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredAll.map(a => (
+                        {filteredAll.map((a: AdminUser) => (
                           <tr key={a.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                             <td className="py-4 px-6 font-medium text-gray-900">{a.name}</td>
                             <td className="py-4 px-6 text-gray-500">{a.email}</td>
@@ -270,7 +270,7 @@ export default function AdminsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredPending.map(a => (
+                        {filteredPending.map((a: AdminUser) => (
                           <tr key={a.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                             <td className="py-4 px-6 font-medium text-gray-900">{a.name}</td>
                             <td className="py-4 px-6 text-gray-500">{a.email}</td>
