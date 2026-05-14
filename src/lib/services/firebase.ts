@@ -73,7 +73,8 @@ export async function signInWithGoogle(): Promise<FirebaseAuthResult> {
   provider.setCustomParameters({ prompt: 'select_account' });
 
   const result  = await signInWithPopup(firebaseAuth, provider);
-  const idToken = await result.user.getIdToken();
+  // Force refresh to ensure a fresh, valid token is sent to the backend
+  const idToken = await result.user.getIdToken(/* forceRefresh */ true);
 
   // Exchange Firebase ID token for backend JWT
   const backendResponse = await apiPost<BackendAuthResponse>(

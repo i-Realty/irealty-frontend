@@ -177,7 +177,7 @@ async function request<T>(
   if (response.status === 401) {
     // Auth endpoints (login, register, verify, etc.) should never trigger
     // a session-clear + redirect — a 401 there just means bad credentials.
-    const isAuthEndpoint = /^\/api\/auth\/(login|register|verify|resend|refresh)/.test(path)
+    const isAuthEndpoint = /^\/api\/auth\/(login|register|verify|resend|refresh|firebase)/.test(path)
       || !!extraHeaders?.['X-Skip-Auth-Redirect'];
 
     if (!isAuthEndpoint) {

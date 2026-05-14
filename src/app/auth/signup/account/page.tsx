@@ -142,8 +142,14 @@ export default function SignupAccount() {
         setGoogleLoading(false);
         return;
       }
-      const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
-      setErrors({ general: msg });
+      // Firebase token verification errors from the backend
+      if (err instanceof ApiError && err.status === 400 &&
+          typeof err.message === 'string' && err.message.toLowerCase().includes('firebase')) {
+        setErrors({ general: 'Google sign-in is temporarily unavailable. Please use email and password.' });
+      } else {
+        const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
+        setErrors({ general: msg });
+      }
     } finally {
       setGoogleLoading(false);
     }
