@@ -264,13 +264,9 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={process.env.NEXT_PUBLIC_USE_API === 'true' ? handleGoogleSignIn : undefined}
-            disabled={googleLoading || loading || process.env.NEXT_PUBLIC_USE_API !== 'true'}
-            className={`w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border font-medium transition-colors
-              ${process.env.NEXT_PUBLIC_USE_API === 'true'
-                ? 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
-                : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 dark:bg-gray-800 cursor-not-allowed opacity-60'
-              }`}
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading || loading}
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border font-medium transition-colors border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {googleLoading ? (
               <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
